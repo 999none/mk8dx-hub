@@ -446,5 +446,6 @@ export default function AcademyPage() {
         </Tabs>
       </div>
     </div>
+    </RequireAuth>
   );
 }
