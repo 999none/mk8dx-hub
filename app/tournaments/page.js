@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Home, Calendar, Users, Bell, BellOff, ExternalLink, Clock } from 'lucide-react';
 import Link from 'next/link';
+import RequireAuth from '@/components/RequireAuth';
 
 export default function TournamentsPage() {
   const [tournaments, setTournaments] = useState([]);
@@ -44,6 +45,7 @@ export default function TournamentsPage() {
   };
 
   return (
+    <RequireAuth>
     <div className="min-h-screen bg-black text-white">
       {/* Navigation */}
       <nav className="border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
