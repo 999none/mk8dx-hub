@@ -12,8 +12,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="fr" className="dark">
-      <body className={inter.className}>
+    <html lang="fr" className="dark" suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
         <AuthSessionProvider>
           {children}
           <Toaster />
