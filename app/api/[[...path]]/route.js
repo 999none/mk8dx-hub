@@ -16,6 +16,20 @@ async function getUserSession(request) {
   return user;
 }
 
+// Helper to parse verification cookie from request
+function getVerificationFromCookie(request) {
+  const cookieHeader = request.headers.get('cookie') || '';
+  const match = cookieHeader.match(/verification_status=([^;]+)/);
+  if (match) {
+    try {
+      return JSON.parse(decodeURIComponent(match[1]));
+    } catch (e) {
+      return null;
+    }
+  }
+  return null;
+}
+
 // GET /api/ - API Info
 export async function GET(request, context) {
   const params = await context.params;
