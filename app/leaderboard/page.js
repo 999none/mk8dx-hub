@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Home, Trophy, TrendingUp, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { getCurrentRank } from '@/lib/mockData';
+import RequireAuth from '@/components/RequireAuth';
 
 export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState([]);
