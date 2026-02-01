@@ -3,10 +3,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-    // Remove if not using Server Components
-    serverComponentsExternalPackages: ['mongodb'],
-  },
+  // Packages that should be resolved on the server bundle side (replacement for deprecated experimental key)
+  serverExternalPackages: ['mongodb'],
+  // Provide an (empty) turbopack config so Next.js doesn't error when a custom webpack
+  // configuration is present. Remove if you intend to fully migrate to Turbopack config.
+  turbopack: {},
   webpack(config, { dev }) {
     if (dev) {
       // Reduce CPU/memory from file watching

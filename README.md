@@ -231,6 +231,30 @@ NEXTAUTH_SECRET=your_secret_key
 
 Ce projet est ouvert aux contributions ! N'hésitez pas à ouvrir des issues ou pull requests.
 
+## 🔐 Discord OAuth Integration
+
+This application includes a complete Discord OAuth integration allowing users to authenticate with their Discord accounts.
+
+### Setup
+
+1. Create a Discord Application at https://discord.com/developers/applications
+2. Configure the following environment variables in `.env.local`:
+   ```
+   DISCORD_CLIENT_ID=your_discord_client_id
+   DISCORD_CLIENT_SECRET=your_discord_client_secret
+   NEXTAUTH_SECRET=your_nextauth_secret
+   NEXTAUTH_URL=http://localhost:3000
+   ```
+3. The integration is already configured with the necessary NextAuth setup in `lib/auth.js`
+
+### Features
+
+- Discord login button component
+- User profile display with Discord information
+- Protected dashboard route
+- Session management
+- Automatic redirection for unauthenticated users
+
 ## 📝 License
 
 MIT License - Projet non officiel, non affilié à Nintendo ou MKCentral.

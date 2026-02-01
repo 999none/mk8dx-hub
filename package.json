@@ -7,10 +7,12 @@
         "dev:no-reload": "next dev --hostname 0.0.0.0 --port 3000",
         "dev:webpack": "next dev --hostname 0.0.0.0 --port 3000",
         "build": "next build",
-        "start": "next start"
+        "start": "next start",
+        "test": "vitest",
+        "test:e2e": "playwright test",
+        "playwright:install": "playwright install --with-deps"
     },
     "dependencies": {
-        "8dxlounge.js": "^0.0.2",
         "@hookform/resolvers": "^5.1.1",
         "@radix-ui/react-accordion": "^1.2.11",
         "@radix-ui/react-alert-dialog": "^1.1.14",
@@ -41,6 +43,7 @@
         "@radix-ui/react-tooltip": "^1.2.7",
         "@tanstack/react-table": "^8.21.3",
         "axios": "^1.10.0",
+        "cheerio": "^1.0.0-rc.12",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
@@ -49,7 +52,7 @@
         "input-otp": "^1.4.2",
         "lucide-react": "^0.516.0",
         "mongodb": "^6.6.0",
-        "next": "14.2.3",
+        "next": "^16.1.6",
         "next-auth": "^4.24.13",
         "next-themes": "^0.4.6",
         "node-cron": "^4.2.1",
@@ -68,9 +71,16 @@
     },
     "devDependencies": {
         "autoprefixer": "^10.4.19",
+        "axios-mock-adapter": "^1.21.2",
         "globals": "^16.2.0",
         "postcss": "^8",
-        "tailwindcss": "^3.4.1"
+        "tailwindcss": "^3.4.1",
+        "vitest": "^4.0.18"
+    },
+    "overrides": {
+        "8dxlounge.js": {
+            "axios": "^1.13.4"
+        }
     },
     "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

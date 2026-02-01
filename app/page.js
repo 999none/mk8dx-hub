@@ -35,7 +35,7 @@ export default function LandingPage() {
             <Link href="/tournaments">
               <Button variant="ghost" className="text-white hover:bg-white/10">Tournois</Button>
             </Link>
-            <Link href="/api/auth/discord">
+            <Link href="/login">
               <Button className="bg-white text-black hover:bg-white/90">
                 Se Connecter
               </Button>
@@ -63,7 +63,7 @@ export default function LandingPage() {
               Suivez vos stats, progressez avec l'Academy, et dominez le Lounge.
             </p>
             <div className="flex gap-4 justify-center">
-              <Link href="/api/auth/discord">
+              <Link href="/login">
                 <Button size="lg" className="bg-white text-black hover:bg-white/90 text-lg px-8">
                   Commencer Maintenant
                   <ArrowRight className="ml-2 w-5 h-5" />
@@ -166,7 +166,7 @@ export default function LandingPage() {
                 Connectez votre compte Discord et accédez instantanément à vos stats, 
                 votre progression MMR, et rejoignez la communauté compétitive.
               </p>
-              <Link href="/api/auth/discord">
+              <Link href="/login">
                 <Button size="lg" className="bg-white text-black hover:bg-white/90 text-lg px-8">
                   Connecter avec Discord
                   <ArrowRight className="ml-2 w-5 h-5" />
