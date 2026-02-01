@@ -33,7 +33,8 @@ export default function LeaderboardPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <RequireAuth>
+      <div className="min-h-screen bg-black text-white">
       {/* Navigation */}
       <nav className="border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
