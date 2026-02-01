@@ -327,6 +327,7 @@ export async function POST(request, { params }) {
 
       // Check if player is active on Lounge
       try {
+        const loungeApi = new LoungeApi();
         const loungePlayer = await loungeApi.getPlayerDetailsByName(serverNickname);
         
         if (!loungePlayer || !loungePlayer.name) {
