@@ -886,6 +886,149 @@ export async function POST(request, context) {
         return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
       }
     }
+
+    // Admin: Set Lounge name and auto-approve if conditions met
+    if (path === 'admin/set-lounge-name') {
+      try {
+        const body = await request.json();
+        const { discordId, loungeName } = body;
+        
+        if (!discordId || !loungeName) {
+          return NextResponse.json({ success: false, message: 'discordId et loungeName requis' }, { status: 400 });
+        }
+
+        const db = await getDatabase();
+        const loungeApi = new LoungeApi();
+
+        // Verify the Lounge player exists
+        let loungePlayer = null;
+        try {
+          loungePlayer = await loungeApi.getPlayerDetailsByName(loungeName);
+        } catch (err) {
+          console.warn('Lounge player lookup failed:', err);
+        }
+
+        if (!loungePlayer || !loungePlayer.name) {
+          return NextResponse.json({ 
+            success: false, 
+            message: `Joueur "${loungeName}" introuvable sur le Lounge. Vérifiez l'orthographe exacte.`
+          });
+        }
+
+        // Check match activity
+        let matchCount = 0;
+        let lastMatchDate = null;
+        try {
+          const matches = await loungeApi.getPlayerMatchHistory(loungeName, { limit: 100 });
+          if (Array.isArray(matches)) {
+            const now = Date.now();
+            const cutoff = now - (30 * 24 * 60 * 60 * 1000);
+            const recent = matches
+              .map(m => ({ ...m, date: new Date(m.date || m.createdAt || m.time) }))
+              .filter(m => m.date && m.date.getTime() >= cutoff)
+              .sort((a, b) => b.date - a.date);
+
+            matchCount = recent.length;
+            lastMatchDate = recent.length > 0 ? recent[0].date.toISOString() : null;
+          }
+        } catch (err) {
+          console.warn('Could not fetch lounge matches:', err);
+        }
+
+        // Check if user has enough activity for auto-approval
+        const canAutoApprove = matchCount >= 2;
+
+        if (canAutoApprove) {
+          // Auto-approve: Create verified user
+          const existingUser = await db.collection('users').findOne({ discordId });
+          
+          if (existingUser) {
+            // Update existing user
+            await db.collection('users').updateOne(
+              { discordId },
+              { 
+                $set: { 
+                  loungeName,
+                  loungeData: loungePlayer,
+                  mmr: loungePlayer.mmr || 0,
+                  verified: true,
+                  verifiedAt: new Date(),
+                  updatedAt: new Date()
+                } 
+              }
+            );
+          } else {
+            // Get pending verification data for user info
+            const pending = await db.collection('pending_verifications').findOne({ discordId });
+            
+            await db.collection('users').insertOne({
+              discordId,
+              serverNickname: pending?.serverNickname || pending?.username || loungeName,
+              loungeName,
+              loungeData: loungePlayer,
+              mmr: loungePlayer.mmr || 0,
+              verified: true,
+              verifiedAt: new Date(),
+              createdAt: new Date(),
+              avatar: pending?.avatar || null,
+              username: pending?.username || null
+            });
+          }
+
+          // Update pending verification to approved
+          await db.collection('pending_verifications').updateOne(
+            { discordId },
+            { 
+              $set: { 
+                status: 'approved', 
+                loungeName,
+                loungeData: loungePlayer,
+                matchCount,
+                lastMatchDate,
+                approvedAt: new Date(),
+                autoApproved: true,
+                updatedAt: new Date()
+              } 
+            }
+          );
+
+          return NextResponse.json({ 
+            success: true, 
+            autoApproved: true,
+            message: `Joueur "${loungeName}" vérifié automatiquement (${matchCount} matchs récents).`,
+            player: loungePlayer
+          });
+        } else {
+          // Not enough activity - update pending with Lounge name but keep as waiting_activity
+          await db.collection('pending_verifications').updateOne(
+            { discordId },
+            { 
+              $set: { 
+                loungeName,
+                loungeData: loungePlayer,
+                matchCount,
+                lastMatchDate,
+                status: 'waiting_activity',
+                updatedAt: new Date()
+              } 
+            }
+          );
+
+          return NextResponse.json({ 
+            success: true, 
+            autoApproved: false,
+            message: `Nom Lounge "${loungeName}" associé. Activité insuffisante (${matchCount}/2 matchs). L'utilisateur doit jouer plus de matchs.`,
+            player: loungePlayer,
+            matchCount,
+            lastMatchDate
+          });
+        }
+
+      } catch (err) {
+        console.error('admin/set-lounge-name error:', err);
+        return NextResponse.json({ success: false, message: 'Erreur serveur' }, { status: 500 });
+      }
+    }
   } catch (error) {
     console.error('POST API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
