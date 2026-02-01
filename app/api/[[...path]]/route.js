@@ -17,7 +17,8 @@ async function getUserSession(request) {
 }
 
 // GET /api/ - API Info
-export async function GET(request, { params }) {
+export async function GET(request, context) {
+  const params = await context.params;
   const path = params.path ? params.path.join('/') : '';
   
   try {
@@ -473,7 +474,8 @@ export async function GET(request, { params }) {
 }
 
 // POST /api/* - Handle POST requests
-export async function POST(request, { params }) {
+export async function POST(request, context) {
+  const params = await context.params;
   const path = params.path ? params.path.join('/') : '';
   
   try {
