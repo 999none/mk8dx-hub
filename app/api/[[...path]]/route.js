@@ -495,6 +495,78 @@ export async function POST(request, { params }) {
       }
 
       // Continue with existing verification logic (activity checks, etc.)
+      try {
+        // Check if player is active on Lounge (must have >= 2 matches in last 30 days)
+        const loungeApi = new LoungeApi();
+        const loungePlayer = await loungeApi.getPlayerDetailsByName(serverNickname);
+        
+        if (!loungePlayer || !loungePlayer.name) {
+          // Player not found on Lounge
+          await db.collection('pending_verifications').updateOne(
+            { discordId },
+            { $set: { status: 'not_active', message: 'Player not found on Lounge' } }
+          );
+          
+          return NextResponse.json({ 
+            success: false, 
+            message: 'Player not found on Lounge. Please play some matches first.' 
+          });
+        }
+
+        // Check match history
+        let matchCount = 0;
+        try {
+          const matches = await loungeApi.getPlayerMatchHistory(serverNickname, { limit: 100 });
+          if (Array.isArray(matches)) {
+            const now = Date.now();
+            const cutoff = now - (30 * 24 * 60 * 60 * 1000);
+            const recent = matches
+              .map(m => ({ ...m, date: new Date(m.date || m.createdAt || m.time) }))
+              .filter(m => m.date && m.date.getTime() >= cutoff);
+
+            matchCount = recent.length;
+          }
+        } catch (err) {
+          console.warn('Could not fetch matches during admin verification:', err);
+        }
+
+        if (matchCount < 2) {
+          await db.collection('pending_verifications').updateOne(
+            { discordId },
+            { $set: { status: 'not_active', matchCount, message: 'Not enough recent activity' } }
+          );
+
+          return NextResponse.json({ success: false, message: 'User does not have enough activity on Lounge (min 2 matches in 30 days).' });
+        }
+
+        // Player is active, create user account
+        await db.collection('users').insertOne({
+          discordId,
+          serverNickname,
+          loungeData: loungePlayer,
+          mmr: loungePlayer.mmr || 0,
+          verified: true,
+          verifiedAt: new Date(),
+          createdAt: new Date()
+        });
+
+        // Update verification status
+        await db.collection('pending_verifications').updateOne(
+          { discordId },
+          { $set: { status: 'approved', approvedAt: new Date(), matchCount } }
+        );
+
+        // Return response and clear client-side verification cookie so dashboard updates
+        const res = NextResponse.json({ success: true, message: 'Player verified successfully' });
+        res.cookies.set('verification_status', '', { path: '/', maxAge: 0 });
+        return res;
+      } catch (error) {
+        console.error('Lounge API error:', error);
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Error checking Lounge activity' 
+        }, { status: 500 });
+      }
     }
 
     // Admin: List MKCentral cache
@@ -611,80 +683,6 @@ export async function POST(request, { params }) {
     }
 
 
-// Check if player is active on Lounge (must have >= 2 matches in last 30 days)
-        try {
-          const loungeApi = new LoungeApi();
-          const loungePlayer = await loungeApi.getPlayerDetailsByName(serverNickname);
-          
-          if (!loungePlayer || !loungePlayer.name) {
-            // Player not found on Lounge
-            await db.collection('pending_verifications').updateOne(
-              { discordId },
-              { $set: { status: 'not_active', message: 'Player not found on Lounge' } }
-            );
-            
-            return NextResponse.json({ 
-              success: false, 
-              message: 'Player not found on Lounge. Please play some matches first.' 
-            });
-          }
-
-          // Check match history
-          let matchCount = 0;
-          try {
-            const matches = await loungeApi.getPlayerMatchHistory(serverNickname, { limit: 100 });
-            if (Array.isArray(matches)) {
-              const now = Date.now();
-              const cutoff = now - (30 * 24 * 60 * 60 * 1000);
-              const recent = matches
-                .map(m => ({ ...m, date: new Date(m.date || m.createdAt || m.time) }))
-                .filter(m => m.date && m.date.getTime() >= cutoff);
-
-              matchCount = recent.length;
-            }
-          } catch (err) {
-            console.warn('Could not fetch matches during admin verification:', err);
-          }
-
-          if (matchCount < 2) {
-            await db.collection('pending_verifications').updateOne(
-              { discordId },
-              { $set: { status: 'not_active', matchCount, message: 'Not enough recent activity' } }
-            );
-
-            return NextResponse.json({ success: false, message: 'User does not have enough activity on Lounge (min 2 matches in 30 days).' });
-          }
-
-          // Player is active, create user account
-          await db.collection('users').insertOne({
-            discordId,
-            serverNickname,
-            loungeData: loungePlayer,
-            mmr: loungePlayer.mmr || 0,
-            verified: true,
-            verifiedAt: new Date(),
-            createdAt: new Date()
-          });
-
-          // Update verification status
-          await db.collection('pending_verifications').updateOne(
-            { discordId },
-            { $set: { status: 'approved', approvedAt: new Date(), matchCount } }
-        );
-
-          // Return response and clear client-side verification cookie so dashboard updates
-          const res = NextResponse.json({ success: true, message: 'Player verified successfully' });
-          res.cookies.set('verification_status', '', { path: '/', maxAge: 0 });
-          return res;
-        } catch (error) {
-          console.error('Lounge API error:', error);
-          return NextResponse.json({ 
-            success: false, 
-            message: 'Error checking Lounge activity' 
-          }, { status: 500 });
-        }
-      }
-    }
 
     // Recheck verification activity endpoint
     if (path === 'verification/recheck') {
@@ -739,3 +737,10 @@ export async function POST(request, { params }) {
       } catch (err) {
         console.error('verification/recheck error:', err);
         return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
+      }
+    }
+  } catch (error) {
+    console.error('POST API Error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

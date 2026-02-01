@@ -1,0 +1,23 @@
+Résumé:
+- Mise à jour de Next.js vers 16.1.6 (major).
+- Mise à jour de Vitest vers 4.0.18.
+- Suppression de la dépendance non utilisée `8dxlounge.js` (mitigation d'une vulnérabilité axios imbriquée).
+- Application d'`npm audit fix --force` pour réduire les vulnérabilités restantes.
+- Ajout de `vite.config.js` pour résoudre les alias `@/...` et config Vitest.
+- Améliorations tests: injection d'axios dans `lib/mkcentral.js`, enforcement of `limit` dans `refreshCache`, import Cheerio stable, et ajout/ajustement des tests.
+
+Checklist:
+- [x] Tests unitaires passent (`npm test`).
+- [ ] Build (`npm run build`) OK en CI/staging.
+- [ ] Smoke tests manuels (dashboard, endpoints).
+- [ ] Reviewer vérifie breaking changes potentiels (Next.js).
+
+Notes:
+- Certaines vulnérabilités liées à paquets tiers peuvent nécessiter des remplacements ou des PRs additionnelles si des fixes ne sont pas disponibles.
+
+Commandes de validation (locally):
+- npm install
+- npm test
+- npm run build
+
+Merci de vérifier et reviewer les changements de dépendances majeures.
