@@ -30,6 +30,26 @@ function getVerificationFromCookie(request) {
   return null;
 }
 
+// Helper to get user-friendly status message
+function getStatusMessage(status, matchCount = 0) {
+  switch (status) {
+    case 'waiting_activity':
+      return `Votre compte nécessite au moins 2 matchs Lounge dans les 30 derniers jours pour être vérifié. Actuellement: ${matchCount} match(s).`;
+    case 'waiting_lounge_name':
+      return "En attente de l'association de votre nom Lounge par un administrateur. Patience, cela peut prendre quelques heures.";
+    case 'pending':
+      return "Votre compte est en cours de vérification par un administrateur.";
+    case 'approved':
+      return "Votre compte est vérifié ! Bienvenue sur MK8DX Hub.";
+    case 'rejected':
+      return "Votre demande de vérification a été rejetée. Contactez un administrateur pour plus d'informations.";
+    case 'not_active':
+      return "Votre compte n'a pas suffisamment d'activité récente sur le Lounge.";
+    default:
+      return "Statut inconnu. Veuillez contacter un administrateur.";
+  }
+}
+
 // GET /api/ - API Info
 export async function GET(request, context) {
   const params = await context.params;
