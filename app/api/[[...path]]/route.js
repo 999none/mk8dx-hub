@@ -17,7 +17,8 @@ async function getUserSession(request) {
 
 // GET /api/ - API Info
 export async function GET(request, { params }) {
-  const path = params.path ? params.path.join('/') : '';
+  const resolvedParams = await params;
+  const path = resolvedParams.path ? resolvedParams.path.join('/') : '';
   
   try {
     // Root API info
@@ -37,14 +38,24 @@ export async function GET(request, { params }) {
 
     // Stats endpoint
     if (path === 'stats') {
-      const db = await getDatabase();
-      const usersCount = await db.collection('users').countDocuments({ verified: true });
-      const racesCount = await db.collection('matches').countDocuments();
-      
-      return NextResponse.json({
-        players: usersCount > 0 ? `${usersCount}+` : '2K+',
-        races: racesCount > 0 ? `${Math.floor(racesCount / 1000)}K+` : '100K+'
-      });
+      try {
+        const db = await getDatabase();
+        const usersCount = await db.collection('users').countDocuments({ verified: true });
+        const racesCount = await db.collection('matches').countDocuments();
+
+        return NextResponse.json({
+          players: usersCount > 0 ? `${usersCount}+` : '2K+',
+          races: racesCount > 0 ? `${Math.floor(racesCount / 1000)}K+` : '100K+'
+        });
+      } catch (error) {
+        console.warn('Database error in stats endpoint:', error.message);
+        // Return mock stats when database is unavailable
+        return NextResponse.json({
+          players: '2K+',
+          races: '100K+',
+          message: 'Using mock data - database unavailable'
+        });
+      }
     }
 
     // Player info (current user)
@@ -77,10 +88,10 @@ export async function GET(request, { params }) {
     if (path === 'leaderboard') {
       try {
         const db = await getDatabase();
-        
+
         // Check if we have cached leaderboard data
         const cache = await db.collection('leaderboard_cache').findOne({ type: 'global' });
-        
+
         if (cache && Date.now() - new Date(cache.lastUpdate).getTime() < 3600000) {
           // Cache is less than 1 hour old
           return NextResponse.json({
@@ -93,7 +104,7 @@ export async function GET(request, { params }) {
         // Fetch from Lounge API
         const loungeApi = new LoungeApi();
         const players = await loungeApi.getPlayers();
-        
+
         // Sort by MMR
         const sortedPlayers = players
           .sort((a, b) => (b.mmr || 0) - (a.mmr || 0))
@@ -108,18 +119,22 @@ export async function GET(request, { params }) {
             rank: index + 1
           }));
 
-        // Cache the results
-        await db.collection('leaderboard_cache').updateOne(
-          { type: 'global' },
-          { 
-            $set: { 
-              data: sortedPlayers, 
-              lastUpdate: new Date(),
-              type: 'global'
-            } 
-          },
-          { upsert: true }
-        );
+        // Try to cache the results if database is available
+        try {
+          await db.collection('leaderboard_cache').updateOne(
+            { type: 'global' },
+            {
+              $set: {
+                data: sortedPlayers,
+                lastUpdate: new Date(),
+                type: 'global'
+              }
+            },
+            { upsert: true }
+          );
+        } catch (cacheError) {
+          console.warn('Failed to cache leaderboard data:', cacheError.message);
+        }
 
         return NextResponse.json({
           players: sortedPlayers,
@@ -128,7 +143,7 @@ export async function GET(request, { params }) {
         });
       } catch (error) {
         console.error('Leaderboard API error:', error);
-        
+
         // Fallback to mock data
         const mockLeaderboard = Array.from({ length: 20 }, (_, i) => ({
           id: i + 1,
@@ -273,13 +288,21 @@ export async function GET(request, { params }) {
 
     // Admin: Get pending verifications
     if (path === 'admin/pending-verifications') {
-      const db = await getDatabase();
-      const pending = await db.collection('pending_verifications')
-        .find({ status: 'pending' })
-        .sort({ createdAt: -1 })
-        .toArray();
-      
-      return NextResponse.json(pending);
+      try {
+        const db = await getDatabase();
+        const pending = await db.collection('pending_verifications')
+          .find({ status: 'pending' })
+          .sort({ createdAt: -1 })
+          .toArray();
+
+        return NextResponse.json(pending);
+      } catch (error) {
+        console.warn('Database error in admin/pending-verifications endpoint:', error.message);
+        // Return empty array when database is unavailable
+        return NextResponse.json([], {
+          message: 'Using mock data - database unavailable'
+        });
+      }
     }
 
     // Lounge player search by name
@@ -305,7 +328,8 @@ export async function GET(request, { params }) {
 
 // POST /api/* - Handle POST requests
 export async function POST(request, { params }) {
-  const path = params.path ? params.path.join('/') : '';
+  const resolvedParams = await params;
+  const path = resolvedParams.path ? resolvedParams.path.join('/') : '';
   
   try {
     // Admin: Verify player
@@ -313,60 +337,68 @@ export async function POST(request, { params }) {
       const body = await request.json();
       const { discordId, serverNickname, approved } = body;
 
-      const db = await getDatabase();
-
-      if (!approved) {
-        // Reject verification
-        await db.collection('pending_verifications').updateOne(
-          { discordId },
-          { $set: { status: 'rejected', rejectedAt: new Date() } }
-        );
-        
-        return NextResponse.json({ success: true, message: 'Verification rejected' });
-      }
-
-      // Check if player is active on Lounge
       try {
-        const loungeApi = new LoungeApi();
-        const loungePlayer = await loungeApi.getPlayerDetailsByName(serverNickname);
-        
-        if (!loungePlayer || !loungePlayer.name) {
-          // Player not found on Lounge
+        const db = await getDatabase();
+
+        if (!approved) {
+          // Reject verification
           await db.collection('pending_verifications').updateOne(
             { discordId },
-            { $set: { status: 'not_active', message: 'Player not found on Lounge' } }
+            { $set: { status: 'rejected', rejectedAt: new Date() } }
           );
-          
-          return NextResponse.json({ 
-            success: false, 
-            message: 'Player not found on Lounge. Please play some matches first.' 
-          });
+
+          return NextResponse.json({ success: true, message: 'Verification rejected' });
         }
 
-        // Player is active, create user account
-        await db.collection('users').insertOne({
-          discordId,
-          serverNickname,
-          loungeData: loungePlayer,
-          mmr: loungePlayer.mmr || 0,
-          verified: true,
-          verifiedAt: new Date(),
-          createdAt: new Date()
-        });
+        // Check if player is active on Lounge
+        try {
+          const loungeApi = new LoungeApi();
+          const loungePlayer = await loungeApi.getPlayerDetailsByName(serverNickname);
 
-        // Update verification status
-        await db.collection('pending_verifications').updateOne(
-          { discordId },
-          { $set: { status: 'approved', approvedAt: new Date() } }
-        );
+          if (!loungePlayer || !loungePlayer.name) {
+            // Player not found on Lounge
+            await db.collection('pending_verifications').updateOne(
+              { discordId },
+              { $set: { status: 'not_active', message: 'Player not found on Lounge' } }
+            );
 
-        return NextResponse.json({ success: true, message: 'Player verified successfully' });
+            return NextResponse.json({
+              success: false,
+              message: 'Player not found on Lounge. Please play some matches first.'
+            });
+          }
 
-      } catch (error) {
-        console.error('Lounge API error:', error);
-        return NextResponse.json({ 
-          success: false, 
-          message: 'Error checking Lounge activity' 
+          // Player is active, create user account
+          await db.collection('users').insertOne({
+            discordId,
+            serverNickname,
+            loungeData: loungePlayer,
+            mmr: loungePlayer.mmr || 0,
+            verified: true,
+            verifiedAt: new Date(),
+            createdAt: new Date()
+          });
+
+          // Update verification status
+          await db.collection('pending_verifications').updateOne(
+            { discordId },
+            { $set: { status: 'approved', approvedAt: new Date() } }
+          );
+
+          return NextResponse.json({ success: true, message: 'Player verified successfully' });
+
+        } catch (error) {
+          console.error('Lounge API error:', error);
+          return NextResponse.json({
+            success: false,
+            message: 'Error checking Lounge activity'
+          }, { status: 500 });
+        }
+      } catch (dbError) {
+        console.error('Database error in admin/verify-player endpoint:', dbError.message);
+        return NextResponse.json({
+          success: false,
+          message: 'Database error - verification failed'
         }, { status: 500 });
       }
     }
