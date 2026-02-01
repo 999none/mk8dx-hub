@@ -171,6 +171,6 @@ export default function LeaderboardPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </RequireAuth>
   );
 }
