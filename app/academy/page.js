@@ -124,6 +124,7 @@ export default function AcademyPage() {
   const progressPercent = (completedGoals.length / goals.length) * 100;
 
   return (
+    <RequireAuth>
     <div className="min-h-screen bg-black text-white">
       {/* Navigation */}
       <nav className="border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
