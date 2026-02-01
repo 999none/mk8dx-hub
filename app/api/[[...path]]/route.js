@@ -347,18 +347,129 @@ export async function GET(request, context) {
       }
     }
 
-    // Admin: Get pending verifications
+    // Admin: Get pending verifications (all statuses for admin view)
     if (path === 'admin/pending-verifications') {
       const db = await getDatabase();
+      // Get both pending and waiting_activity users for admin
       const pending = await db.collection('pending_verifications')
-        .find({ status: 'pending' })
+        .find({ status: { $in: ['pending', 'waiting_activity', 'waiting_lounge_name'] } })
         .sort({ createdAt: -1 })
         .toArray();
       
       return NextResponse.json(pending);
     }
 
-    // Lounge player search by name
+    // Get current user verification status
+    if (path === 'verification/status') {
+      const verification = getVerificationFromCookie(request);
+      
+      if (!verification || !verification.discordId) {
+        return NextResponse.json({ verified: false, status: 'not_logged_in' });
+      }
+      
+      const db = await getDatabase();
+      
+      // Check if user is already verified
+      const user = await db.collection('users').findOne({ discordId: verification.discordId, verified: true });
+      if (user) {
+        return NextResponse.json({ 
+          verified: true, 
+          status: 'approved',
+          user: {
+            discordId: user.discordId,
+            serverNickname: user.serverNickname,
+            loungeName: user.loungeName,
+            mmr: user.mmr,
+            loungeData: user.loungeData
+          }
+        });
+      }
+      
+      // Check pending verification
+      const pending = await db.collection('pending_verifications').findOne({ discordId: verification.discordId });
+      if (!pending) {
+        return NextResponse.json({ verified: false, status: 'not_found' });
+      }
+      
+      return NextResponse.json({
+        verified: false,
+        status: pending.status,
+        matchCount: pending.matchCount || 0,
+        lastMatchDate: pending.lastMatchDate || null,
+        loungeName: pending.loungeName || null,
+        serverNickname: pending.serverNickname || pending.username,
+        createdAt: pending.createdAt,
+        message: getStatusMessage(pending.status, pending.matchCount)
+      });
+    }
+
+    // Admin: Search Lounge player with full stats
+    if (path === 'admin/lounge-search') {
+      const { searchParams } = new URL(request.url);
+      const name = searchParams.get('name');
+      
+      if (!name) {
+        return NextResponse.json({ error: 'name parameter required' }, { status: 400 });
+      }
+      
+      try {
+        const loungeApi = new LoungeApi();
+        const playerDetails = await loungeApi.getPlayerDetailsByName(name);
+        
+        if (!playerDetails || !playerDetails.name) {
+          return NextResponse.json({ found: false, error: 'Player not found on Lounge' });
+        }
+        
+        // Fetch match history for activity check
+        let matchCount = 0;
+        let lastMatchDate = null;
+        try {
+          const matches = await loungeApi.getPlayerMatchHistory(name, { limit: 100 });
+          if (Array.isArray(matches)) {
+            const now = Date.now();
+            const cutoff = now - (30 * 24 * 60 * 60 * 1000);
+            const recent = matches
+              .map(m => ({ ...m, date: new Date(m.date || m.createdAt || m.time) }))
+              .filter(m => m.date && m.date.getTime() >= cutoff)
+              .sort((a, b) => b.date - a.date);
+            
+            matchCount = recent.length;
+            lastMatchDate = recent.length > 0 ? recent[0].date.toISOString() : null;
+          }
+        } catch (err) {
+          console.warn('Could not fetch lounge matches:', err);
+        }
+        
+        return NextResponse.json({
+          found: true,
+          player: {
+            name: playerDetails.name,
+            mmr: playerDetails.mmr || 0,
+            maxMmr: playerDetails.maxMmr || 0,
+            wins: playerDetails.wins || 0,
+            losses: playerDetails.losses || 0,
+            winRate: playerDetails.wins && playerDetails.losses 
+              ? Math.round((playerDetails.wins / (playerDetails.wins + playerDetails.losses)) * 100) 
+              : 0,
+            rank: playerDetails.rank || playerDetails.division || 'N/A',
+            eventsPlayed: playerDetails.eventsPlayed || 0,
+            partnerId: playerDetails.partnerId || null,
+            mkcId: playerDetails.mkcId || null
+          },
+          activity: {
+            matchCount,
+            lastMatchDate,
+            isActive: matchCount >= 2
+          },
+          loungeProfileUrl: `https://www.mk8dx-lounge.com/PlayerDetails/${encodeURIComponent(name)}`
+        });
+      } catch (error) {
+        console.error('Lounge search error:', error);
+        return NextResponse.json({ found: false, error: 'Error searching Lounge' });
+      }
+    }
+
+    // Lounge player search by name (existing)
     if (path.startsWith('lounge/player/')) {
       const playerName = path.replace('lounge/player/', '');
       
