@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
-import { LoungeApi } from '8dxlounge.js';
+import { LoungeApi } from '@/lib/loungeApi';
 import { mockPlayerData, mockMMRHistory, mockMatchHistory, mockTeamMembers, mockTournaments } from '@/lib/mockData';
 
 // Initialize Lounge API
