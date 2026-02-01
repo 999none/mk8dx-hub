@@ -287,6 +287,7 @@ export async function GET(request, { params }) {
       const playerName = path.replace('lounge/player/', '');
       
       try {
+        const loungeApi = new LoungeApi();
         const playerDetails = await loungeApi.getPlayerDetailsByName(playerName);
         return NextResponse.json(playerDetails);
       } catch (error) {
