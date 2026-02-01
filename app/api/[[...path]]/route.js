@@ -3,9 +3,6 @@ import { getDatabase } from '@/lib/mongodb';
 import { LoungeApi } from '@/lib/loungeApi';
 import { mockPlayerData, mockMMRHistory, mockMatchHistory, mockTeamMembers, mockTournaments } from '@/lib/mockData';
 
-// Initialize Lounge API
-const loungeApi = new LoungeApi();
-
 // Helper function to get user session (simple implementation)
 async function getUserSession(request) {
   // For MVP, we'll use a simple token in header
