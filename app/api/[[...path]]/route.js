@@ -91,6 +91,7 @@ export async function GET(request, { params }) {
         }
 
         // Fetch from Lounge API
+        const loungeApi = new LoungeApi();
         const players = await loungeApi.getPlayers();
         
         // Sort by MMR
