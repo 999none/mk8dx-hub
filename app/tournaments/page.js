@@ -190,6 +190,6 @@ export default function TournamentsPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </RequireAuth>
   );
 }
