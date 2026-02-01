@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Home, Zap, Car, Brain, Target, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import RequireAuth from '@/components/RequireAuth';
 
 export default function AcademyPage() {
   const [completedGoals, setCompletedGoals] = useState([]);
