@@ -8,9 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { Home, Zap, Car, Brain, Target, CheckCircle2 } from 'lucide-react';
+import { Home, Zap, Car, Brain, Target, CheckCircle2, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import RequireAuth from '@/components/RequireAuth';
+import Navbar from '@/components/Navbar';
 
 export default function AcademyPage() {
   const [completedGoals, setCompletedGoals] = useState([]);
@@ -127,29 +128,9 @@ export default function AcademyPage() {
     <RequireAuth>
     <div className="min-h-screen bg-black text-white">
       {/* Navigation */}
-      <nav className="border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2">
-              <Home className="w-5 h-5" />
-            </Link>
-            <Link href="/dashboard">
-              <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-white/10">Dashboard</Button>
-            </Link>
-            <Link href="/academy">
-              <span className="font-bold text-white">Academy</span>
-            </Link>
-            <Link href="/tournaments">
-              <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-white/10">Tournois</Button>
-            </Link>
-            <Link href="/leaderboard">
-              <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-white/10">Leaderboard</Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-black mb-4">MK8DX Academy</h1>

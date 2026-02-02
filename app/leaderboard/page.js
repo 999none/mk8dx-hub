@@ -14,6 +14,7 @@ import {
 import Link from 'next/link';
 import { getCurrentRank } from '@/lib/mockData';
 import RequireAuth from '@/components/RequireAuth';
+import Navbar from '@/components/Navbar';
 
 // Country codes to names mapping (common ones)
 const COUNTRY_NAMES = {
@@ -167,38 +168,9 @@ export default function LeaderboardPage() {
     <RequireAuth>
       <div className="min-h-screen bg-black text-white">
         {/* Navigation */}
-        <nav className="border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
-          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Link href="/" className="flex items-center gap-2">
-                <Home className="w-5 h-5" />
-              </Link>
-              <Link href="/dashboard">
-                <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-white/10">Dashboard</Button>
-              </Link>
-              <Link href="/academy">
-                <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-white/10">Academy</Button>
-              </Link>
-              <Link href="/tournaments">
-                <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-white/10">Tournois</Button>
-              </Link>
-              <Link href="/leaderboard">
-                <span className="font-bold text-white">Leaderboard</span>
-              </Link>
-            </div>
-            <Button 
-              onClick={fetchLeaderboard} 
-              disabled={loading}
-              variant="outline"
-              className="border-white/20 hover:bg-white/10"
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Actualiser
-            </Button>
-          </div>
-        </nav>
+        <Navbar />
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 pt-24">
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-5xl font-black mb-4 flex items-center justify-center gap-3">
