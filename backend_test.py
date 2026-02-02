@@ -416,6 +416,9 @@ class BackendTester:
                     False, 
                     f"HTTP {response.status_code}: {response.text}"
                 )
+        except Exception as e:
+            self.log_test("Admin Lounge Search", False, f"Request failed: {str(e)}")
+    
     def test_additional_endpoints(self):
         """Test additional API endpoints"""
         try:
