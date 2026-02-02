@@ -777,6 +777,64 @@ export async function GET(request, context) {
       }
     }
 
+    // Get match/table details by ID
+    if (path.startsWith('lounge/match/')) {
+      const tableId = path.replace('lounge/match/', '');
+      
+      try {
+        const loungeApi = new LoungeApi();
+        const tableDetails = await loungeApi.getTableById(tableId);
+        
+        if (!tableDetails || !tableDetails.id) {
+          return NextResponse.json({ error: 'Match not found' }, { status: 404 });
+        }
+        
+        // Calculate total scores per team
+        const teamsWithTotals = (tableDetails.teams || []).map(team => {
+          const totalScore = team.scores.reduce((sum, s) => sum + (s.score || 0), 0);
+          const avgDelta = team.scores.length > 0 
+            ? Math.round(team.scores.reduce((sum, s) => sum + (s.delta || 0), 0) / team.scores.length)
+            : 0;
+          return {
+            ...team,
+            totalScore,
+            avgDelta,
+            playerCount: team.scores.length
+          };
+        });
+        
+        // Get all players sorted by score
+        const allPlayers = teamsWithTotals
+          .flatMap(team => team.scores.map(s => ({ ...s, teamRank: team.rank })))
+          .sort((a, b) => b.score - a.score);
+        
+        // Calculate match statistics
+        const totalPlayers = allPlayers.length;
+        const avgScore = totalPlayers > 0 
+          ? Math.round(allPlayers.reduce((sum, p) => sum + p.score, 0) / totalPlayers)
+          : 0;
+        const highestScore = allPlayers.length > 0 ? Math.max(...allPlayers.map(p => p.score)) : 0;
+        const lowestScore = allPlayers.length > 0 ? Math.min(...allPlayers.map(p => p.score)) : 0;
+        
+        return NextResponse.json({
+          ...tableDetails,
+          teams: teamsWithTotals,
+          allPlayers,
+          stats: {
+            totalPlayers,
+            avgScore,
+            highestScore,
+            lowestScore,
+            format: tableDetails.format || `${tableDetails.numTeams} teams`
+          }
+        });
+        
+      } catch (error) {
+        console.error('Match details error:', error);
+        return NextResponse.json({ error: 'Failed to fetch match details' }, { status: 500 });
+      }
+    }
+
     // Lounge player search by name (existing)
     if (path.startsWith('lounge/player/')) {
       const playerName = path.replace('lounge/player/', '');
