@@ -196,17 +196,17 @@ export default function MatchDetailsPage() {
               </CardContent>
             </Card>
 
-            {/* ========== SCORES TABLE - Black & White ========== */}
+            {/* ========== SCORES TABLE - Mobile Optimized ========== */}
             <Card className="bg-zinc-900 border-white/20">
-              <CardHeader className="border-b border-white/10 bg-white text-black">
-                <CardTitle className="flex items-center justify-between text-black">
+              <CardHeader className="border-b border-white/10 bg-white text-black py-3 sm:py-4 px-4 sm:px-6">
+                <CardTitle className="flex items-center justify-between text-black text-sm sm:text-base">
                   <div className="flex items-center gap-2">
-                    <Medal className="w-5 h-5" />
+                    <Medal className="w-4 h-4 sm:w-5 sm:h-5" />
                     Classement & Scores
                   </div>
                   {matchData.stats && (
-                    <div className="text-sm font-normal">
-                      Score moyen: <span className="font-bold">{matchData.stats.avgScore}</span>
+                    <div className="text-xs sm:text-sm font-normal">
+                      Moy: <span className="font-bold">{matchData.stats.avgScore}</span>
                     </div>
                   )}
                 </CardTitle>
@@ -215,9 +215,9 @@ export default function MatchDetailsPage() {
                 {/* Teams */}
                 <div className="divide-y divide-white/10">
                   {matchData.teams?.sort((a, b) => a.rank - b.rank).map((team, teamIndex) => (
-                    <div key={teamIndex} className="p-6">
-                      {/* Team Header */}
-                      <div className={`flex items-center justify-between p-4 rounded-xl mb-4 ${
+                    <div key={teamIndex} className="p-3 sm:p-6">
+                      {/* Team Header - Compact on mobile */}
+                      <div className={`flex items-center justify-between p-3 sm:p-4 rounded-lg sm:rounded-xl mb-3 sm:mb-4 ${
                         team.rank === 1 
                           ? 'bg-white text-black' 
                           : team.rank === 2 
@@ -226,8 +226,8 @@ export default function MatchDetailsPage() {
                               ? 'bg-gray-500 text-white'
                               : 'bg-zinc-800 text-white border border-white/20'
                       }`}>
-                        <div className="flex items-center gap-4">
-                          <div className={`w-14 h-14 rounded-full flex items-center justify-center font-black text-2xl ${
+                        <div className="flex items-center gap-2 sm:gap-4">
+                          <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full flex items-center justify-center font-black text-lg sm:text-2xl ${
                             team.rank === 1 
                               ? 'bg-black text-white' 
                               : team.rank === 2 
@@ -239,26 +239,26 @@ export default function MatchDetailsPage() {
                             {team.rank === 1 ? '🥇' : team.rank === 2 ? '🥈' : team.rank === 3 ? '🥉' : team.rank}
                           </div>
                           <div>
-                            <p className="font-bold text-xl">Équipe #{team.rank}</p>
-                            <p className="text-sm opacity-70">{team.playerCount || team.scores?.length} joueur{(team.playerCount || team.scores?.length) > 1 ? 's' : ''}</p>
+                            <p className="font-bold text-base sm:text-xl">Équipe #{team.rank}</p>
+                            <p className="text-xs sm:text-sm opacity-70">{team.playerCount || team.scores?.length} joueur{(team.playerCount || team.scores?.length) > 1 ? 's' : ''}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-4xl font-black">{team.totalScore}</p>
-                          <p className="text-sm opacity-70">points</p>
+                          <p className="text-2xl sm:text-4xl font-black">{team.totalScore}</p>
+                          <p className="text-[10px] sm:text-sm opacity-70">points</p>
                         </div>
                       </div>
 
-                      {/* Team Players Table */}
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
+                      {/* Team Players Table - Horizontal scroll on mobile */}
+                      <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+                        <table className="w-full min-w-[400px] sm:min-w-0">
                           <thead>
                             <tr className="border-b border-white/20 text-gray-400">
-                              <th className="text-left py-2 px-3 text-sm">#</th>
-                              <th className="text-left py-2 px-3 text-sm">Joueur</th>
-                              <th className="text-center py-2 px-3 text-sm">Score</th>
-                              <th className="text-center py-2 px-3 text-sm">Δ MMR</th>
-                              <th className="text-right py-2 px-3 text-sm">Nouveau MMR</th>
+                              <th className="text-left py-2 px-2 sm:px-3 text-xs sm:text-sm">#</th>
+                              <th className="text-left py-2 px-2 sm:px-3 text-xs sm:text-sm">Joueur</th>
+                              <th className="text-center py-2 px-2 sm:px-3 text-xs sm:text-sm">Score</th>
+                              <th className="text-center py-2 px-2 sm:px-3 text-xs sm:text-sm">Δ MMR</th>
+                              <th className="text-right py-2 px-2 sm:px-3 text-xs sm:text-sm">Nouveau</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -267,35 +267,35 @@ export default function MatchDetailsPage() {
                                 key={playerIndex}
                                 className="border-b border-white/5 hover:bg-white/5 transition-colors"
                               >
-                                <td className="py-3 px-3 text-gray-500">{playerIndex + 1}</td>
-                                <td className="py-3 px-3">
+                                <td className="py-2 sm:py-3 px-2 sm:px-3 text-gray-500 text-xs sm:text-sm">{playerIndex + 1}</td>
+                                <td className="py-2 sm:py-3 px-2 sm:px-3">
                                   <Link 
                                     href={`/player/${encodeURIComponent(player.playerName)}`}
-                                    className="flex items-center gap-2 hover:text-blue-400 transition-colors"
+                                    className="flex items-center gap-1.5 sm:gap-2 hover:text-blue-400 transition-colors"
                                   >
                                     {player.playerCountryCode && (
-                                      <span className="text-lg" title={player.playerCountryCode}>
+                                      <span className="text-sm sm:text-lg" title={player.playerCountryCode}>
                                         {getCountryFlag(player.playerCountryCode)}
                                       </span>
                                     )}
-                                    <span className="font-medium">{player.playerName}</span>
+                                    <span className="font-medium text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none">{player.playerName}</span>
                                   </Link>
                                 </td>
-                                <td className="py-3 px-3 text-center">
-                                  <span className="font-bold text-lg">{player.score}</span>
+                                <td className="py-2 sm:py-3 px-2 sm:px-3 text-center">
+                                  <span className="font-bold text-sm sm:text-lg">{player.score}</span>
                                 </td>
-                                <td className="py-3 px-3 text-center">
-                                  <span className={`font-bold flex items-center justify-center gap-1 ${
+                                <td className="py-2 sm:py-3 px-2 sm:px-3 text-center">
+                                  <span className={`font-bold flex items-center justify-center gap-0.5 sm:gap-1 text-xs sm:text-sm ${
                                     player.delta > 0 ? 'text-green-400' : player.delta < 0 ? 'text-red-400' : 'text-gray-400'
                                   }`}>
-                                    {player.delta > 0 ? <TrendingUp className="w-4 h-4" /> : player.delta < 0 ? <TrendingDown className="w-4 h-4" /> : null}
+                                    {player.delta > 0 ? <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" /> : player.delta < 0 ? <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" /> : null}
                                     {player.delta > 0 ? '+' : ''}{player.delta}
                                   </span>
                                 </td>
-                                <td className="py-3 px-3 text-right">
+                                <td className="py-2 sm:py-3 px-2 sm:px-3 text-right">
                                   <div>
-                                    <span className="font-semibold">{player.newMmr?.toLocaleString('fr-FR')}</span>
-                                    <span className="text-xs text-gray-500 ml-2">
+                                    <span className="font-semibold text-xs sm:text-sm">{player.newMmr?.toLocaleString('fr-FR')}</span>
+                                    <span className="text-[10px] sm:text-xs text-gray-500 ml-1 sm:ml-2 hidden sm:inline">
                                       ({player.prevMmr?.toLocaleString('fr-FR')})
                                     </span>
                                   </div>
