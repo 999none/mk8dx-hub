@@ -71,6 +71,7 @@ export default function PlayerProfilePage() {
   const [error, setError] = useState(null);
   const [selectedSeason, setSelectedSeason] = useState('');
   const [showAllMatches, setShowAllMatches] = useState(false);
+  const [selectedMatchId, setSelectedMatchId] = useState(null);
 
   useEffect(() => {
     const fetchPlayer = async () => {
