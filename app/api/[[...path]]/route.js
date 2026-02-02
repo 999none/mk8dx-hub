@@ -891,7 +891,7 @@ export async function POST(request, context) {
       }
     }
 
-    // Create verification for NextAuth session (first login)
+    // Create verification for NextAuth session (first login) - AUTO-VERIFY if possible
     if (path === 'verification/create') {
       try {
         const body = await request.json();
@@ -911,58 +911,153 @@ export async function POST(request, context) {
         // Check if already verified
         const existingUser = await db.collection('users').findOne({ discordId, verified: true });
         if (existingUser) {
-          return NextResponse.json({ success: true, status: 'approved', verified: true });
+          return NextResponse.json({ success: true, status: 'approved', verified: true, user: existingUser });
         }
 
         // Check if pending verification already exists
         const existingPending = await db.collection('pending_verifications').findOne({ discordId });
-        if (existingPending) {
+        if (existingPending && existingPending.status === 'approved') {
           return NextResponse.json({ 
             success: true, 
-            status: existingPending.status, 
-            verified: false,
-            matchCount: existingPending.matchCount || 0
+            status: 'approved', 
+            verified: true
           });
         }
 
-        // Check Lounge activity using serverNickname
+        // ============================================
+        // AUTO-VERIFICATION: Recherche directe sur le Lounge
+        // ============================================
         const loungeApi = new LoungeApi();
+        const loungeName = serverNickname || username;
+        
+        let loungePlayer = null;
         let matchCount = 0;
         let lastMatchDate = null;
 
+        // 1. Chercher le joueur sur le Lounge avec le nickname Discord
         try {
-          const matches = await loungeApi.getPlayerMatchHistory(serverNickname || username, { limit: 100 });
-          if (Array.isArray(matches)) {
-            const now = Date.now();
-            const cutoff = now - (30 * 24 * 60 * 60 * 1000);
-            const recent = matches
-              .map(m => ({ ...m, date: new Date(m.date || m.createdAt || m.time) }))
-              .filter(m => m.date && m.date.getTime() >= cutoff)
-              .sort((a, b) => b.date - a.date);
-
-            matchCount = recent.length;
-            lastMatchDate = recent.length > 0 ? recent[0].date.toISOString() : null;
-          }
+          loungePlayer = await loungeApi.getPlayerDetailsByName(loungeName);
+          console.log(`[Verification] Found Lounge player: ${loungePlayer?.name || 'not found'}`);
         } catch (err) {
-          console.warn('Could not fetch lounge matches during create:', err);
+          console.warn(`[Verification] Player "${loungeName}" not found on Lounge:`, err.message);
         }
 
-        const status = matchCount >= 2 ? 'pending' : 'waiting_activity';
+        // 2. Si trouvé, vérifier l'activité (matchs récents)
+        if (loungePlayer && loungePlayer.name) {
+          try {
+            const matches = await loungeApi.getPlayerMatchHistory(loungePlayer.name, { limit: 100 });
+            if (Array.isArray(matches)) {
+              const now = Date.now();
+              const cutoff = now - (30 * 24 * 60 * 60 * 1000); // 30 jours
+              const recent = matches
+                .map(m => ({ ...m, date: new Date(m.date || m.createdAt || m.time) }))
+                .filter(m => m.date && m.date.getTime() >= cutoff)
+                .sort((a, b) => b.date - a.date);
 
-        // Create pending verification
-        await db.collection('pending_verifications').insertOne({
-          discordId,
-          username,
-          serverNickname: serverNickname || username,
-          avatar,
-          createdAt: new Date(),
-          status,
+              matchCount = recent.length;
+              lastMatchDate = recent.length > 0 ? recent[0].date.toISOString() : null;
+            }
+          } catch (err) {
+            console.warn('[Verification] Could not fetch match history:', err.message);
+          }
+
+          // 3. AUTO-APPROVE si le joueur a assez d'activité
+          if (matchCount >= 2) {
+            // Créer l'utilisateur vérifié directement !
+            await db.collection('users').insertOne({
+              discordId,
+              username,
+              serverNickname: loungeName,
+              loungeName: loungePlayer.name,
+              loungeData: loungePlayer,
+              mmr: loungePlayer.mmr || 0,
+              maxMmr: loungePlayer.maxMmr || 0,
+              wins: loungePlayer.wins || 0,
+              losses: loungePlayer.losses || 0,
+              avatar,
+              verified: true,
+              verifiedAt: new Date(),
+              autoVerified: true,
+              createdAt: new Date()
+            });
+
+            // Créer/mettre à jour l'entrée pending pour historique
+            await db.collection('pending_verifications').updateOne(
+              { discordId },
+              { 
+                $set: { 
+                  discordId,
+                  username,
+                  serverNickname: loungeName,
+                  loungeName: loungePlayer.name,
+                  loungeData: loungePlayer,
+                  avatar,
+                  status: 'approved',
+                  autoApproved: true,
+                  matchCount,
+                  lastMatchDate,
+                  approvedAt: new Date(),
+                  updatedAt: new Date()
+                },
+                $setOnInsert: { createdAt: new Date() }
+              },
+              { upsert: true }
+            );
+
+            console.log(`[Verification] AUTO-APPROVED: ${loungeName} (${matchCount} matchs)`);
+
+            const res = NextResponse.json({ 
+              success: true, 
+              status: 'approved', 
+              verified: true,
+              autoVerified: true,
+              loungeName: loungePlayer.name,
+              mmr: loungePlayer.mmr,
+              matchCount,
+              message: `Bienvenue ${loungePlayer.name} ! Votre compte a été vérifié automatiquement.`
+            });
+            res.cookies.set('verification_status', JSON.stringify({ discordId, status: 'approved', verified: true }), { httpOnly: false, path: '/', maxAge: 60 * 60 * 24 * 30 });
+            return res;
+          }
+        }
+
+        // 4. Si pas trouvé ou pas assez d'activité → créer pending verification
+        const status = loungePlayer ? 'waiting_activity' : 'waiting_lounge_name';
+        
+        await db.collection('pending_verifications').updateOne(
+          { discordId },
+          { 
+            $set: { 
+              discordId,
+              username,
+              serverNickname: loungeName,
+              loungeName: loungePlayer?.name || null,
+              loungeData: loungePlayer || null,
+              avatar,
+              status,
+              matchCount,
+              lastMatchDate,
+              updatedAt: new Date()
+            },
+            $setOnInsert: { createdAt: new Date() }
+          },
+          { upsert: true }
+        );
+
+        const message = loungePlayer 
+          ? `Joueur "${loungePlayer.name}" trouvé mais activité insuffisante (${matchCount}/2 matchs en 30 jours).`
+          : `Joueur "${loungeName}" non trouvé sur le Lounge. Vérifiez que votre pseudo Discord correspond à votre nom Lounge.`;
+
+        const res = NextResponse.json({ 
+          success: true, 
+          status, 
+          verified: false,
+          loungeName: loungePlayer?.name || null,
+          loungeFound: !!loungePlayer,
           matchCount,
-          lastMatchDate
+          lastMatchDate,
+          message
         });
-
-        // Set cookie for client
-        const res = NextResponse.json({ success: true, status, matchCount, lastMatchDate, verified: false });
         res.cookies.set('verification_status', JSON.stringify({ discordId, status, matchCount, lastMatchDate }), { httpOnly: false, path: '/', maxAge: 60 * 60 * 24 * 30 });
         return res;
 
