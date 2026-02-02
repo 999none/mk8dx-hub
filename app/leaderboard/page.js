@@ -185,8 +185,8 @@ export default function LeaderboardPage() {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="bg-neutral-900 border border-gray-800 rounded-lg p-3 sm:p-4 mb-4">
+        {/* Filters - Style MKCentral */}
+        <div className="bg-[#1a1a2e] border border-[#252540] rounded-lg p-3 sm:p-4 mb-4">
           <div className="flex flex-col gap-3">
             {/* Search Row */}
             <div className="flex gap-2">
@@ -196,7 +196,7 @@ export default function LeaderboardPage() {
                   placeholder="Rechercher..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  className="pl-9 bg-neutral-800 border-gray-700 text-gray-200 placeholder:text-gray-600 text-sm h-9"
+                  className="pl-9 bg-[#12122a] border-[#252540] text-gray-200 placeholder:text-gray-600 text-sm h-9"
                 />
               </div>
               {hasActiveFilters && (
@@ -204,7 +204,7 @@ export default function LeaderboardPage() {
                   variant="ghost" 
                   size="sm"
                   onClick={clearFilters}
-                  className="text-gray-500 hover:text-gray-300 hover:bg-neutral-800 h-9 px-2"
+                  className="text-gray-500 hover:text-gray-300 hover:bg-[#252548] h-9 px-2"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -214,11 +214,11 @@ export default function LeaderboardPage() {
             {/* Filters Row - Mobile optimized */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <Select value={country} onValueChange={(v) => handleFilterChange(setCountry, v)}>
-                <SelectTrigger className="bg-neutral-800 border-gray-700 text-gray-300 text-xs h-9">
+                <SelectTrigger className="bg-[#12122a] border-[#252540] text-gray-300 text-xs h-9">
                   <Globe className="w-3 h-3 mr-1.5 text-gray-500" />
                   <SelectValue placeholder="Pays" />
                 </SelectTrigger>
-                <SelectContent className="bg-neutral-900 border-gray-700">
+                <SelectContent className="bg-[#1a1a2e] border-[#252540]">
                   <SelectItem value="all">Tous pays</SelectItem>
                   {availableCountries.map(code => (
                     <SelectItem key={code} value={code}>
@@ -229,11 +229,11 @@ export default function LeaderboardPage() {
               </Select>
 
               <Select value={mmrRange} onValueChange={(v) => handleFilterChange(setMmrRange, v)}>
-                <SelectTrigger className="bg-neutral-800 border-gray-700 text-gray-300 text-xs h-9">
+                <SelectTrigger className="bg-[#12122a] border-[#252540] text-gray-300 text-xs h-9">
                   <Trophy className="w-3 h-3 mr-1.5 text-gray-500" />
                   <SelectValue placeholder="MMR" />
                 </SelectTrigger>
-                <SelectContent className="bg-neutral-900 border-gray-700">
+                <SelectContent className="bg-[#1a1a2e] border-[#252540]">
                   {MMR_RANGES.map(range => (
                     <SelectItem key={range.value} value={range.value}>
                       {range.label}
@@ -243,11 +243,11 @@ export default function LeaderboardPage() {
               </Select>
 
               <Select value={eventsRange} onValueChange={(v) => handleFilterChange(setEventsRange, v)}>
-                <SelectTrigger className="bg-neutral-800 border-gray-700 text-gray-300 text-xs h-9">
+                <SelectTrigger className="bg-[#12122a] border-[#252540] text-gray-300 text-xs h-9">
                   <Users className="w-3 h-3 mr-1.5 text-gray-500" />
                   <SelectValue placeholder="Events" />
                 </SelectTrigger>
-                <SelectContent className="bg-neutral-900 border-gray-700">
+                <SelectContent className="bg-[#1a1a2e] border-[#252540]">
                   {EVENTS_RANGES.map(range => (
                     <SelectItem key={range.value} value={range.value}>
                       {range.label} events
@@ -257,11 +257,11 @@ export default function LeaderboardPage() {
               </Select>
 
               <Select value={sortBy} onValueChange={(v) => handleFilterChange(setSortBy, v)}>
-                <SelectTrigger className="bg-neutral-800 border-gray-700 text-gray-300 text-xs h-9">
+                <SelectTrigger className="bg-[#12122a] border-[#252540] text-gray-300 text-xs h-9">
                   <ArrowUpDown className="w-3 h-3 mr-1.5 text-gray-500" />
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-neutral-900 border-gray-700">
+                <SelectContent className="bg-[#1a1a2e] border-[#252540]">
                   {SORT_OPTIONS.map(opt => (
                     <SelectItem key={opt.value} value={opt.value}>
                       Tri: {opt.label}
