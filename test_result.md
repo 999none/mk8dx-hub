@@ -107,6 +107,12 @@ user_problem_statement: |
   - Améliorer la page Leaderboard avec filtres (pays, MMR range, events), recherche, pagination et tri
   - Améliorer le Dashboard avec historique matchs, graphique MMR, stats avancées
   - Améliorer la page Tournois avec filtre par jeu (MK8DX, MKWII, etc.)
+  
+  Phase 4: Intégration MKCentral Registry
+  - Connecter l'utilisateur à son compte MKCentral Registry via registryId (mkcId)
+  - Récupérer automatiquement les équipes et l'historique des tournois
+  - Afficher dans le Dashboard : section "Teams" + "Tournament History"
+  - Afficher dans le profil joueur du Leaderboard : section "Teams" + "Tournament History"
 
 backend:
   - task: "Discord OAuth Configuration (NextAuth)"
