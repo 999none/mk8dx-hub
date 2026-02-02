@@ -256,6 +256,30 @@ frontend:
       - working: true
         agent: "main"
         comment: "RequireAuth vérifie le statut de vérification avant accès"
+  
+  - task: "Dashboard Teams & Tournament History Display"
+    implemented: true
+    working: true
+    file: "app/dashboard/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Ajout de deux nouvelles sections dans le Dashboard : 'Teams' affiche les équipes actuelles du joueur avec badges (jeu, mode). 'Tournament History' affiche les tournois participés avec date, équipe, placement. Récupération automatique via registryId (mkcId) depuis l'API Lounge. Liens vers MKCentral pour chaque équipe/tournoi."
+  
+  - task: "Player Profile Teams & Tournament History Display"
+    implemented: true
+    working: true
+    file: "app/player/[name]/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Ajout des mêmes sections Teams et Tournament History dans le profil joueur accessible depuis le Leaderboard. Affichage en grille 2 colonnes. Récupération automatique des données Registry via mkcId. Style cohérent avec le Dashboard."
 
 metadata:
   created_by: "main_agent"
