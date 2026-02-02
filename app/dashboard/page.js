@@ -394,6 +394,120 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
+              {/* Teams Section */}
+              {registryData?.teams && registryData.teams.length > 0 && (
+                <Card className="bg-white/[0.02] border-white/[0.04] lg:col-span-2">
+                  <CardHeader className="border-b border-white/[0.04] pb-4">
+                    <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      Teams ({registryData.teams.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4">
+                    {registryData.teams.map((team, index) => (
+                      <div key={index} className="p-3 mb-2 last:mb-0 bg-white/[0.02] border border-white/[0.04] rounded-lg hover:border-white/[0.08] transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-white">{team.name}</h4>
+                              {team.isCurrent && (
+                                <Badge className="bg-green-500/10 text-green-500 border border-green-500/20 text-xs">
+                                  Actuelle
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex gap-1.5">
+                              <Badge variant="outline" className="text-xs border-white/[0.08] text-gray-400">
+                                {team.gameHuman || team.game}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs border-white/[0.08] text-gray-400">
+                                {team.mode}
+                              </Badge>
+                            </div>
+                          </div>
+                          {team.url && (
+                            <a 
+                              href={`https://mkcentral.com${team.url}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-gray-500 hover:text-white transition-colors"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Tournament History Section */}
+              {registryData?.tournamentHistory && registryData.tournamentHistory.length > 0 && (
+                <Card className="bg-white/[0.02] border-white/[0.04] lg:col-span-2">
+                  <CardHeader className="border-b border-white/[0.04] pb-4">
+                    <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                      <Trophy className="w-4 h-4" />
+                      Tournament History ({registryData.tournamentHistory.length})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="text-gray-500 text-xs uppercase tracking-wider border-b border-white/[0.04]">
+                            <th className="text-left py-3 px-4 font-medium">Tournament</th>
+                            <th className="text-left py-3 px-4 font-medium">Date</th>
+                            <th className="text-left py-3 px-4 font-medium">Team</th>
+                            <th className="text-center py-3 px-4 font-medium">Place</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/[0.03]">
+                          {registryData.tournamentHistory.slice(0, 10).map((tournament, index) => (
+                            <tr key={index} className="hover:bg-white/[0.02] transition-colors">
+                              <td className="py-3 px-4">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-white text-sm font-medium">{tournament.name}</span>
+                                  {tournament.url && (
+                                    <a 
+                                      href={`https://mkcentral.com${tournament.url}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-gray-500 hover:text-white transition-colors"
+                                    >
+                                      <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-gray-400 text-sm">
+                                {tournament.dateHuman || `${tournament.startDate || '?'} - ${tournament.endDate || '?'}`}
+                              </td>
+                              <td className="py-3 px-4 text-gray-400 text-sm">
+                                {tournament.team || '-'}
+                              </td>
+                              <td className="py-3 px-4 text-center">
+                                <Badge 
+                                  className={`${
+                                    tournament.placement === 1 
+                                      ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' 
+                                      : tournament.placement <= 3 
+                                      ? 'bg-gray-500/10 text-gray-400 border border-gray-500/20' 
+                                      : 'bg-white/[0.02] text-gray-500 border border-white/[0.04]'
+                                  }`}
+                                >
+                                  {tournament.placementText || tournament.placement || '?'}
+                                </Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Quick Links */}
               <Card className="bg-white/[0.02] border-white/[0.04] lg:col-span-4">
                 <CardContent className="p-4">
