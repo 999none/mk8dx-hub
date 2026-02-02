@@ -382,15 +382,19 @@ export async function GET(request, context) {
     // Get current user verification status
     if (path === 'verification/status') {
       const verification = getVerificationFromCookie(request);
+      const { searchParams } = new URL(request.url);
       
-      if (!verification || !verification.discordId) {
+      // Support both cookie and query params (for NextAuth sessions)
+      const discordId = verification?.discordId || searchParams.get('discordId');
+      
+      if (!discordId) {
         return NextResponse.json({ verified: false, status: 'not_logged_in' });
       }
       
       const db = await getDatabase();
       
       // Check if user is already verified
-      const user = await db.collection('users').findOne({ discordId: verification.discordId, verified: true });
+      const user = await db.collection('users').findOne({ discordId: discordId, verified: true });
       if (user) {
         return NextResponse.json({ 
           verified: true, 
@@ -406,7 +410,7 @@ export async function GET(request, context) {
       }
       
       // Check pending verification
-      const pending = await db.collection('pending_verifications').findOne({ discordId: verification.discordId });
+      const pending = await db.collection('pending_verifications').findOne({ discordId: discordId });
       if (!pending) {
         return NextResponse.json({ verified: false, status: 'not_found' });
       }
