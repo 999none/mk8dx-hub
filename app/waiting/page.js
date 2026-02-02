@@ -234,6 +234,53 @@ export default function WaitingPage() {
             </Card>
           )}
 
+          {/* Lounge Profile Info (if found) */}
+          {status.loungeData && (
+            <Card className="bg-white/5 border-white/10 mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-yellow-500" />
+                  Profil Lounge Trouvé
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-3 bg-white/5 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-400">{status.loungeData.mmr || 0}</div>
+                    <div className="text-xs text-gray-400">MMR</div>
+                  </div>
+                  <div className="text-center p-3 bg-white/5 rounded-lg">
+                    <div className="text-2xl font-bold text-green-400">{status.loungeData.wins || 0}</div>
+                    <div className="text-xs text-gray-400">Victoires</div>
+                  </div>
+                  <div className="text-center p-3 bg-white/5 rounded-lg">
+                    <div className="text-2xl font-bold text-red-400">{status.loungeData.losses || 0}</div>
+                    <div className="text-xs text-gray-400">Défaites</div>
+                  </div>
+                  <div className="text-center p-3 bg-white/5 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-400">
+                      {status.loungeData.wins && status.loungeData.losses 
+                        ? Math.round((status.loungeData.wins / (status.loungeData.wins + status.loungeData.losses)) * 100)
+                        : 0}%
+                    </div>
+                    <div className="text-xs text-gray-400">Win Rate</div>
+                  </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <a 
+                    href={`https://www.mk8dx-lounge.com/PlayerDetails/${encodeURIComponent(status.loungeName || status.serverNickname)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-400 hover:underline inline-flex items-center gap-1"
+                  >
+                    Voir sur MK8DX Lounge
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* User Info */}
           <Card className="bg-white/5 border-white/10 mb-6">
             <CardHeader>
@@ -242,13 +289,19 @@ export default function WaitingPage() {
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Pseudo Discord</span>
+                  <span className="text-gray-400">Pseudo Discord (Lounge)</span>
                   <span className="font-medium">{status.serverNickname}</span>
                 </div>
-                {status.loungeName && (
+                {status.loungeName && status.loungeName !== status.serverNickname && (
                   <div className="flex justify-between">
                     <span className="text-gray-400">Nom Lounge</span>
-                    <span className="font-medium">{status.loungeName}</span>
+                    <span className="font-medium text-green-400">{status.loungeName}</span>
+                  </div>
+                )}
+                {!status.loungeName && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Nom Lounge</span>
+                    <span className="font-medium text-yellow-400">Non trouvé</span>
                   </div>
                 )}
                 <div className="flex justify-between">
@@ -262,7 +315,7 @@ export default function WaitingPage() {
                     {status.status === 'approved' ? 'Vérifié' :
                      status.status === 'pending' ? 'En attente admin' :
                      status.status === 'waiting_activity' ? 'Activité requise' :
-                     status.status === 'waiting_lounge_name' ? 'Attente association' :
+                     status.status === 'waiting_lounge_name' ? 'Pseudo non trouvé' :
                      status.status}
                   </Badge>
                 </div>
