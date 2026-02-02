@@ -138,8 +138,81 @@ export default function MatchDetailModal({ matchId, onClose }) {
                 </div>
               </div>
 
-              {/* Players Table */}
-              <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl overflow-hidden">
+              {/* Players Table - Team Format */}
+              {formatInfo?.isTeamFormat ? (
+                <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl overflow-hidden">
+                  <div className="px-4 py-2 border-b border-white/[0.04] flex items-center justify-between">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Classement par équipes</span>
+                    <span className="text-xs text-gray-600">{formatInfo.numTeams} équipes • {formatInfo.format}</span>
+                  </div>
+                  
+                  <div className="divide-y divide-white/[0.04]">
+                    {matchDetails.teams?.sort((a, b) => a.rank - b.rank).map((team, teamIndex) => {
+                      const teamColor = TEAM_COLORS[Math.min(teamIndex, TEAM_COLORS.length - 1)];
+                      const teamTotal = team.scores?.reduce((sum, p) => sum + (p.score || 0), 0) || 0;
+                      const teamAvgDelta = team.scores?.length > 0 
+                        ? Math.round(team.scores.reduce((sum, p) => sum + (p.delta || 0), 0) / team.scores.length)
+                        : 0;
+                      
+                      return (
+                        <div key={teamIndex} className={`${teamColor.light}`}>
+                          {/* Team Header */}
+                          <div className={`flex items-center justify-between px-4 py-3 border-b border-white/[0.04]`}>
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 ${teamColor.bg} ${teamColor.text} rounded-lg flex items-center justify-center font-bold text-sm`}>
+                                {team.rank}
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-white">Équipe {team.rank}</p>
+                                <p className="text-[10px] text-gray-500">{team.scores?.length || 0} joueur{(team.scores?.length || 0) > 1 ? 's' : ''}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-white">{teamTotal} pts</p>
+                              <p className={`text-xs font-medium ${teamAvgDelta > 0 ? 'text-green-500' : teamAvgDelta < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                                Δ moy: {teamAvgDelta > 0 ? '+' : ''}{teamAvgDelta}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {/* Team Players */}
+                          <div className="divide-y divide-white/[0.02]">
+                            {team.scores?.sort((a, b) => b.score - a.score).map((player, playerIndex) => {
+                              const isWin = player.delta > 0;
+                              const isLoss = player.delta < 0;
+                              
+                              return (
+                                <div key={playerIndex} className="grid grid-cols-12 gap-2 px-4 py-2 items-center hover:bg-white/[0.02]">
+                                  <div className="col-span-1">
+                                    <span className="text-[10px] text-gray-600">{playerIndex + 1}</span>
+                                  </div>
+                                  <div className="col-span-5 flex items-center gap-2 min-w-0">
+                                    {player.playerCountryCode && <span className="text-sm flex-shrink-0">{getCountryFlag(player.playerCountryCode)}</span>}
+                                    <span className="text-sm text-gray-300 truncate">{player.playerName}</span>
+                                  </div>
+                                  <div className="col-span-2 text-center">
+                                    <span className="text-sm font-semibold text-white">{player.score}</span>
+                                  </div>
+                                  <div className="col-span-2 text-center">
+                                    <span className={`text-sm font-bold ${isWin ? 'text-green-500' : isLoss ? 'text-red-500' : 'text-gray-500'}`}>
+                                      {player.delta > 0 ? '+' : ''}{player.delta}
+                                    </span>
+                                  </div>
+                                  <div className="col-span-2 text-right">
+                                    <span className="text-sm text-gray-400">{player.newMmr ? player.newMmr.toLocaleString('fr-FR') : '-'}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                /* FFA Format - Classic Table */
+                <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl overflow-hidden">
                 <div className="px-4 py-2 border-b border-white/[0.04]">
                   <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Classement</span>
                 </div>
@@ -213,6 +286,7 @@ export default function MatchDetailModal({ matchId, onClose }) {
                   )}
                 </div>
               </div>
+              )}
 
               {/* External Link */}
               <a 
