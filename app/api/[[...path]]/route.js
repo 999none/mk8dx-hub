@@ -110,79 +110,185 @@ export async function GET(request, context) {
       return NextResponse.json(mockTournaments);
     }
 
-    // Leaderboard
+    // Leaderboard with pagination and filters
     if (path === 'leaderboard') {
       try {
+        const { searchParams } = new URL(request.url);
+        const page = parseInt(searchParams.get('page') || '1', 10);
+        const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100);
+        const country = searchParams.get('country') || null;
+        const minMmr = searchParams.get('minMmr') ? parseInt(searchParams.get('minMmr'), 10) : null;
+        const maxMmr = searchParams.get('maxMmr') ? parseInt(searchParams.get('maxMmr'), 10) : null;
+        const minEvents = searchParams.get('minEvents') ? parseInt(searchParams.get('minEvents'), 10) : null;
+        const maxEvents = searchParams.get('maxEvents') ? parseInt(searchParams.get('maxEvents'), 10) : null;
+        const sortBy = searchParams.get('sortBy') || 'mmr'; // mmr, name, peakMmr, eventsPlayed
+        const search = searchParams.get('search') || null;
+        
         const db = await getDatabase();
         
-        // Check if we have cached leaderboard data
-        const cache = await db.collection('leaderboard_cache').findOne({ type: 'global' });
+        // Create a cache key based on filters
+        const cacheKey = `leaderboard_${country || 'all'}_${minMmr || 0}_${maxMmr || 99999}_${minEvents || 0}_${maxEvents || 99999}_${sortBy}`;
+        
+        // Check cache (1 hour)
+        const cache = await db.collection('leaderboard_cache').findOne({ key: cacheKey });
+        let allPlayers = [];
+        let lastUpdate = new Date();
+        let cached = false;
+        let season = 15;
         
         if (cache && Date.now() - new Date(cache.lastUpdate).getTime() < 3600000) {
-          // Cache is less than 1 hour old
-          return NextResponse.json({
-            players: cache.data,
-            lastUpdate: cache.lastUpdate,
-            cached: true
-          });
+          allPlayers = cache.data;
+          lastUpdate = cache.lastUpdate;
+          cached = true;
+          season = cache.season || 15;
+        } else {
+          // Fetch from Lounge API
+          const loungeApi = new LoungeApi();
+          const response = await loungeApi.getPlayers();
+          
+          if (response && response.players) {
+            season = response.season || 15;
+            allPlayers = response.players.map((p, index) => ({
+              id: p.id,
+              mkcId: p.mkcId,
+              name: p.name,
+              mmr: p.mmr || 0,
+              eventsPlayed: p.eventsPlayed || 0,
+              discordId: p.discordId,
+              countryCode: p.countryCode || null
+            }));
+            
+            // Cache full results
+            await db.collection('leaderboard_cache').updateOne(
+              { key: cacheKey },
+              { 
+                $set: { 
+                  key: cacheKey,
+                  data: allPlayers, 
+                  lastUpdate: new Date(),
+                  season
+                } 
+              },
+              { upsert: true }
+            );
+            lastUpdate = new Date();
+          }
         }
-
-        // Fetch from Lounge API
-        const loungeApi = new LoungeApi();
-        const players = await loungeApi.getPlayers();
         
-        // Sort by MMR
-        const sortedPlayers = players
-          .sort((a, b) => (b.mmr || 0) - (a.mmr || 0))
-          .slice(0, 100)
-          .map((p, index) => ({
-            id: p.mkcId || p.id,
-            name: p.name,
-            mmr: p.mmr || 0,
-            wins: p.wins || 0,
-            losses: p.losses || 0,
-            totalRaces: (p.wins || 0) + (p.losses || 0),
-            rank: index + 1
-          }));
-
-        // Cache the results
-        await db.collection('leaderboard_cache').updateOne(
-          { type: 'global' },
-          { 
-            $set: { 
-              data: sortedPlayers, 
-              lastUpdate: new Date(),
-              type: 'global'
-            } 
-          },
-          { upsert: true }
-        );
-
+        // Apply filters
+        let filteredPlayers = [...allPlayers];
+        
+        if (country) {
+          filteredPlayers = filteredPlayers.filter(p => p.countryCode === country);
+        }
+        if (minMmr !== null) {
+          filteredPlayers = filteredPlayers.filter(p => p.mmr >= minMmr);
+        }
+        if (maxMmr !== null) {
+          filteredPlayers = filteredPlayers.filter(p => p.mmr <= maxMmr);
+        }
+        if (minEvents !== null) {
+          filteredPlayers = filteredPlayers.filter(p => p.eventsPlayed >= minEvents);
+        }
+        if (maxEvents !== null) {
+          filteredPlayers = filteredPlayers.filter(p => p.eventsPlayed <= maxEvents);
+        }
+        if (search) {
+          const searchLower = search.toLowerCase();
+          filteredPlayers = filteredPlayers.filter(p => p.name.toLowerCase().includes(searchLower));
+        }
+        
+        // Sort
+        switch (sortBy) {
+          case 'name':
+            filteredPlayers.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+          case 'eventsPlayed':
+            filteredPlayers.sort((a, b) => b.eventsPlayed - a.eventsPlayed);
+            break;
+          case 'mmr':
+          default:
+            filteredPlayers.sort((a, b) => b.mmr - a.mmr);
+        }
+        
+        // Add rank after sorting
+        filteredPlayers = filteredPlayers.map((p, index) => ({ ...p, rank: index + 1 }));
+        
+        // Pagination
+        const total = filteredPlayers.length;
+        const totalPages = Math.ceil(total / limit);
+        const startIdx = (page - 1) * limit;
+        const paginatedPlayers = filteredPlayers.slice(startIdx, startIdx + limit);
+        
         return NextResponse.json({
-          players: sortedPlayers,
-          lastUpdate: new Date().toISOString(),
-          cached: false
+          players: paginatedPlayers,
+          season,
+          total,
+          page,
+          limit,
+          totalPages,
+          lastUpdate: lastUpdate.toISOString ? lastUpdate.toISOString() : lastUpdate,
+          cached,
+          filters: { country, minMmr, maxMmr, minEvents, maxEvents, sortBy, search }
         });
+        
       } catch (error) {
         console.error('Leaderboard API error:', error);
+        return NextResponse.json({ 
+          error: 'Failed to fetch leaderboard',
+          message: error.message 
+        }, { status: 500 });
+      }
+    }
+    
+    // Get player full details from Lounge
+    if (path.startsWith('lounge/player-details/')) {
+      const playerName = decodeURIComponent(path.replace('lounge/player-details/', ''));
+      
+      try {
+        const loungeApi = new LoungeApi();
+        const playerDetails = await loungeApi.getPlayerDetailsByName(playerName);
         
-        // Fallback to mock data
-        const mockLeaderboard = Array.from({ length: 20 }, (_, i) => ({
-          id: i + 1,
-          name: `Player${i + 1}`,
-          mmr: 17000 - (i * 500),
-          wins: 500 - (i * 10),
-          losses: 200 + (i * 5),
-          totalRaces: 700 - (i * 5),
-          rank: i + 1
-        }));
-
+        if (!playerDetails || !playerDetails.name) {
+          return NextResponse.json({ error: 'Player not found' }, { status: 404 });
+        }
+        
+        // Extract match history from mmrChanges
+        const matchHistory = (playerDetails.mmrChanges || [])
+          .filter(change => change.reason === 'Table')
+          .slice(0, 50)
+          .map(change => ({
+            id: change.changeId,
+            time: change.time,
+            mmrDelta: change.mmrDelta,
+            newMmr: change.newMmr,
+            tier: change.tier,
+            score: change.score,
+            numTeams: change.numTeams,
+            numPlayers: change.numPlayers
+          }));
+        
+        // Calculate stats
+        const recentMatches = matchHistory.slice(0, 30);
+        const recentWins = recentMatches.filter(m => m.mmrDelta > 0).length;
+        const recentLosses = recentMatches.filter(m => m.mmrDelta < 0).length;
+        
         return NextResponse.json({
-          players: mockLeaderboard,
-          lastUpdate: new Date().toISOString(),
-          cached: false,
-          error: 'Using mock data'
+          ...playerDetails,
+          matchHistory,
+          recentStats: {
+            last30: {
+              wins: recentWins,
+              losses: recentLosses,
+              total: recentMatches.length
+            }
+          },
+          loungeProfileUrl: `https://www.mk8dx-lounge.com/PlayerDetails/${encodeURIComponent(playerName)}`
         });
+        
+      } catch (error) {
+        console.error('Player details error:', error);
+        return NextResponse.json({ error: 'Failed to fetch player details' }, { status: 500 });
       }
     }
 
