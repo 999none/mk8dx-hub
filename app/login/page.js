@@ -14,57 +14,107 @@ export default function LoginPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [checking, setChecking] = useState(false);
-  const [verificationData, setVerificationData] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Si connecté via NextAuth, vérifier le statut et rediriger
+    if (status === 'loading') return;
+    
+    // Si connecté via NextAuth
     if (status === 'authenticated' && session) {
       setChecking(true);
       
       // Vérifier si l'utilisateur est membre du serveur Lounge
       if (session.user.isInServer === false) {
-        // Pas membre du serveur - rester sur la page avec message d'erreur
         setChecking(false);
         return;
       }
 
-      // Vérifier le statut de vérification
-      fetch('/api/verification/status')
-        .then(res => res.json())
-        .then(data => {
-          setVerificationData(data);
+      // Créer ou vérifier l'inscription
+      const processVerification = async () => {
+        try {
+          // D'abord vérifier le statut actuel
+          const statusRes = await fetch(`/api/verification/status?discordId=${session.user.discordId}`);
+          const statusData = await statusRes.json();
           
-          if (data.verified) {
-            // Utilisateur vérifié → Dashboard
+          if (statusData.verified) {
+            // Déjà vérifié → Dashboard
             router.push('/dashboard');
-          } else if (data.status && data.status !== 'not_logged_in' && data.status !== 'not_found') {
-            // Utilisateur en attente de vérification → Page d'attente
-            router.push('/waiting');
-          } else {
-            // Première connexion - créer une entrée de vérification
-            setChecking(false);
+            return;
           }
-        })
-        .catch(err => {
-          console.error('Error checking verification:', err);
+          
+          if (statusData.status && statusData.status !== 'not_logged_in' && statusData.status !== 'not_found') {
+            // En attente de vérification → Page d'attente
+            router.push('/waiting');
+            return;
+          }
+          
+          // Première connexion - créer l'inscription avec le nom Lounge (serverNickname)
+          const createRes = await fetch('/api/verification/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              discordId: session.user.discordId,
+              username: session.user.username,
+              serverNickname: session.user.serverNickname, // Nom sur le serveur Lounge
+              avatar: session.user.avatar,
+              isInServer: session.user.isInServer
+            })
+          });
+          
+          const createData = await createRes.json();
+          
+          if (createData.verified) {
+            router.push('/dashboard');
+          } else {
+            router.push('/waiting');
+          }
+          
+        } catch (err) {
+          console.error('Error processing verification:', err);
+          setError('Erreur lors de la vérification. Veuillez réessayer.');
           setChecking(false);
-        });
+        }
+      };
+      
+      processVerification();
     }
   }, [session, status, router]);
 
-  // Affichage pendant le chargement initial
+  // Chargement
   if (status === 'loading' || checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
         <div className="text-center">
           <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
           <p className="text-gray-400">Vérification de votre compte...</p>
+          {checking && session?.user?.serverNickname && (
+            <p className="text-sm text-gray-500 mt-2">
+              Recherche de "{session.user.serverNickname}" sur le Lounge...
+            </p>
+          )}
         </div>
       </div>
     );
   }
 
-  // Si connecté mais PAS membre du serveur Lounge
+  // Erreur
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-black">
+        <Card className="w-full max-w-md bg-red-500/10 border-red-500/30">
+          <CardContent className="p-8 text-center">
+            <XCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
+            <p className="text-white mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Réessayer
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // NON membre du serveur Lounge
   if (session && session.user.isInServer === false) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-black">
@@ -108,6 +158,7 @@ export default function LoginPage() {
     );
   }
 
+  // Page de connexion normale
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-black">
       <Card className="w-full max-w-md bg-white/5 border-white/10">
