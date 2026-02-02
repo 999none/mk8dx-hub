@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   Home, Trophy, TrendingUp, RefreshCw, Search, 
   ChevronLeft, ChevronRight, Filter, X, Globe,
-  ArrowUpDown, Users
+  ArrowUpDown, Users, ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import { getCurrentRank } from '@/lib/mockData';
