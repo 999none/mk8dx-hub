@@ -301,3 +301,5 @@ agent_communication:
     message: "✅ BACKEND TESTING COMPLETE: All Discord authentication endpoints tested successfully. 14/14 tests passed (100% success rate). Key findings: NextAuth Discord OAuth working correctly, verification APIs functional with proper auto-approval logic, admin endpoints accessible, error handling working properly. All backend tasks are working as expected."
   - agent: "main"
     message: "Phase 2-3 implémentée: Leaderboard avec filtres/pagination/recherche/tri, Dashboard avec graphique MMR et historique matchs, Tournois avec filtre par jeu. Toutes les APIs utilisent les vraies données MK8DX Lounge et MKCentral."
+  - agent: "main"
+    message: "Phase 4 implémentée: Intégration MKCentral Registry complète. API Backend créée (GET /api/registry/player/{registryId}) avec cache 6h. Frontend Dashboard et Player Profile mis à jour avec sections Teams et Tournament History. Récupération automatique via mkcId depuis Lounge API. Prêt pour tests."
