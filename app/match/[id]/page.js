@@ -298,25 +298,28 @@ export default function MatchDetailsPage() {
                                     <td className="py-2 px-2 text-center">
                                       <span className="font-semibold text-sm text-gray-200">{player.score}</span>
                                     </td>
-                              <td className="py-2 px-2 text-center">
-                                <span className={`font-medium text-xs sm:text-sm ${
-                                  player.delta > 0 ? 'text-gray-200' : player.delta < 0 ? 'text-gray-500' : 'text-gray-600'
-                                }`}>
-                                  {player.delta > 0 ? '+' : ''}{player.delta}
-                                </span>
-                              </td>
-                              <td className="py-2 px-2 text-right">
-                                <span className="text-xs sm:text-sm text-gray-400">{player.newMmr?.toLocaleString('fr-FR')}</span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                                    <td className="py-2 px-2 text-center">
+                                      <span className={`font-medium text-xs sm:text-sm ${
+                                        player.delta > 0 ? 'text-gray-200' : player.delta < 0 ? 'text-gray-500' : 'text-gray-600'
+                                      }`}>
+                                        {player.delta > 0 ? '+' : ''}{player.delta}
+                                      </span>
+                                    </td>
+                                    <td className="py-2 px-2 text-right">
+                                      <span className="text-xs sm:text-sm text-gray-400">{player.newMmr?.toLocaleString('fr-FR')}</span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              );
+            })()}
 
             {/* ========== MATCH STATISTICS ========== */}
             {matchData.stats && (
