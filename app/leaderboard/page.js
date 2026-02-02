@@ -340,11 +340,11 @@ export default function LeaderboardPage() {
                       
                       return (
                         <Link 
+                          key={player.id || index}
                           href={`/player/${encodeURIComponent(player.name)}`}
                           className="block"
                         >
                           <div 
-                            key={player.id || index}
                             className={`flex items-center justify-between p-4 rounded-lg transition-all hover:scale-[1.02] cursor-pointer ${
                               isTop3 ? 'bg-gradient-to-r from-yellow-500/20 to-transparent border border-yellow-500/30' : 'bg-white/5 hover:bg-white/10'
                             }`}
