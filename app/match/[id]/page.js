@@ -160,7 +160,9 @@ export default function MatchDetailsPage() {
                 </div>
                 <div className="p-2 sm:p-3 bg-neutral-900 border border-gray-800 rounded-lg text-center">
                   <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">Format</p>
-                  <p className="font-bold text-lg sm:text-xl text-gray-100">{matchData.format || `${matchData.numTeams}v${matchData.numTeams}`}</p>
+                  <p className="font-bold text-lg sm:text-xl text-gray-100">
+                    {getFormatInfo(matchData.numTeams, matchData.numPlayers).format}
+                  </p>
                 </div>
                 <div className="p-2 sm:p-3 bg-neutral-900 border border-gray-800 rounded-lg text-center">
                   <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider">Joueurs</p>
