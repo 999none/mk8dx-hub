@@ -60,6 +60,24 @@ const getMatchFormat = (numTeams, numPlayers) => {
   return `${playersPerTeam}v${playersPerTeam}`;
 };
 
+// Custom tooltip for chart - defined outside component
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-neutral-900 border border-gray-700 p-3 rounded-lg shadow-xl">
+        <p className="text-xs text-gray-500">{data.date}</p>
+        <p className="text-base font-bold text-gray-200">{data.mmr.toLocaleString('fr-FR')} MMR</p>
+        <p className={`text-sm ${data.delta > 0 ? 'text-gray-300' : 'text-gray-500'}`}>
+          {data.delta > 0 ? '+' : ''}{data.delta}
+        </p>
+        {data.tier && <p className="text-xs text-gray-600">Tier {data.tier}</p>}
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function PlayerProfilePage() {
   const params = useParams();
   const router = useRouter();
