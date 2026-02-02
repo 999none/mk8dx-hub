@@ -227,10 +227,28 @@ export default function DashboardPage() {
         </nav>
 
         <div className="container mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-black mb-2">Tableau de Bord</h1>
-            <p className="text-gray-400">Bienvenue, {user?.serverNickname || user?.name || 'Joueur'} !</p>
+          {/* Header avec sélecteur de saison */}
+          <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-black mb-2">Tableau de Bord</h1>
+              <p className="text-gray-400">Bienvenue, {user?.serverNickname || user?.name || 'Joueur'} !</p>
+            </div>
+            
+            {/* Sélecteur de Saison */}
+            <div className="flex items-center gap-3">
+              <Calendar className="w-5 h-5 text-gray-400" />
+              <select
+                value={selectedSeason}
+                onChange={(e) => setSelectedSeason(e.target.value)}
+                className="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                {AVAILABLE_SEASONS.map((season) => (
+                  <option key={season.value} value={season.value} className="bg-gray-900">
+                    {season.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {loading ? (
