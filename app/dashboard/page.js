@@ -295,9 +295,9 @@ export default function DashboardPage() {
                     )}
 
                     {/* Lounge Profile Link */}
-                    {loungeData?.name && (
+                    {(loungeData?.name || playerDetails?.playerId) && (
                       <a 
-                        href={`https://www.mk8dx-lounge.com/PlayerDetails/${encodeURIComponent(loungeData.name)}`}
+                        href={`https://lounge.mkcentral.com/mk8dx/PlayerDetails/${playerDetails?.playerId || loungeData?.id || loungeData?.name}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-4 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm"
