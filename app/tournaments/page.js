@@ -181,21 +181,39 @@ export default function TournamentsPage() {
                     >
                       {/* Tournament/Series Logo */}
                       <div className="h-28 bg-gradient-to-b from-white/[0.04] to-transparent flex items-center justify-center p-4 relative">
-                        <img 
-                          src={tournament.logo || tournament.seriesLogo || tournament.tournamentLogo} 
-                          alt={tournament.name}
-                          className="max-h-20 max-w-full object-contain"
-                          onError={(e) => {
-                            // Try series logo if main logo fails
-                            if (tournament.seriesLogo && e.target.src !== tournament.seriesLogo) {
-                              e.target.src = tournament.seriesLogo;
-                            } else if (tournament.tournamentLogo && e.target.src !== tournament.tournamentLogo) {
-                              e.target.src = tournament.tournamentLogo;
-                            } else {
-                              e.target.style.display = 'none';
-                            }
-                          }}
-                        />
+                        {(tournament.logo || tournament.seriesLogo || tournament.tournamentLogo) ? (
+                          <img 
+                            src={tournament.logo || tournament.seriesLogo || tournament.tournamentLogo} 
+                            alt={tournament.name}
+                            className="max-h-20 max-w-full object-contain"
+                            onError={(e) => {
+                              // Try series logo if main logo fails
+                              if (tournament.seriesLogo && e.target.src !== tournament.seriesLogo) {
+                                e.target.src = tournament.seriesLogo;
+                              } else if (tournament.tournamentLogo && e.target.src !== tournament.tournamentLogo) {
+                                e.target.src = tournament.tournamentLogo;
+                              } else {
+                                // Hide image and show fallback icon
+                                e.target.style.display = 'none';
+                                e.target.nextElementSibling?.classList.remove('hidden');
+                              }
+                            }}
+                          />
+                        ) : null}
+                        {/* Fallback icon when no logo or image fails to load */}
+                        <div className={`flex flex-col items-center justify-center ${(tournament.logo || tournament.seriesLogo || tournament.tournamentLogo) ? 'hidden' : ''}`}>
+                          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] flex items-center justify-center border border-white/[0.06]">
+                            {tournament.game === 'mkworld' ? (
+                              <span className="text-3xl">🌍</span>
+                            ) : tournament.game === 'mk8dx' ? (
+                              <span className="text-3xl">🏎️</span>
+                            ) : tournament.game === 'mkw' ? (
+                              <span className="text-3xl">🏁</span>
+                            ) : (
+                              <Trophy className="w-8 h-8 text-gray-600" />
+                            )}
+                          </div>
+                        </div>
                         {tournament.series?.name && (
                           <div className="absolute bottom-1 left-2 right-2">
                             <span className="text-[10px] text-gray-500 truncate block">{tournament.series.name}</span>
