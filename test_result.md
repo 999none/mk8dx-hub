@@ -207,6 +207,18 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: All verification APIs working correctly. POST /api/verification/create creates verification with auto-approval logic. GET /api/verification/status returns proper status. POST /api/verification/recheck updates activity status. Proper error handling for missing data"
+  
+  - task: "MKCentral Registry API Integration"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js, lib/mkcentralRegistry.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Endpoint GET /api/registry/player/{registryId} créé. Récupère teams (équipes actuelles), teamHistory (historique équipes) et tournamentHistory (tournois participés) depuis MKCentral Registry. Cache de 6 heures. Parsing complet avec Cheerio."
 
 frontend:
   - task: "Login Page with Server Check"
