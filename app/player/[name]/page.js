@@ -353,33 +353,33 @@ export default function PlayerProfilePage() {
           </CardContent>
         </Card>
 
-        {/* ========== STATS GRID ========== */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {/* ========== STATS GRID - Mobile Optimized ========== */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <Card className="bg-green-500/10 border-green-500/20">
-            <CardContent className="p-4 text-center">
-              <TrendingUp className="w-6 h-6 mx-auto mb-2 text-green-400" />
-              <div className="text-2xl font-bold text-green-400">{playerDetails?.wins || 0}</div>
-              <div className="text-sm text-gray-400">Victoires</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-green-400" />
+              <div className="text-xl sm:text-2xl font-bold text-green-400">{playerDetails?.wins || 0}</div>
+              <div className="text-[10px] sm:text-sm text-gray-400">Victoires</div>
             </CardContent>
           </Card>
           <Card className="bg-red-500/10 border-red-500/20">
-            <CardContent className="p-4 text-center">
-              <TrendingDown className="w-6 h-6 mx-auto mb-2 text-red-400" />
-              <div className="text-2xl font-bold text-red-400">{playerDetails?.losses || 0}</div>
-              <div className="text-sm text-gray-400">Défaites</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-red-400" />
+              <div className="text-xl sm:text-2xl font-bold text-red-400">{playerDetails?.losses || 0}</div>
+              <div className="text-[10px] sm:text-sm text-gray-400">Défaites</div>
             </CardContent>
           </Card>
           <Card className="bg-blue-500/10 border-blue-500/20">
-            <CardContent className="p-4 text-center">
-              <Users className="w-6 h-6 mx-auto mb-2 text-blue-400" />
-              <div className="text-2xl font-bold text-blue-400">{player.eventsPlayed || 0}</div>
-              <div className="text-sm text-gray-400">Events joués</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-blue-400" />
+              <div className="text-xl sm:text-2xl font-bold text-blue-400">{player.eventsPlayed || 0}</div>
+              <div className="text-[10px] sm:text-sm text-gray-400">Events</div>
             </CardContent>
           </Card>
           <Card className="bg-purple-500/10 border-purple-500/20">
-            <CardContent className="p-4 text-center">
-              <Target className="w-6 h-6 mx-auto mb-2 text-purple-400" />
-              <div className="text-2xl font-bold text-purple-400">
+            <CardContent className="p-3 sm:p-4 text-center">
+              <Target className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-purple-400" />
+              <div className="text-xl sm:text-2xl font-bold text-purple-400">
                 {(() => {
                   const wins = playerDetails?.wins || 0;
                   const losses = playerDetails?.losses || 0;
@@ -387,65 +387,65 @@ export default function PlayerProfilePage() {
                   return total > 0 ? Math.round((wins / total) * 100) : 0;
                 })()}%
               </div>
-              <div className="text-sm text-gray-400">Taux victoire</div>
+              <div className="text-[10px] sm:text-sm text-gray-400">Win Rate</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* ========== SECOND STATS ROW ========== */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {/* ========== SECOND STATS ROW - Mobile Optimized ========== */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <Card className="bg-white/5 border-white/10">
-            <CardContent className="p-4 text-center">
-              <div className="text-xl font-bold text-yellow-400">{player.maxMmr || '-'}</div>
-              <div className="text-xs text-gray-400">MMR Max</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-xl font-bold text-yellow-400">{player.maxMmr || '-'}</div>
+              <div className="text-[10px] sm:text-xs text-gray-400">MMR Max</div>
             </CardContent>
           </Card>
           <Card className="bg-white/5 border-white/10">
-            <CardContent className="p-4 text-center">
-              <div className="text-xl font-bold text-cyan-400">
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-xl font-bold text-cyan-400">
                 {playerDetails?.gainLoss !== undefined ? (playerDetails.gainLoss > 0 ? '+' : '') + playerDetails.gainLoss : '-'}
               </div>
-              <div className="text-xs text-gray-400">Gain/Perte</div>
+              <div className="text-[10px] sm:text-xs text-gray-400">Gain/Perte</div>
             </CardContent>
           </Card>
           <Card className="bg-white/5 border-white/10">
-            <CardContent className="p-4 text-center">
-              <div className="text-xl font-bold text-orange-400">+{playerDetails?.largestGain || '-'}</div>
-              <div className="text-xs text-gray-400">+ Grand Gain</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-xl font-bold text-orange-400">+{playerDetails?.largestGain || '-'}</div>
+              <div className="text-[10px] sm:text-xs text-gray-400">Max Gain</div>
             </CardContent>
           </Card>
           <Card className="bg-white/5 border-white/10">
-            <CardContent className="p-4 text-center">
-              <div className="text-xl font-bold text-pink-400">{playerDetails?.largestLoss ? playerDetails.largestLoss : '-'}</div>
-              <div className="text-xs text-gray-400">+ Grande Perte</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-xl font-bold text-pink-400">{playerDetails?.largestLoss ? playerDetails.largestLoss : '-'}</div>
+              <div className="text-[10px] sm:text-xs text-gray-400">Max Perte</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* ========== MAIN CONTENT GRID ========== */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* ========== MAIN CONTENT GRID - Mobile Stack ========== */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
           
           {/* Advanced Stats */}
           <Card className="bg-white/5 border-white/10">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-purple-500" />
+            <CardHeader className="py-3 sm:py-4 px-4 sm:px-6">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
                 Stats Avancées
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               {advancedStats ? (
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-4">
                   {advancedStats.avgScore !== null && (
-                    <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                      <span className="text-gray-400 text-sm">Score moyen</span>
-                      <span className="font-bold text-lg">{advancedStats.avgScore}</span>
+                    <div className="flex justify-between items-center p-2 sm:p-3 bg-white/5 rounded-lg">
+                      <span className="text-gray-400 text-xs sm:text-sm">Score moyen</span>
+                      <span className="font-bold text-base sm:text-lg">{advancedStats.avgScore}</span>
                     </div>
                   )}
                   {advancedStats.favoriteTier && (
-                    <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                      <span className="text-gray-400 text-sm">Tier préféré</span>
-                      <Badge variant="outline" className="border-white/30">
+                    <div className="flex justify-between items-center p-2 sm:p-3 bg-white/5 rounded-lg">
+                      <span className="text-gray-400 text-xs sm:text-sm">Tier préféré</span>
+                      <Badge variant="outline" className="border-white/30 text-xs sm:text-sm">
                         Tier {advancedStats.favoriteTier.tier}
                       </Badge>
                     </div>
