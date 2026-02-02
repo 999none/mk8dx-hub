@@ -20,6 +20,20 @@ import {
   Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart
 } from 'recharts';
 
+// Saisons disponibles (à mettre à jour quand de nouvelles saisons sont ajoutées)
+const AVAILABLE_SEASONS = [
+  { value: '', label: 'Saison Actuelle' },
+  { value: '20', label: 'Saison 20' },
+  { value: '19', label: 'Saison 19' },
+  { value: '18', label: 'Saison 18' },
+  { value: '17', label: 'Saison 17' },
+  { value: '16', label: 'Saison 16' },
+  { value: '15', label: 'Saison 15' },
+  { value: '14', label: 'Saison 14' },
+  { value: '13', label: 'Saison 13' },
+  { value: '12', label: 'Saison 12' },
+];
+
 export default function DashboardPage() {
   const { data: session } = useSession();
   const [playerStats, setPlayerStats] = useState(null);
@@ -27,6 +41,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [verificationData, setVerificationData] = useState(null);
   const [showAllMatches, setShowAllMatches] = useState(false);
+  const [selectedSeason, setSelectedSeason] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
