@@ -56,6 +56,7 @@ export default function DashboardPage() {
   const { data: session } = useSession();
   const [playerStats, setPlayerStats] = useState(null);
   const [playerDetails, setPlayerDetails] = useState(null);
+  const [registryData, setRegistryData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [verificationData, setVerificationData] = useState(null);
   const [showAllMatches, setShowAllMatches] = useState(false);
