@@ -88,6 +88,20 @@ export default function PlayerProfilePage() {
         
         setPlayer(data);
         setPlayerDetails(data);
+        
+        // Fetch Registry data if mkcId available
+        const registryId = data.mkcId || data.registryId;
+        if (registryId) {
+          try {
+            const registryRes = await fetch(`/api/registry/player/${registryId}`);
+            const registryData = await registryRes.json();
+            if (registryData && !registryData.error) {
+              setRegistryData(registryData);
+            }
+          } catch (err) {
+            console.warn('Registry data not available:', err);
+          }
+        }
       } catch (err) {
         setError('Erreur');
       } finally {
