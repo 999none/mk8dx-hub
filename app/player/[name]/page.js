@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import MatchDetailModal from '@/components/MatchDetailModal';
 import { getCurrentRank } from '@/lib/mockData';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, 
