@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 export default function UserProfile() {
   const { data: session, status } = useSession();
@@ -12,7 +13,7 @@ export default function UserProfile() {
   }
 
   if (!session) {
-    return null; // Or return a login prompt
+    return null;
   }
 
   const { user } = session;
@@ -39,6 +40,28 @@ export default function UserProfile() {
           </p>
         </div>
       </div>
+
+      {/* Server membership info */}
+      <div className="mt-4 p-3 bg-gray-200 dark:bg-gray-700 rounded-md">
+        <div className="flex items-center gap-2 mb-2">
+          {user.isInServer ? (
+            <CheckCircle className="w-5 h-5 text-green-500" />
+          ) : (
+            <XCircle className="w-5 h-5 text-red-500" />
+          )}
+          <span className="text-sm font-medium">
+            {user.isInServer ? 'Membre du serveur Lounge' : 'Non membre du serveur Lounge'}
+          </span>
+        </div>
+        
+        {user.isInServer && user.serverNickname && (
+          <div className="text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Nickname serveur: </span>
+            <span className="font-semibold text-blue-600 dark:text-blue-400">{user.serverNickname}</span>
+          </div>
+        )}
+      </div>
+
       <div className="mt-4">
         <Button 
           onClick={() => signOut({ callbackUrl: '/' })}
