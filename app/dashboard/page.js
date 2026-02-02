@@ -9,13 +9,14 @@ import {
   Home, Trophy, TrendingUp, TrendingDown, Target, 
   Gamepad2, Star, Calendar, RefreshCw, LogOut,
   User, Shield, Award, Zap, History, BarChart3,
-  Clock, ChevronDown, ChevronUp, ExternalLink, X,
+  Clock, ChevronDown, ChevronUp, ExternalLink,
   Users, Flag, Medal, Swords
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import RequireAuth from '@/components/RequireAuth';
 import Navbar from '@/components/Navbar';
+import MatchDetailModal from '@/components/MatchDetailModal';
 import { getCurrentRank } from '@/lib/mockData';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
