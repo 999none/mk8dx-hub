@@ -1095,9 +1095,22 @@ class BackendTester:
         # Core API tests
         self.test_api_root()
         self.test_stats_api()
+        
+        # MK8DX Competitive Hub API tests (as requested)
+        print("\n🏁 Testing MK8DX Competitive Hub APIs:")
         self.test_leaderboard_api()
+        self.test_leaderboard_pagination()
+        self.test_leaderboard_filters()
+        self.test_leaderboard_search()
+        self.test_leaderboard_sorting()
+        self.test_player_details_api()
+        self.test_tournaments_api()
+        self.test_tournaments_pagination()
+        self.test_tournaments_game_filter()
+        self.test_admin_lounge_search_api()
         
         # Verification flow tests
+        print("\n🔐 Testing Discord Authentication Flow:")
         self.test_verification_status_no_cookie()
         self.test_verification_create()
         self.test_verification_status_with_discord_id()
