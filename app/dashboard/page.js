@@ -9,7 +9,8 @@ import {
   Home, Trophy, TrendingUp, TrendingDown, Target, 
   Gamepad2, Star, Calendar, RefreshCw, LogOut,
   User, Shield, Award, Zap, History, BarChart3,
-  Clock, ChevronDown, ChevronUp, ExternalLink
+  Clock, ChevronDown, ChevronUp, ExternalLink, X,
+  Users, Flag, Medal, Swords
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
