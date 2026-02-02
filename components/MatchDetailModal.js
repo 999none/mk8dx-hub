@@ -266,9 +266,13 @@ export default function MatchDetailModal({ matchId, onClose }) {
                           {/* Player */}
                           <div className="col-span-5 flex items-center gap-2 min-w-0">
                             {player.playerCountryCode && <span className="text-sm flex-shrink-0">{getCountryFlag(player.playerCountryCode)}</span>}
-                            <span className={`text-sm truncate ${isPodium && isFirstInTeam ? 'text-white font-medium' : 'text-gray-400'}`}>
+                            <Link 
+                              href={`/player/${encodeURIComponent(player.playerName)}`}
+                              className={`text-sm truncate hover:text-white hover:underline transition-colors ${isPodium && isFirstInTeam ? 'text-white font-medium' : 'text-gray-400'}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               {player.playerName}
-                            </span>
+                            </Link>
                           </div>
                           
                           {/* Score */}
