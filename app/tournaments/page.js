@@ -318,43 +318,6 @@ export default function TournamentsPage() {
             </>
           )}
 
-          {/* Weekly Schedule */}
-          <Card className="bg-white/[0.02] border-white/[0.04] mt-8">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-400">Programme Squad Queue</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {[
-                  { day: 'Lun-Jeu', event: 'Squad Queue 4v4', time: '19:00-23:00' },
-                  { day: 'Vendredi', event: 'Wars 6v6', time: '20:00-01:00' },
-                  { day: 'Samedi', event: 'Solo Mogi FFA', time: '18:00-00:00' },
-                  { day: 'Dimanche', event: 'Championship', time: '17:00-22:00' },
-                ].map((item, i) => (
-                  <div key={i} className="p-3 bg-white/[0.02] border border-white/[0.04] rounded-lg">
-                    <p className="font-medium text-sm mb-1">{item.day}</p>
-                    <p className="text-xs text-gray-500">{item.event}</p>
-                    <p className="text-xs text-gray-600">{item.time} UTC</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* External Links */}
-          <div className="grid md:grid-cols-2 gap-4 mt-6">
-            {[
-              { title: 'MKCentral Lounge', desc: 'Matchs classés & stats', href: 'https://lounge.mkcentral.com/mk8dx/', color: 'text-blue-500' },
-              { title: 'Discord Lounge', desc: 'Communauté compétitive', href: 'https://discord.gg/revmGkE', color: 'text-purple-500' },
-            ].map((link, i) => (
-              <a key={i} href={link.href} target="_blank" rel="noopener noreferrer">
-                <div className="p-6 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:bg-white/[0.04] transition-all">
-                  <h3 className={`font-semibold mb-1 ${link.color}`}>{link.title}</h3>
-                  <p className="text-sm text-gray-500">{link.desc}</p>
-                </div>
-              </a>
-            ))}
-          </div>
         </div>
       </div>
     </RequireAuth>
