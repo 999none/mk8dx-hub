@@ -62,9 +62,7 @@ export default function DashboardPage() {
   const [verificationData, setVerificationData] = useState(null);
   const [showAllMatches, setShowAllMatches] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState('');
-  const [selectedMatch, setSelectedMatch] = useState(null);
-  const [matchDetails, setMatchDetails] = useState(null);
-  const [loadingMatch, setLoadingMatch] = useState(false);
+  const [selectedMatchId, setSelectedMatchId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
