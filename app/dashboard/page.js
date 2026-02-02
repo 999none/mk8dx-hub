@@ -32,6 +32,25 @@ const AVAILABLE_SEASONS = [
   { value: '8', label: 'Saison 8' },
 ];
 
+// Helper function to get match format
+const getMatchFormat = (numTeams, numPlayers) => {
+  if (!numTeams || !numPlayers) return '-';
+  
+  // FFA = chaque joueur est une équipe
+  if (numTeams === numPlayers) return 'FFA';
+  
+  // Calculer le nombre de joueurs par équipe
+  const playersPerTeam = Math.floor(numPlayers / numTeams);
+  
+  switch (playersPerTeam) {
+    case 2: return '2v2';
+    case 3: return '3v3';
+    case 4: return '4v4';
+    case 6: return '6v6';
+    default: return `${playersPerTeam}v${playersPerTeam}`;
+  }
+};
+
 export default function DashboardPage() {
   const { data: session } = useSession();
   const [playerStats, setPlayerStats] = useState(null);
