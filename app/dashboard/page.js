@@ -704,7 +704,18 @@ export default function DashboardPage() {
                       </div>
                     </Link>
                     <a 
-                      href={loungeData?.name ? `https://lounge.mkcentral.com/mk8dx/PlayerDetails/${playerDetails?.playerId || loungeData?.id || ''}` : 'https://lounge.mkcentral.com/mk8dx'} 
+                      href={(() => {
+                        // Priorité: playerId > id > fallback générique
+                        const playerId = playerDetails?.playerId || playerDetails?.id || loungeData?.playerId || loungeData?.id;
+                        const baseUrl = 'https://lounge.mkcentral.com/mk8dx/PlayerDetails';
+                        if (playerId) {
+                          return selectedSeason 
+                            ? `${baseUrl}/${playerId}?season=${selectedSeason}`
+                            : `${baseUrl}/${playerId}`;
+                        }
+                        // Fallback générique
+                        return 'https://lounge.mkcentral.com/mk8dx';
+                      })()} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="block"
