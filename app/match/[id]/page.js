@@ -160,33 +160,33 @@ export default function MatchDetailsPage() {
               </div>
             </div>
 
-            {/* ========== OFFICIAL TABLE IMAGE ========== */}
+            {/* ========== OFFICIAL TABLE IMAGE - Mobile Optimized ========== */}
             <Card className="bg-zinc-900 border-white/20 overflow-hidden">
-              <CardHeader className="border-b border-white/10 bg-white text-black">
-                <CardTitle className="flex items-center gap-2 text-black">
-                  <Trophy className="w-5 h-5" />
-                  Image Officielle du Match
+              <CardHeader className="border-b border-white/10 bg-white text-black py-3 sm:py-4 px-4 sm:px-6">
+                <CardTitle className="flex items-center gap-2 text-black text-sm sm:text-base">
+                  <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Image Officielle
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 {!imageError ? (
-                  <div className="relative bg-black">
+                  <div className="relative bg-black overflow-x-auto">
                     <img
                       src={tableImageUrl}
                       alt={`Table ${matchId} Results`}
-                      className="w-full h-auto"
+                      className="w-full h-auto min-w-[320px]"
                       onError={() => setImageError(true)}
                     />
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-16 bg-zinc-900">
-                    <Trophy className="w-12 h-12 mb-4 text-gray-600" />
-                    <p className="text-gray-400">Image non disponible</p>
+                  <div className="flex flex-col items-center justify-center py-10 sm:py-16 bg-zinc-900 px-4">
+                    <Trophy className="w-10 h-10 sm:w-12 sm:h-12 mb-3 sm:mb-4 text-gray-600" />
+                    <p className="text-gray-400 text-sm sm:text-base">Image non disponible</p>
                     <a 
                       href={loungeTableUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-4 text-blue-400 hover:underline flex items-center gap-2"
+                      className="mt-3 sm:mt-4 text-blue-400 hover:underline flex items-center gap-2 text-sm"
                     >
                       <ExternalLink className="w-4 h-4" />
                       Voir sur MKCentral
