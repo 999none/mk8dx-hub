@@ -972,18 +972,19 @@ class BackendTester:
             
             if response.status_code == 200:
                 data = response.json()
-                if isinstance(data, list):
+                if 'tournaments' in data and isinstance(data['tournaments'], list):
+                    tournaments = data.get('tournaments', [])
                     self.log_test(
                         "Tournaments Endpoint", 
                         True, 
-                        f"Tournaments endpoint returns {len(data)} tournaments"
+                        f"Tournaments endpoint returns {len(tournaments)} tournaments"
                     )
                 else:
                     self.log_test(
                         "Tournaments Endpoint", 
                         False, 
-                        "Expected array response",
-                        {'response_type': type(data).__name__}
+                        "Expected tournaments array in response",
+                        {'response_type': type(data).__name__, 'keys': list(data.keys()) if isinstance(data, dict) else 'not_dict'}
                     )
             else:
                 self.log_test(
