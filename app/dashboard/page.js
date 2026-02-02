@@ -80,7 +80,23 @@ export default function DashboardPage() {
 
           const detailsRes = await fetch(`/api/lounge/player-details/${encodeURIComponent(loungeName)}${selectedSeason ? `?season=${selectedSeason}` : ''}`);
           const detailsData = await detailsRes.json();
-          if (detailsData && detailsData.name) setPlayerDetails(detailsData);
+          if (detailsData && detailsData.name) {
+            setPlayerDetails(detailsData);
+            
+            // Fetch Registry data (teams + tournaments) if mkcId is available
+            const registryId = detailsData.mkcId || detailsData.registryId;
+            if (registryId) {
+              try {
+                const registryRes = await fetch(`/api/registry/player/${registryId}`);
+                const registryData = await registryRes.json();
+                if (registryData && !registryData.error) {
+                  setRegistryData(registryData);
+                }
+              } catch (err) {
+                console.warn('Registry data not available:', err);
+              }
+            }
+          }
         }
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
