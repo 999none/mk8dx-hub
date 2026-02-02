@@ -430,10 +430,13 @@ export async function GET(request, context) {
         // Calculate gainLoss (total MMR change from all matches this season)
         const gainLoss = allTableMatches.reduce((sum, m) => sum + (m.mmrDelta || 0), 0);
         
-        // Calculate largestGain and largestLoss
-        const gains = allTableMatches.filter(m => m.mmrDelta > 0).map(m => m.mmrDelta);
+        // Use largestGain from API if available, otherwise calculate
+        const apiLargestGain = playerDetails.largestGain;
+        const calculatedGains = allTableMatches.filter(m => m.mmrDelta > 0).map(m => m.mmrDelta);
+        const largestGain = apiLargestGain || (calculatedGains.length > 0 ? Math.max(...calculatedGains) : null);
+        
+        // Calculate largestLoss (API doesn't provide this)
         const lossesValues = allTableMatches.filter(m => m.mmrDelta < 0).map(m => m.mmrDelta);
-        const largestGain = gains.length > 0 ? Math.max(...gains) : null;
         const largestLoss = lossesValues.length > 0 ? Math.min(...lossesValues) : null;
         
         // Build the correct MKCentral URL
