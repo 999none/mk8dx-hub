@@ -1,6 +1,6 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import RequireAuth from '@/components/RequireAuth';
+import Navbar from '@/components/Navbar';
 import { getCurrentRank } from '@/lib/mockData';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
@@ -417,55 +418,9 @@ export default function DashboardPage() {
     <RequireAuth>
       <div className="min-h-screen bg-black text-white">
         {/* Navigation */}
-        <nav className="border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
-          <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Link href="/" className="flex items-center gap-2">
-                <Home className="w-5 h-5" />
-                <span className="font-bold text-xl">MK8DX Hub</span>
-              </Link>
-              <Link href="/dashboard">
-                <span className="font-bold text-white">Dashboard</span>
-              </Link>
-              <Link href="/academy">
-                <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-white/10">Academy</Button>
-              </Link>
-              <Link href="/tournaments">
-                <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-white/10">Tournois</Button>
-              </Link>
-              <Link href="/leaderboard">
-                <Button variant="ghost" className="text-gray-400 hover:text-white hover:bg-white/10">Leaderboard</Button>
-              </Link>
-            </div>
-            <div className="flex items-center gap-4">
-              {user && (
-                <div className="flex items-center gap-3">
-                  {user.image && (
-                    <Image 
-                      src={user.image} 
-                      alt="Avatar" 
-                      width={32} 
-                      height={32} 
-                      className="rounded-full"
-                    />
-                  )}
-                  <span className="text-sm text-gray-300">{user.name || user.username}</span>
-                </div>
-              )}
-              <Button 
-                onClick={() => signOut({ callbackUrl: '/' })}
-                variant="outline"
-                size="sm"
-                className="border-white/20 hover:bg-white/10"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Déconnexion
-              </Button>
-            </div>
-          </div>
-        </nav>
+        <Navbar />
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 pt-24">
           {/* Header avec sélecteur de saison */}
           <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>

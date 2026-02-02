@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Trophy, Target, Users, Clock, ArrowRight, Zap, BarChart3, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import Navbar from '@/components/Navbar';
 
 export default function LandingPage() {
   const [stats, setStats] = useState(null);
@@ -19,30 +20,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-6 h-6" />
-            <span className="font-bold text-xl">MK8DX Hub</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" className="text-white hover:bg-white/10">Dashboard</Button>
-            </Link>
-            <Link href="/academy">
-              <Button variant="ghost" className="text-white hover:bg-white/10">Academy</Button>
-            </Link>
-            <Link href="/tournaments">
-              <Button variant="ghost" className="text-white hover:bg-white/10">Tournois</Button>
-            </Link>
-            <Link href="/login">
-              <Button className="bg-white text-black hover:bg-white/90">
-                Se Connecter
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 overflow-hidden">
