@@ -541,92 +541,109 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              {/* Match History */}
-              <Card className="bg-white/5 border-white/10 lg:col-span-4">
-                <CardHeader>
+              {/* Match History - Style MKCentral */}
+              <Card className="bg-[#1a1a2e] border-[#252540] lg:col-span-4 overflow-hidden">
+                <CardHeader className="border-b border-[#252540] bg-[#16162a]">
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <History className="w-5 h-5 text-blue-500" />
-                      Historique des Matchs
+                      <History className="w-5 h-5 text-blue-400" />
+                      <span className="text-gray-100">Historique des Matchs</span>
                     </div>
                     {matchHistory.length > 0 && (
-                      <span className="text-sm font-normal text-gray-400">
-                        {matchHistory.length} matchs récents
+                      <span className="text-sm font-normal text-gray-500">
+                        {matchHistory.length} matchs
                       </span>
                     )}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-0">
                   {matchHistory.length > 0 ? (
                     <>
                       <div className="overflow-x-auto">
                         <table className="w-full">
                           <thead>
-                            <tr className="border-b border-white/10">
-                              <th className="text-left py-3 px-4 text-gray-400 font-medium">Date</th>
-                              <th className="text-center py-3 px-4 text-gray-400 font-medium">Tier</th>
-                              <th className="text-center py-3 px-4 text-gray-400 font-medium">Format</th>
-                              <th className="text-center py-3 px-4 text-gray-400 font-medium">Score</th>
-                              <th className="text-center py-3 px-4 text-gray-400 font-medium">Δ MMR</th>
-                              <th className="text-right py-3 px-4 text-gray-400 font-medium">Nouveau MMR</th>
+                            <tr className="bg-[#12122a] text-gray-400 text-xs uppercase tracking-wider">
+                              <th className="text-left py-3 px-4 font-semibold">#</th>
+                              <th className="text-left py-3 px-4 font-semibold">Date</th>
+                              <th className="text-center py-3 px-4 font-semibold">Tier</th>
+                              <th className="text-center py-3 px-4 font-semibold">Format</th>
+                              <th className="text-center py-3 px-4 font-semibold">Score</th>
+                              <th className="text-center py-3 px-4 font-semibold">Change</th>
+                              <th className="text-right py-3 px-4 font-semibold">New MMR</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {displayedMatches.map((match, index) => (
-                              <tr 
-                                key={match.id || index} 
-                                className="border-b border-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-                                onClick={() => match.id && setSelectedMatchId(match.id)}
-                                title="Cliquez pour voir les détails du match"
-                              >
-                                <td className="py-3 px-4">
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-gray-500" />
-                                    <span className="text-sm">
+                            {displayedMatches.map((match, index) => {
+                              const isWin = match.mmrDelta > 0;
+                              const isLoss = match.mmrDelta < 0;
+                              const rowBg = index % 2 === 0 ? 'bg-[#1e1e38]' : 'bg-[#1a1a2e]';
+                              
+                              return (
+                                <tr 
+                                  key={match.id || index} 
+                                  className={`${rowBg} hover:bg-[#252548] transition-colors cursor-pointer border-l-2 ${
+                                    isWin ? 'border-l-green-500/50' : isLoss ? 'border-l-red-500/50' : 'border-l-transparent'
+                                  }`}
+                                  onClick={() => match.id && setSelectedMatchId(match.id)}
+                                  title="Cliquez pour voir les détails"
+                                >
+                                  <td className="py-3 px-4">
+                                    <span className="text-gray-500 text-sm">{index + 1}</span>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <span className="text-gray-300 text-sm">
                                       {new Date(match.time).toLocaleDateString('fr-FR', {
                                         day: '2-digit',
                                         month: '2-digit',
-                                        year: '2-digit',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
+                                        year: '2-digit'
                                       })}
+                                      <span className="text-gray-500 ml-2">
+                                        {new Date(match.time).toLocaleTimeString('fr-FR', {
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        })}
+                                      </span>
                                     </span>
-                                  </div>
-                                </td>
-                                <td className="py-3 px-4 text-center">
-                                  <Badge variant="outline" className="border-white/20">
-                                    T{match.tier || '?'}
-                                  </Badge>
-                                </td>
-                                <td className="py-3 px-4 text-center text-sm text-gray-400">
-                                  {getMatchFormat(match.numTeams, match.numPlayers)}
-                                </td>
-                                <td className="py-3 px-4 text-center">
-                                  <span className="font-semibold">{match.score ?? '-'}</span>
-                                </td>
-                                <td className="py-3 px-4 text-center">
-                                  <span className={`font-bold ${
-                                    match.mmrDelta > 0 ? 'text-green-400' : 
-                                    match.mmrDelta < 0 ? 'text-red-400' : 'text-gray-400'
-                                  }`}>
-                                    {match.mmrDelta > 0 ? '+' : ''}{match.mmrDelta}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4 text-right font-semibold">
-                                  {(match.newMmr || 0).toLocaleString('fr-FR')}
-                                </td>
-                              </tr>
-                            ))}
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <span className="inline-flex items-center justify-center w-7 h-7 rounded bg-[#252548] text-gray-300 text-sm font-medium">
+                                      {match.tier || '?'}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <span className="text-gray-400 text-sm">
+                                      {getMatchFormat(match.numTeams, match.numPlayers)}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <span className="text-gray-200 font-semibold">{match.score ?? '-'}</span>
+                                  </td>
+                                  <td className="py-3 px-4 text-center">
+                                    <span className={`font-bold ${
+                                      isWin ? 'text-green-400' : 
+                                      isLoss ? 'text-red-400' : 'text-gray-500'
+                                    }`}>
+                                      {match.mmrDelta > 0 ? '+' : ''}{match.mmrDelta}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4 text-right">
+                                    <span className="text-gray-200 font-semibold">
+                                      {(match.newMmr || 0).toLocaleString('fr-FR')}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
                       
                       {matchHistory.length > 10 && (
-                        <div className="mt-4 text-center">
+                        <div className="py-4 text-center border-t border-[#252540]">
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             onClick={() => setShowAllMatches(!showAllMatches)}
-                            className="border-white/20 hover:bg-white/10"
+                            className="text-gray-400 hover:text-gray-200 hover:bg-[#252548]"
                           >
                             {showAllMatches ? (
                               <>
@@ -644,7 +661,7 @@ export default function DashboardPage() {
                       )}
                     </>
                   ) : (
-                    <div className="text-center py-8">
+                    <div className="text-center py-12">
                       <Gamepad2 className="w-12 h-12 mx-auto mb-4 text-gray-600" />
                       <p className="text-gray-400">Aucun match récent</p>
                       <p className="text-xs text-gray-500 mt-2">Jouez des matchs sur le Lounge pour voir votre historique</p>
