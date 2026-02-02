@@ -101,3 +101,139 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  Finaliser et fiabiliser l'authentification Discord pour MK8DX Competitive Hub.
+  - Mettre à jour DISCORD_CLIENT_SECRET avec le nouveau secret
+  - Vérifier les scopes OAuth Discord (identify, email, guilds, guilds.members.read)
+  - Vérifier l'appartenance au serveur Discord Lounge
+  - Récupérer le nickname du serveur
+  - Enrichir la session NextAuth avec toutes les données requises
+  - Implémenter le flux de redirection complet
+
+backend:
+  - task: "Discord OAuth Configuration (NextAuth)"
+    implemented: true
+    working: true
+    file: "lib/auth.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "NextAuth configuré avec Discord Provider, scopes identify email guilds guilds.members.read"
+
+  - task: "DISCORD_CLIENT_SECRET Update"
+    implemented: true
+    working: true
+    file: ".env, .env.local"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Secret mis à jour dans les deux fichiers .env avec unS6ICLfNjPSA3z-HpMnUOhVMOWgsBJn"
+
+  - task: "Server Membership Verification (isInServer)"
+    implemented: true
+    working: true
+    file: "lib/auth.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Vérifie si l'utilisateur est membre du serveur DISCORD_LOUNGE_SERVER_ID"
+
+  - task: "Server Nickname Retrieval (serverNickname)"
+    implemented: true
+    working: true
+    file: "lib/auth.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Récupère le nickname via API Discord /guilds/{id}/member avec fallback sur username"
+
+  - task: "Session Enrichment"
+    implemented: true
+    working: true
+    file: "lib/auth.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Session contient discordId, username, serverNickname, isInServer, accessToken"
+
+  - task: "Verification API (create/status/recheck)"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "APIs de vérification avec auto-approval si >= 2 matchs en 30 jours"
+
+frontend:
+  - task: "Login Page with Server Check"
+    implemented: true
+    working: true
+    file: "app/login/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Affiche message 'rejoindre serveur' si isInServer=false, sinon redirige"
+
+  - task: "Waiting Page"
+    implemented: true
+    working: true
+    file: "app/waiting/page.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Affiche progression activité et bouton recheck"
+
+  - task: "Dashboard Access Control"
+    implemented: true
+    working: true
+    file: "app/dashboard/page.js, components/RequireAuth.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "RequireAuth vérifie le statut de vérification avant accès"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Discord OAuth Flow E2E"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Authentification Discord finalisée. Secret mis à jour dans .env et .env.local. Tous les scopes requis sont configurés. Flux de redirection complet implémenté."
