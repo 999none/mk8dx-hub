@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, Trophy, TrendingUp, TrendingDown, Calendar, 
-  Users, Target, Award, RefreshCw, ExternalLink, 
+  Users, Target, RefreshCw, ExternalLink, 
   BarChart3, History, Clock, ChevronDown, ChevronUp, Swords
 } from 'lucide-react';
 import Link from 'next/link';
@@ -190,13 +190,13 @@ export default function PlayerProfilePage() {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-zinc-900 border border-white/20 p-3 rounded-lg shadow-xl">
-          <p className="text-sm text-gray-400">{data.date}</p>
-          <p className="text-lg font-bold">{data.mmr.toLocaleString('fr-FR')} MMR</p>
-          <p className={`text-sm ${data.delta > 0 ? 'text-green-400' : 'text-red-400'}`}>
+        <div className="bg-neutral-900 border border-gray-700 p-3 rounded-lg shadow-xl">
+          <p className="text-xs text-gray-500">{data.date}</p>
+          <p className="text-base font-bold text-gray-200">{data.mmr.toLocaleString('fr-FR')} MMR</p>
+          <p className={`text-sm ${data.delta > 0 ? 'text-gray-300' : 'text-gray-500'}`}>
             {data.delta > 0 ? '+' : ''}{data.delta}
           </p>
-          {data.tier && <p className="text-xs text-gray-500">Tier {data.tier}</p>}
+          {data.tier && <p className="text-xs text-gray-600">Tier {data.tier}</p>}
         </div>
       );
     }
@@ -216,8 +216,8 @@ export default function PlayerProfilePage() {
         <Navbar />
         <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 pt-20 sm:pt-24">
           <div className="flex flex-col items-center justify-center py-16 sm:py-20">
-            <RefreshCw className="w-10 h-10 sm:w-12 sm:h-12 animate-spin mb-3 sm:mb-4 text-white/50" />
-            <p className="text-gray-400 text-sm sm:text-base text-center px-4">Chargement du profil de {playerName}...</p>
+            <RefreshCw className="w-10 h-10 sm:w-12 sm:h-12 animate-spin mb-3 sm:mb-4 text-gray-600" />
+            <p className="text-gray-500 text-sm sm:text-base text-center px-4">Chargement...</p>
           </div>
         </div>
       </div>
@@ -230,13 +230,13 @@ export default function PlayerProfilePage() {
         <Navbar />
         <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 pt-20 sm:pt-24">
           <div className="text-center py-16 sm:py-20 px-4">
-            <Trophy className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-gray-600" />
-            <h2 className="text-xl sm:text-2xl font-bold mb-2">{error}</h2>
-            <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">Le joueur &quot;{playerName}&quot; n&apos;a pas été trouvé sur le Lounge.</p>
+            <Trophy className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-gray-700" />
+            <h2 className="text-xl sm:text-2xl font-bold mb-2 text-gray-300">{error}</h2>
+            <p className="text-gray-500 mb-4 sm:mb-6 text-sm sm:text-base">Le joueur &quot;{playerName}&quot; n&apos;a pas été trouvé.</p>
             <Button 
               onClick={() => router.back()}
               variant="outline" 
-              className="border-white/20"
+              className="border-gray-700 text-gray-300 hover:bg-neutral-900"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retour
@@ -254,27 +254,26 @@ export default function PlayerProfilePage() {
       <Navbar />
       
       <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 pt-20 sm:pt-24">
-        {/* Header with Back + Season Selector - Mobile Optimized */}
+        {/* Header with Back + Season Selector */}
         <div className="mb-4 sm:mb-6 flex flex-row items-center justify-between gap-2 sm:gap-4">
           <Button 
             onClick={() => router.back()}
             variant="ghost" 
-            className="hover:bg-white/10 h-9 px-3 text-sm"
+            className="hover:bg-neutral-900 text-gray-400 hover:text-white h-9 px-3 text-sm"
           >
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             <span className="hidden sm:inline">Retour</span>
           </Button>
           
-          {/* Sélecteur de Saison - Compact on mobile */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 hidden sm:block" />
+          {/* Sélecteur de Saison */}
+          <div className="flex items-center gap-2">
             <select
               value={selectedSeason}
               onChange={(e) => setSelectedSeason(e.target.value)}
-              className="bg-white/10 border border-white/20 rounded-lg px-2 sm:px-4 py-1.5 sm:py-2 text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer max-w-[140px] sm:max-w-none"
+              className="bg-neutral-900 border border-gray-700 rounded-lg px-2 sm:px-3 py-1.5 text-gray-300 text-xs sm:text-sm focus:outline-none focus:border-gray-500 cursor-pointer"
             >
               {AVAILABLE_SEASONS.map((season) => (
-                <option key={season.value} value={season.value} className="bg-gray-900">
+                <option key={season.value} value={season.value} className="bg-neutral-900">
                   {season.label}
                 </option>
               ))}
@@ -282,239 +281,200 @@ export default function PlayerProfilePage() {
           </div>
         </div>
 
-        {/* ========== PLAYER HEADER - Mobile Optimized ========== */}
-        <Card className="bg-white/5 border-white/10 mb-4 sm:mb-6">
-          <CardContent className="p-4 sm:p-8">
-            <div className="flex flex-col items-center gap-4 sm:gap-6">
-              {/* Avatar + Name + Country - Stack vertically on mobile */}
-              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full">
-                <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-2xl sm:text-4xl font-bold shadow-xl flex-shrink-0">
-                  {player.name?.charAt(0).toUpperCase()}
-                </div>
-                
-                <div className="flex-1 text-center sm:text-left">
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 mb-2">
-                    <h1 className="text-2xl sm:text-4xl font-black">{player.name}</h1>
-                    {player.countryCode && (
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <span className="text-xl sm:text-3xl">{getCountryFlag(player.countryCode)}</span>
-                        <span className="text-sm sm:text-lg text-gray-400">
-                          {COUNTRY_NAMES[player.countryCode] || player.countryCode}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-4">
-                    {rank && (
-                      <Badge 
-                        style={{ backgroundColor: rank.color }} 
-                        className="text-black text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1 font-bold"
-                      >
-                        {rank.name}
-                      </Badge>
-                    )}
-                    {player.overallRank && (
-                      <div className="flex items-center gap-1 sm:gap-2 text-yellow-500">
-                        <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span className="font-semibold text-sm sm:text-base">#{player.overallRank}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+        {/* ========== PLAYER HEADER ========== */}
+        <div className="bg-neutral-900 border border-gray-800 rounded-lg p-4 sm:p-6 mb-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+            {/* Avatar */}
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-800 rounded-full flex items-center justify-center text-2xl sm:text-3xl font-bold text-gray-400 flex-shrink-0">
+              {player.name?.charAt(0).toUpperCase()}
+            </div>
+            
+            {/* Info */}
+            <div className="flex-1 text-center sm:text-left">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-100">{player.name}</h1>
+                {player.countryCode && (
+                  <span className="text-lg sm:text-xl">{getCountryFlag(player.countryCode)}</span>
+                )}
               </div>
               
-              {/* MMR Box - Full width on mobile */}
-              <div className="w-full sm:w-auto text-center bg-white/5 rounded-xl p-4 sm:p-0 sm:bg-transparent">
-                <div className="text-xs sm:text-sm text-gray-400 mb-1">MMR</div>
-                <div className="text-4xl sm:text-5xl font-black text-blue-400">
-                  {(player.mmr || 0).toLocaleString('fr-FR')}
-                </div>
-                {player.maxMmr && (
-                  <div className="text-xs sm:text-sm text-gray-500 mt-1">
-                    Max: {player.maxMmr.toLocaleString('fr-FR')}
-                  </div>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                {rank && (
+                  <Badge 
+                    style={{ backgroundColor: rank.color }} 
+                    className="text-black text-xs px-2 py-0.5 font-semibold"
+                  >
+                    {rank.name}
+                  </Badge>
+                )}
+                {player.overallRank && (
+                  <span className="text-xs text-gray-500">Rang #{player.overallRank}</span>
                 )}
               </div>
             </div>
             
-            {/* External Link */}
-            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white/10 text-center">
-              <a 
-                href={loungeProfileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm sm:text-base"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Voir sur MK8DX Lounge
-              </a>
+            {/* MMR Box */}
+            <div className="text-center sm:text-right">
+              <div className="text-xs text-gray-500 mb-1">MMR</div>
+              <div className="text-3xl sm:text-4xl font-bold text-gray-100">
+                {(player.mmr || 0).toLocaleString('fr-FR')}
+              </div>
+              {player.maxMmr && (
+                <div className="text-xs text-gray-600 mt-1">
+                  Max: {player.maxMmr.toLocaleString('fr-FR')}
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* ========== STATS GRID - Mobile Optimized ========== */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
-          <Card className="bg-green-500/10 border-green-500/20">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-green-400" />
-              <div className="text-xl sm:text-2xl font-bold text-green-400">{playerDetails?.wins || 0}</div>
-              <div className="text-[10px] sm:text-sm text-gray-400">Victoires</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-red-500/10 border-red-500/20">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-red-400" />
-              <div className="text-xl sm:text-2xl font-bold text-red-400">{playerDetails?.losses || 0}</div>
-              <div className="text-[10px] sm:text-sm text-gray-400">Défaites</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-blue-500/10 border-blue-500/20">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-blue-400" />
-              <div className="text-xl sm:text-2xl font-bold text-blue-400">{player.eventsPlayed || 0}</div>
-              <div className="text-[10px] sm:text-sm text-gray-400">Events</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-purple-500/10 border-purple-500/20">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <Target className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-purple-400" />
-              <div className="text-xl sm:text-2xl font-bold text-purple-400">
-                {(() => {
-                  const wins = playerDetails?.wins || 0;
-                  const losses = playerDetails?.losses || 0;
-                  const total = wins + losses;
-                  return total > 0 ? Math.round((wins / total) * 100) : 0;
-                })()}%
-              </div>
-              <div className="text-[10px] sm:text-sm text-gray-400">Win Rate</div>
-            </CardContent>
-          </Card>
+          </div>
+          
+          {/* External Link */}
+          <div className="mt-4 pt-4 border-t border-gray-800 text-center">
+            <a 
+              href={loungeProfileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-300 text-xs sm:text-sm"
+            >
+              <ExternalLink className="w-3 h-3" />
+              Voir sur MK8DX Lounge
+            </a>
+          </div>
         </div>
 
-        {/* ========== SECOND STATS ROW - Mobile Optimized ========== */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
-          <Card className="bg-white/5 border-white/10">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <div className="text-lg sm:text-xl font-bold text-yellow-400">{player.maxMmr || '-'}</div>
-              <div className="text-[10px] sm:text-xs text-gray-400">MMR Max</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white/5 border-white/10">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <div className="text-lg sm:text-xl font-bold text-cyan-400">
-                {playerDetails?.gainLoss !== undefined ? (playerDetails.gainLoss > 0 ? '+' : '') + playerDetails.gainLoss : '-'}
-              </div>
-              <div className="text-[10px] sm:text-xs text-gray-400">Gain/Perte</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white/5 border-white/10">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <div className="text-lg sm:text-xl font-bold text-orange-400">+{playerDetails?.largestGain || '-'}</div>
-              <div className="text-[10px] sm:text-xs text-gray-400">Max Gain</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white/5 border-white/10">
-            <CardContent className="p-3 sm:p-4 text-center">
-              <div className="text-lg sm:text-xl font-bold text-pink-400">{playerDetails?.largestLoss ? playerDetails.largestLoss : '-'}</div>
-              <div className="text-[10px] sm:text-xs text-gray-400">Max Perte</div>
-            </CardContent>
-          </Card>
+        {/* ========== STATS GRID ========== */}
+        <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-4">
+          <div className="bg-neutral-900 border border-gray-800 rounded-lg p-3 text-center">
+            <div className="text-lg sm:text-xl font-bold text-gray-200">{playerDetails?.wins || 0}</div>
+            <div className="text-[10px] sm:text-xs text-gray-500">Victoires</div>
+          </div>
+          <div className="bg-neutral-900 border border-gray-800 rounded-lg p-3 text-center">
+            <div className="text-lg sm:text-xl font-bold text-gray-400">{playerDetails?.losses || 0}</div>
+            <div className="text-[10px] sm:text-xs text-gray-500">Défaites</div>
+          </div>
+          <div className="bg-neutral-900 border border-gray-800 rounded-lg p-3 text-center">
+            <div className="text-lg sm:text-xl font-bold text-gray-200">{player.eventsPlayed || 0}</div>
+            <div className="text-[10px] sm:text-xs text-gray-500">Events</div>
+          </div>
+          <div className="bg-neutral-900 border border-gray-800 rounded-lg p-3 text-center">
+            <div className="text-lg sm:text-xl font-bold text-gray-200">
+              {(() => {
+                const wins = playerDetails?.wins || 0;
+                const losses = playerDetails?.losses || 0;
+                const total = wins + losses;
+                return total > 0 ? Math.round((wins / total) * 100) : 0;
+              })()}%
+            </div>
+            <div className="text-[10px] sm:text-xs text-gray-500">Win Rate</div>
+          </div>
         </div>
 
-        {/* ========== MAIN CONTENT GRID - Mobile Stack ========== */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        {/* ========== SECOND STATS ROW ========== */}
+        <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-4">
+          <div className="bg-neutral-900 border border-gray-800 rounded-lg p-3 text-center">
+            <div className="text-sm sm:text-base font-bold text-gray-300">{player.maxMmr || '-'}</div>
+            <div className="text-[10px] text-gray-600">Max</div>
+          </div>
+          <div className="bg-neutral-900 border border-gray-800 rounded-lg p-3 text-center">
+            <div className="text-sm sm:text-base font-bold text-gray-300">
+              {playerDetails?.gainLoss !== undefined ? (playerDetails.gainLoss > 0 ? '+' : '') + playerDetails.gainLoss : '-'}
+            </div>
+            <div className="text-[10px] text-gray-600">Gain/Perte</div>
+          </div>
+          <div className="bg-neutral-900 border border-gray-800 rounded-lg p-3 text-center">
+            <div className="text-sm sm:text-base font-bold text-gray-300">+{playerDetails?.largestGain || '-'}</div>
+            <div className="text-[10px] text-gray-600">+ Gain</div>
+          </div>
+          <div className="bg-neutral-900 border border-gray-800 rounded-lg p-3 text-center">
+            <div className="text-sm sm:text-base font-bold text-gray-400">{playerDetails?.largestLoss || '-'}</div>
+            <div className="text-[10px] text-gray-600">+ Perte</div>
+          </div>
+        </div>
+
+        {/* ========== MAIN CONTENT GRID ========== */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
           
           {/* Advanced Stats */}
-          <Card className="bg-white/5 border-white/10">
-            <CardHeader className="py-3 sm:py-4 px-4 sm:px-6">
-              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
-                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
-                Stats Avancées
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+          <div className="bg-neutral-900 border border-gray-800 rounded-lg">
+            <div className="px-4 py-3 border-b border-gray-800">
+              <span className="text-sm font-medium text-gray-300">Stats Avancées</span>
+            </div>
+            <div className="p-4">
               {advancedStats ? (
-                <div className="space-y-2 sm:space-y-4">
+                <div className="space-y-2">
                   {advancedStats.avgScore !== null && (
-                    <div className="flex justify-between items-center p-2 sm:p-3 bg-white/5 rounded-lg">
-                      <span className="text-gray-400 text-xs sm:text-sm">Score moyen</span>
-                      <span className="font-bold text-base sm:text-lg">{advancedStats.avgScore}</span>
+                    <div className="flex justify-between items-center p-2 bg-neutral-800/50 rounded">
+                      <span className="text-gray-500 text-xs">Score moyen</span>
+                      <span className="font-semibold text-sm text-gray-200">{advancedStats.avgScore}</span>
                     </div>
                   )}
                   {advancedStats.favoriteTier && (
-                    <div className="flex justify-between items-center p-2 sm:p-3 bg-white/5 rounded-lg">
-                      <span className="text-gray-400 text-xs sm:text-sm">Tier préféré</span>
-                      <Badge variant="outline" className="border-white/30 text-xs sm:text-sm">
-                        Tier {advancedStats.favoriteTier.tier}
-                      </Badge>
+                    <div className="flex justify-between items-center p-2 bg-neutral-800/50 rounded">
+                      <span className="text-gray-500 text-xs">Tier préféré</span>
+                      <span className="text-sm text-gray-300">T{advancedStats.favoriteTier.tier}</span>
                     </div>
                   )}
                   {advancedStats.avgMmrChange !== null && (
-                    <div className="flex justify-between items-center p-2 sm:p-3 bg-white/5 rounded-lg">
-                      <span className="text-gray-400 text-xs sm:text-sm">Δ MMR moyen</span>
-                      <span className={`font-bold text-sm sm:text-base ${advancedStats.avgMmrChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <div className="flex justify-between items-center p-2 bg-neutral-800/50 rounded">
+                      <span className="text-gray-500 text-xs">Δ MMR moyen</span>
+                      <span className={`font-semibold text-sm ${advancedStats.avgMmrChange >= 0 ? 'text-gray-200' : 'text-gray-500'}`}>
                         {advancedStats.avgMmrChange > 0 ? '+' : ''}{advancedStats.avgMmrChange}
                       </span>
                     </div>
                   )}
                   {advancedStats.currentStreak && advancedStats.currentStreak.count > 1 && (
-                    <div className="flex justify-between items-center p-2 sm:p-3 bg-white/5 rounded-lg">
-                      <span className="text-gray-400 text-xs sm:text-sm">Série actuelle</span>
-                      <span className={`font-bold text-sm sm:text-base ${advancedStats.currentStreak.type === 'win' ? 'text-green-400' : 'text-red-400'}`}>
+                    <div className="flex justify-between items-center p-2 bg-neutral-800/50 rounded">
+                      <span className="text-gray-500 text-xs">Série</span>
+                      <span className={`font-semibold text-sm ${advancedStats.currentStreak.type === 'win' ? 'text-gray-200' : 'text-gray-500'}`}>
                         {advancedStats.currentStreak.count} {advancedStats.currentStreak.type === 'win' ? 'V' : 'D'}
                       </span>
                     </div>
                   )}
                   {advancedStats.recentForm && (
-                    <div className="flex justify-between items-center p-2 sm:p-3 bg-white/5 rounded-lg">
-                      <span className="text-gray-400 text-xs sm:text-sm">Forme (10 derniers)</span>
-                      <span className="font-bold text-sm sm:text-base">
-                        <span className="text-green-400">{advancedStats.recentForm.wins}V</span>
-                        {' / '}
-                        <span className="text-red-400">{advancedStats.recentForm.losses}D</span>
+                    <div className="flex justify-between items-center p-2 bg-neutral-800/50 rounded">
+                      <span className="text-gray-500 text-xs">10 derniers</span>
+                      <span className="text-sm">
+                        <span className="text-gray-200">{advancedStats.recentForm.wins}V</span>
+                        <span className="text-gray-600"> / </span>
+                        <span className="text-gray-500">{advancedStats.recentForm.losses}D</span>
                       </span>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-6 sm:py-8">
-                  <BarChart3 className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-gray-600" />
-                  <p className="text-gray-400 text-xs sm:text-sm">Pas assez de données</p>
+                <div className="text-center py-6">
+                  <BarChart3 className="w-8 h-8 mx-auto mb-2 text-gray-700" />
+                  <p className="text-gray-600 text-xs">Pas assez de données</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* MMR Chart - Mobile Optimized */}
-          <Card className="bg-white/5 border-white/10 lg:col-span-2">
-            <CardHeader className="py-3 sm:py-4 px-4 sm:px-6">
-              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
-                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
-                Évolution du MMR
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-2 sm:px-6 pb-4 sm:pb-6">
+          {/* MMR Chart */}
+          <div className="bg-neutral-900 border border-gray-800 rounded-lg lg:col-span-2">
+            <div className="px-4 py-3 border-b border-gray-800">
+              <span className="text-sm font-medium text-gray-300">Évolution MMR</span>
+            </div>
+            <div className="p-2 sm:p-4">
               {mmrChartData.length > 0 ? (
-                <div className="h-48 sm:h-64">
+                <div className="h-48 sm:h-56">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={mmrChartData}>
                       <defs>
-                        <linearGradient id="mmrGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        <linearGradient id="mmrGradientPlayer" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#525252" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#525252" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
                       <XAxis 
                         dataKey="date" 
-                        stroke="#666"
-                        tick={{ fontSize: 9 }}
+                        stroke="#525252"
+                        tick={{ fontSize: 9, fill: '#525252' }}
                         interval="preserveStartEnd"
                       />
                       <YAxis 
-                        stroke="#666"
-                        tick={{ fontSize: 9 }}
+                        stroke="#525252"
+                        tick={{ fontSize: 9, fill: '#525252' }}
                         domain={['dataMin - 100', 'dataMax + 100']}
                         tickFormatter={(v) => v.toLocaleString('fr-FR')}
                         width={45}
@@ -523,96 +483,81 @@ export default function PlayerProfilePage() {
                       <Area
                         type="monotone"
                         dataKey="mmr"
-                        stroke="#3b82f6"
+                        stroke="#737373"
                         strokeWidth={2}
-                        fill="url(#mmrGradient)"
+                        fill="url(#mmrGradientPlayer)"
                       />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="text-center py-8 sm:py-12">
-                  <BarChart3 className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-gray-600" />
-                  <p className="text-gray-400 text-xs sm:text-sm">Pas assez de données pour afficher le graphique</p>
+                <div className="text-center py-10">
+                  <BarChart3 className="w-8 h-8 mx-auto mb-2 text-gray-700" />
+                  <p className="text-gray-600 text-xs">Pas assez de données</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
-        {/* ========== MATCH HISTORY - Mobile Optimized ========== */}
-        <Card className="bg-white/5 border-white/10">
-          <CardHeader className="py-3 sm:py-4 px-4 sm:px-6">
-            <CardTitle className="flex items-center justify-between text-sm sm:text-base">
-              <div className="flex items-center gap-2">
-                <History className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
-                Historique des Matchs
-              </div>
-              {matchHistory.length > 0 && (
-                <span className="text-sm font-normal text-gray-400">
-                  {matchHistory.length} matchs récents
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* ========== MATCH HISTORY ========== */}
+        <div className="bg-neutral-900 border border-gray-800 rounded-lg">
+          <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-300">Historique des Matchs</span>
+            {matchHistory.length > 0 && (
+              <span className="text-xs text-gray-600">{matchHistory.length} matchs</span>
+            )}
+          </div>
+          <div className="p-0">
             {matchHistory.length > 0 ? (
               <>
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full min-w-[400px]">
                     <thead>
-                      <tr className="border-b border-white/10">
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Date</th>
-                        <th className="text-center py-3 px-4 text-gray-400 font-medium">Tier</th>
-                        <th className="text-center py-3 px-4 text-gray-400 font-medium">Format</th>
-                        <th className="text-center py-3 px-4 text-gray-400 font-medium">Score</th>
-                        <th className="text-center py-3 px-4 text-gray-400 font-medium">Δ MMR</th>
-                        <th className="text-right py-3 px-4 text-gray-400 font-medium">Nouveau MMR</th>
+                      <tr className="border-b border-gray-800 text-gray-500 text-xs">
+                        <th className="text-left py-3 px-4 font-medium">Date</th>
+                        <th className="text-center py-3 px-4 font-medium">Tier</th>
+                        <th className="text-center py-3 px-4 font-medium">Format</th>
+                        <th className="text-center py-3 px-4 font-medium">Score</th>
+                        <th className="text-center py-3 px-4 font-medium">Δ MMR</th>
+                        <th className="text-right py-3 px-4 font-medium">MMR</th>
                       </tr>
                     </thead>
                     <tbody>
                       {displayedMatches.map((match, index) => (
                         <tr 
                           key={match.id || index} 
-                          className="border-b border-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                          className="border-b border-gray-800/50 hover:bg-neutral-800/50 transition-colors cursor-pointer"
                           onClick={() => match.id && router.push(`/match/${match.id}`)}
-                          title={match.id ? "Cliquez pour voir les détails du match" : ""}
                         >
                           <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-4 h-4 text-gray-500" />
-                              <span className="text-sm">
-                                {new Date(match.time).toLocaleDateString('fr-FR', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: '2-digit',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </span>
-                            </div>
+                            <span className="text-xs text-gray-400">
+                              {new Date(match.time).toLocaleDateString('fr-FR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: '2-digit'
+                              })}
+                            </span>
                           </td>
                           <td className="py-3 px-4 text-center">
-                            <Badge variant="outline" className="border-white/20">
-                              T{match.tier || '?'}
-                            </Badge>
+                            <span className="text-xs text-gray-400">T{match.tier || '?'}</span>
                           </td>
-                          <td className="py-3 px-4 text-center text-sm text-gray-400">
+                          <td className="py-3 px-4 text-center text-xs text-gray-500">
                             {getMatchFormat(match.numTeams, match.numPlayers)}
                           </td>
                           <td className="py-3 px-4 text-center">
-                            <span className="font-semibold">{match.score ?? '-'}</span>
+                            <span className="font-medium text-sm text-gray-300">{match.score ?? '-'}</span>
                           </td>
                           <td className="py-3 px-4 text-center">
-                            <span className={`font-bold ${
-                              match.mmrDelta > 0 ? 'text-green-400' : 
-                              match.mmrDelta < 0 ? 'text-red-400' : 'text-gray-400'
+                            <span className={`font-medium text-sm ${
+                              match.mmrDelta > 0 ? 'text-gray-200' : 
+                              match.mmrDelta < 0 ? 'text-gray-500' : 'text-gray-600'
                             }`}>
                               {match.mmrDelta > 0 ? '+' : ''}{match.mmrDelta}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-right font-semibold">
-                            {(match.newMmr || 0).toLocaleString('fr-FR')}
+                          <td className="py-3 px-4 text-right">
+                            <span className="text-sm text-gray-400">{(match.newMmr || 0).toLocaleString('fr-FR')}</span>
                           </td>
                         </tr>
                       ))}
@@ -621,21 +566,21 @@ export default function PlayerProfilePage() {
                 </div>
                 
                 {matchHistory.length > 10 && (
-                  <div className="mt-4 text-center">
+                  <div className="p-4 text-center border-t border-gray-800">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => setShowAllMatches(!showAllMatches)}
-                      className="border-white/20 hover:bg-white/10"
+                      className="text-gray-400 hover:text-gray-200 hover:bg-neutral-800 text-xs"
                     >
                       {showAllMatches ? (
                         <>
-                          <ChevronUp className="w-4 h-4 mr-2" />
+                          <ChevronUp className="w-4 h-4 mr-1" />
                           Voir moins
                         </>
                       ) : (
                         <>
-                          <ChevronDown className="w-4 h-4 mr-2" />
-                          Voir tout ({matchHistory.length} matchs)
+                          <ChevronDown className="w-4 h-4 mr-1" />
+                          Voir tout ({matchHistory.length})
                         </>
                       )}
                     </Button>
@@ -644,23 +589,26 @@ export default function PlayerProfilePage() {
               </>
             ) : (
               <div className="text-center py-12">
-                <Swords className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                <p className="text-gray-400">Aucun match récent pour cette saison</p>
+                <Swords className="w-10 h-10 mx-auto mb-3 text-gray-700" />
+                <p className="text-gray-500 text-sm">Aucun match pour cette saison</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Quick Links */}
+        {/* Quick Link */}
         <div className="mt-6 text-center">
           <a 
             href={loungeProfileUrl}
             target="_blank"
             rel="noopener noreferrer"
           >
-            <Button className="bg-white text-black hover:bg-gray-200 font-bold px-8 py-3">
-              <ExternalLink className="w-5 h-5 mr-2" />
-              Voir le profil complet sur MK8DX Lounge
+            <Button 
+              variant="outline" 
+              className="border-gray-700 text-gray-300 hover:bg-neutral-800 hover:text-white px-6"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Profil complet sur MK8DX Lounge
             </Button>
           </a>
         </div>
