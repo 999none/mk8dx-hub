@@ -189,7 +189,13 @@ export default function MatchDetailModal({ matchId, onClose }) {
                                   </div>
                                   <div className="col-span-5 flex items-center gap-2 min-w-0">
                                     {player.playerCountryCode && <span className="text-sm flex-shrink-0">{getCountryFlag(player.playerCountryCode)}</span>}
-                                    <span className="text-sm text-gray-300 truncate">{player.playerName}</span>
+                                    <Link 
+                                      href={`/player/${encodeURIComponent(player.playerName)}`}
+                                      className="text-sm text-gray-300 truncate hover:text-white hover:underline transition-colors"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {player.playerName}
+                                    </Link>
                                   </div>
                                   <div className="col-span-2 text-center">
                                     <span className="text-sm font-semibold text-white">{player.score}</span>
