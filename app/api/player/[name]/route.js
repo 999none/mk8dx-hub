@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request, { params }) {
   try {
-    const playerName = decodeURIComponent(params.name);
+    const resolvedParams = await params;
+    const playerName = decodeURIComponent(resolvedParams.name);
     
     // Search for the player in the leaderboard data
     const leaderboardUrl = new URL('/api/leaderboard', request.url);
