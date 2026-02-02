@@ -15,12 +15,8 @@ import Navbar from '@/components/Navbar';
 const GAME_FILTERS = [
   { value: 'all', label: 'Tous les jeux', icon: '🎮' },
   { value: 'mkworld', label: 'Mario Kart World', icon: '🌍' },
-  { value: 'mk8dx', label: 'Mario Kart 8 DX', icon: '🏎️' },
-  { value: 'mk8', label: 'Mario Kart 8', icon: '🎯' },
-  { value: 'mkwii', label: 'Mario Kart Wii', icon: '🏁' },
-  { value: 'mkt', label: 'Mario Kart Tour', icon: '📱' },
-  { value: 'mk7', label: 'Mario Kart 7', icon: '🎲' },
-  { value: 'smk', label: 'Super Mario Kart', icon: '👾' },
+  { value: 'mk8dx', label: 'Mario Kart 8 Deluxe', icon: '🏎️' },
+  { value: 'mkw', label: 'Mario Kart Wii', icon: '🏁' },
 ];
 
 const STATUS_FILTERS = [
