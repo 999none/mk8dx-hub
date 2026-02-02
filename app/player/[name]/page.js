@@ -530,7 +530,7 @@ export default function PlayerProfilePage() {
                         <tr 
                           key={match.id || index} 
                           className="border-b border-gray-800/50 hover:bg-neutral-800/50 transition-colors cursor-pointer"
-                          onClick={() => match.id && router.push(`/match/${match.id}`)}
+                          onClick={() => match.id && setSelectedMatchId(match.id)}
                         >
                           <td className="py-3 px-4">
                             <span className="text-xs text-gray-400">
