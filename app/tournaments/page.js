@@ -105,14 +105,16 @@ export default function TournamentsPage() {
 
           {/* Summary Stats */}
           {summary && (
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-4 gap-3 mb-6">
               {[
-                { label: 'En cours', value: summary.ongoing || 0, color: 'text-green-500', bg: 'bg-green-500/10' },
-                { label: 'À venir', value: summary.upcoming || 0, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                { label: 'Terminés', value: summary.past || 0, color: 'text-gray-400', bg: 'bg-white/[0.02]' },
+                { label: 'MK World', value: summary.mkworld || 0, color: 'text-green-500', bg: 'bg-green-500/10', icon: '🌍' },
+                { label: 'MK8 Deluxe', value: summary.mk8dx || 0, color: 'text-blue-500', bg: 'bg-blue-500/10', icon: '🏎️' },
+                { label: 'MK Wii', value: summary.mkw || 0, color: 'text-purple-500', bg: 'bg-purple-500/10', icon: '🏁' },
+                { label: 'Inscriptions', value: summary.registrationsOpen || 0, color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: '✍️' },
               ].map((stat, i) => (
                 <div key={i} className={`text-center p-4 ${stat.bg} border border-white/[0.04] rounded-xl`}>
-                  <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
+                  <div className="text-lg mb-1">{stat.icon}</div>
+                  <div className={`text-xl font-bold ${stat.color}`}>{stat.value}</div>
                   <p className="text-xs text-gray-500">{stat.label}</p>
                 </div>
               ))}
