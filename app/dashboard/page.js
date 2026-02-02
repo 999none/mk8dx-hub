@@ -311,9 +311,23 @@ export default function DashboardPage() {
                     )}
 
                     {/* Lounge Profile Link */}
-                    {(loungeData?.name || playerDetails?.playerId) && (
+                    {(loungeData?.name || playerDetails?.playerId || playerDetails?.id) && (
                       <a 
-                        href={`https://lounge.mkcentral.com/mk8dx/PlayerDetails/${playerDetails?.playerId || loungeData?.id || loungeData?.name}`}
+                        href={(() => {
+                          // Priorité: playerId > id > name encodé
+                          const playerId = playerDetails?.playerId || playerDetails?.id || loungeData?.playerId || loungeData?.id;
+                          const baseUrl = 'https://lounge.mkcentral.com/mk8dx/PlayerDetails';
+                          if (playerId) {
+                            return selectedSeason 
+                              ? `${baseUrl}/${playerId}?season=${selectedSeason}`
+                              : `${baseUrl}/${playerId}`;
+                          }
+                          // Fallback avec le nom encodé
+                          const name = encodeURIComponent(loungeData?.name || playerDetails?.name || '');
+                          return selectedSeason 
+                            ? `${baseUrl}/${name}?season=${selectedSeason}`
+                            : `${baseUrl}/${name}`;
+                        })()}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-4 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm"
