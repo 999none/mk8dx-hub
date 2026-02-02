@@ -394,13 +394,13 @@ export default function LeaderboardPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-1 p-4 border-t border-gray-800">
+                <div className="flex items-center justify-center gap-1 p-4 border-t border-[#252540] bg-[#12122a]">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setPage(1)}
                     disabled={page === 1}
-                    className="text-gray-500 hover:text-gray-300 hover:bg-neutral-800 h-8 px-2 text-xs"
+                    className="text-gray-500 hover:text-gray-300 hover:bg-[#252548] h-8 px-2 text-xs"
                   >
                     Début
                   </Button>
@@ -409,7 +409,7 @@ export default function LeaderboardPage() {
                     size="icon"
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="text-gray-500 hover:text-gray-300 hover:bg-neutral-800 h-8 w-8"
+                    className="text-gray-500 hover:text-gray-300 hover:bg-[#252548] h-8 w-8"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
@@ -437,7 +437,7 @@ export default function LeaderboardPage() {
                           className={`h-8 w-8 text-xs ${
                             page === pageNum 
                               ? 'bg-gray-200 text-black hover:bg-gray-300' 
-                              : 'text-gray-500 hover:text-gray-300 hover:bg-neutral-800'
+                              : 'text-gray-500 hover:text-gray-300 hover:bg-[#252548]'
                           }`}
                         >
                           {pageNum}
@@ -451,7 +451,7 @@ export default function LeaderboardPage() {
                     size="icon"
                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="text-gray-500 hover:text-gray-300 hover:bg-neutral-800 h-8 w-8"
+                    className="text-gray-500 hover:text-gray-300 hover:bg-[#252548] h-8 w-8"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </Button>
@@ -460,7 +460,7 @@ export default function LeaderboardPage() {
                     size="sm"
                     onClick={() => setPage(totalPages)}
                     disabled={page === totalPages}
-                    className="text-gray-500 hover:text-gray-300 hover:bg-neutral-800 h-8 px-2 text-xs"
+                    className="text-gray-500 hover:text-gray-300 hover:bg-[#252548] h-8 px-2 text-xs"
                   >
                     Fin
                   </Button>
