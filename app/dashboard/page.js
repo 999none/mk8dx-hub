@@ -8,18 +8,25 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Home, Trophy, TrendingUp, TrendingDown, Target, 
   Gamepad2, Star, Calendar, RefreshCw, LogOut,
-  User, Shield, Award, Zap
+  User, Shield, Award, Zap, History, BarChart3,
+  Clock, ChevronDown, ChevronUp, ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import RequireAuth from '@/components/RequireAuth';
 import { getCurrentRank } from '@/lib/mockData';
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, 
+  Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart
+} from 'recharts';
 
 export default function DashboardPage() {
   const { data: session } = useSession();
   const [playerStats, setPlayerStats] = useState(null);
+  const [playerDetails, setPlayerDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [verificationData, setVerificationData] = useState(null);
+  const [showAllMatches, setShowAllMatches] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,12 +37,22 @@ export default function DashboardPage() {
         const verifyData = await verifyRes.json();
         setVerificationData(verifyData);
 
-        // If user is verified and has lounge name, fetch their stats
+        // If user is verified and has lounge name, fetch their full stats
         if (verifyData.verified && verifyData.user?.loungeName) {
-          const loungeRes = await fetch(`/api/admin/lounge-search?name=${encodeURIComponent(verifyData.user.loungeName)}`);
+          const loungeName = verifyData.user.loungeName;
+          
+          // Fetch activity stats
+          const loungeRes = await fetch(`/api/admin/lounge-search?name=${encodeURIComponent(loungeName)}`);
           const loungeData = await loungeRes.json();
           if (loungeData.found) {
             setPlayerStats(loungeData);
+          }
+
+          // Fetch full player details with MMR history
+          const detailsRes = await fetch(`/api/lounge/player-details/${encodeURIComponent(loungeName)}`);
+          const detailsData = await detailsRes.json();
+          if (detailsData && detailsData.name) {
+            setPlayerDetails(detailsData);
           }
         }
       } catch (err) {
@@ -51,6 +68,96 @@ export default function DashboardPage() {
   const user = session?.user;
   const loungeData = verificationData?.user?.loungeData || playerStats?.player;
   const rank = loungeData?.mmr ? getCurrentRank(loungeData.mmr) : null;
+  
+  // Calculate advanced stats from match history
+  const matchHistory = playerDetails?.matchHistory || [];
+  const mmrChanges = playerDetails?.mmrChanges || [];
+  
+  // Prepare MMR chart data
+  const mmrChartData = mmrChanges
+    .filter(c => c.reason === 'Table')
+    .slice(0, 50)
+    .reverse()
+    .map((change, index) => ({
+      index,
+      date: new Date(change.time).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+      mmr: change.newMmr,
+      delta: change.mmrDelta,
+      tier: change.tier
+    }));
+
+  // Calculate advanced statistics
+  const calculateAdvancedStats = () => {
+    if (!matchHistory || matchHistory.length === 0) return null;
+    
+    const scores = matchHistory.filter(m => m.score !== undefined).map(m => m.score);
+    const avgScore = scores.length > 0 
+      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) 
+      : null;
+    
+    // Tier distribution
+    const tierCounts = {};
+    matchHistory.forEach(m => {
+      if (m.tier) {
+        tierCounts[m.tier] = (tierCounts[m.tier] || 0) + 1;
+      }
+    });
+    const favoriteTier = Object.entries(tierCounts).sort((a, b) => b[1] - a[1])[0];
+    
+    // Win/Loss streak
+    let currentStreak = 0;
+    let streakType = null;
+    for (const m of matchHistory) {
+      if (m.mmrDelta > 0) {
+        if (streakType === 'win') currentStreak++;
+        else { currentStreak = 1; streakType = 'win'; }
+      } else if (m.mmrDelta < 0) {
+        if (streakType === 'loss') currentStreak++;
+        else { currentStreak = 1; streakType = 'loss'; }
+      } else break;
+    }
+    
+    // Recent form (last 10)
+    const recent10 = matchHistory.slice(0, 10);
+    const wins10 = recent10.filter(m => m.mmrDelta > 0).length;
+    const losses10 = recent10.filter(m => m.mmrDelta < 0).length;
+    
+    // Average MMR change
+    const mmrDeltas = matchHistory.filter(m => m.mmrDelta !== undefined).map(m => m.mmrDelta);
+    const avgMmrChange = mmrDeltas.length > 0
+      ? Math.round(mmrDeltas.reduce((a, b) => a + b, 0) / mmrDeltas.length)
+      : null;
+    
+    return {
+      avgScore,
+      favoriteTier: favoriteTier ? { tier: favoriteTier[0], count: favoriteTier[1] } : null,
+      currentStreak: { count: currentStreak, type: streakType },
+      recentForm: { wins: wins10, losses: losses10 },
+      avgMmrChange,
+      tierCounts
+    };
+  };
+
+  const advancedStats = calculateAdvancedStats();
+  const displayedMatches = showAllMatches ? matchHistory : matchHistory.slice(0, 10);
+
+  // Custom tooltip for chart
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-gray-900 border border-white/20 p-3 rounded-lg shadow-xl">
+          <p className="text-sm text-gray-400">{data.date}</p>
+          <p className="text-lg font-bold">{data.mmr.toLocaleString('fr-FR')} MMR</p>
+          <p className={`text-sm ${data.delta > 0 ? 'text-green-400' : 'text-red-400'}`}>
+            {data.delta > 0 ? '+' : ''}{data.delta}
+          </p>
+          {data.tier && <p className="text-xs text-gray-500">Tier {data.tier}</p>}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <RequireAuth>
@@ -117,7 +224,7 @@ export default function DashboardPage() {
               <span className="text-gray-400">Chargement de vos données...</span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Profil Card */}
               <Card className="bg-white/5 border-white/10 lg:row-span-2">
                 <CardHeader>
@@ -137,7 +244,7 @@ export default function DashboardPage() {
                         className="rounded-full mb-4 border-4 border-white/20"
                       />
                     )}
-                    <h3 className="text-2xl font-bold mb-1">{user?.name || user?.username}</h3>
+                    <h3 className="text-2xl font-bold mb-1">{loungeData?.name || user?.name || user?.username}</h3>
                     <p className="text-gray-400 text-sm mb-4">@{user?.username}</p>
                     
                     {/* Server Status */}
@@ -172,6 +279,19 @@ export default function DashboardPage() {
                       </Badge>
                     )}
 
+                    {/* Lounge Profile Link */}
+                    {loungeData?.name && (
+                      <a 
+                        href={`https://www.mk8dx-lounge.com/PlayerDetails/${encodeURIComponent(loungeData.name)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-4 flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Voir profil Lounge
+                      </a>
+                    )}
+
                     <p className="text-xs text-gray-500 mt-4">
                       Discord ID: {user?.discordId}
                     </p>
@@ -191,7 +311,7 @@ export default function DashboardPage() {
                   {loungeData ? (
                     <div className="space-y-4">
                       <div className="text-center">
-                        <div className="text-5xl font-black mb-2">{loungeData.mmr || 0}</div>
+                        <div className="text-5xl font-black mb-2">{(loungeData.mmr || 0).toLocaleString('fr-FR')}</div>
                         <p className="text-gray-400 text-sm">MMR Actuel</p>
                       </div>
                       {rank && (
@@ -206,14 +326,13 @@ export default function DashboardPage() {
                       )}
                       {loungeData.maxMmr && (
                         <div className="text-center pt-2 border-t border-white/10">
-                          <p className="text-sm text-gray-400">MMR Max: <span className="text-white font-semibold">{loungeData.maxMmr}</span></p>
+                          <p className="text-sm text-gray-400">MMR Max: <span className="text-white font-semibold">{loungeData.maxMmr.toLocaleString('fr-FR')}</span></p>
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className="text-center py-4">
                       <p className="text-gray-400">Données non disponibles</p>
-                      <p className="text-xs text-gray-500 mt-2">Connectez votre compte Lounge pour voir vos stats</p>
                     </div>
                   )}
                 </CardContent>
@@ -229,7 +348,7 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   {loungeData ? (
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="text-center p-3 bg-green-500/10 rounded-lg">
                         <div className="flex items-center justify-center gap-1 mb-1">
                           <TrendingUp className="w-4 h-4 text-green-500" />
@@ -244,9 +363,11 @@ export default function DashboardPage() {
                         <div className="text-2xl font-bold text-red-400">{loungeData.losses || 0}</div>
                         <p className="text-xs text-gray-400">Défaites</p>
                       </div>
-                      {loungeData.winRate !== undefined && (
+                      {(loungeData.wins || loungeData.losses) && (
                         <div className="col-span-2 text-center p-3 bg-white/5 rounded-lg">
-                          <div className="text-2xl font-bold">{Math.round(loungeData.winRate * 100) || loungeData.winRate}%</div>
+                          <div className="text-2xl font-bold">
+                            {Math.round((loungeData.wins / (loungeData.wins + loungeData.losses)) * 100)}%
+                          </div>
                           <p className="text-xs text-gray-400">Taux de victoire</p>
                         </div>
                       )}
@@ -259,52 +380,231 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              {/* Activity Card */}
-              <Card className="bg-white/5 border-white/10 lg:col-span-2">
+              {/* Advanced Stats Card */}
+              <Card className="bg-white/5 border-white/10">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Gamepad2 className="w-5 h-5 text-purple-500" />
-                    Activité Récente
+                    <BarChart3 className="w-5 h-5 text-purple-500" />
+                    Stats Avancées
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {playerStats?.activity ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="text-center p-4 bg-white/5 rounded-lg">
-                        <Zap className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
-                        <div className="text-3xl font-bold">{playerStats.activity.matchCount}</div>
-                        <p className="text-sm text-gray-400">Matchs (30j)</p>
-                      </div>
-                      <div className="text-center p-4 bg-white/5 rounded-lg">
-                        <Calendar className="w-8 h-8 mx-auto mb-2 text-blue-500" />
-                        <div className="text-lg font-semibold">
-                          {playerStats.activity.lastMatchDate 
-                            ? new Date(playerStats.activity.lastMatchDate).toLocaleDateString('fr-FR')
-                            : 'N/A'
-                          }
+                  {advancedStats ? (
+                    <div className="space-y-4">
+                      {advancedStats.avgScore !== null && (
+                        <div className="flex justify-between items-center p-2 bg-white/5 rounded">
+                          <span className="text-gray-400 text-sm">Score moyen</span>
+                          <span className="font-bold text-lg">{advancedStats.avgScore}</span>
                         </div>
-                        <p className="text-sm text-gray-400">Dernier match</p>
-                      </div>
-                      <div className="text-center p-4 bg-white/5 rounded-lg">
-                        <Star className="w-8 h-8 mx-auto mb-2 text-green-500" />
-                        <div className={`text-2xl font-bold ${playerStats.activity.isActive ? 'text-green-400' : 'text-red-400'}`}>
-                          {playerStats.activity.isActive ? 'Actif' : 'Inactif'}
+                      )}
+                      {advancedStats.favoriteTier && (
+                        <div className="flex justify-between items-center p-2 bg-white/5 rounded">
+                          <span className="text-gray-400 text-sm">Tier préféré</span>
+                          <Badge variant="outline" className="border-white/30">
+                            Tier {advancedStats.favoriteTier.tier}
+                          </Badge>
                         </div>
-                        <p className="text-sm text-gray-400">Statut</p>
-                      </div>
+                      )}
+                      {advancedStats.avgMmrChange !== null && (
+                        <div className="flex justify-between items-center p-2 bg-white/5 rounded">
+                          <span className="text-gray-400 text-sm">Δ MMR moyen</span>
+                          <span className={`font-bold ${advancedStats.avgMmrChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {advancedStats.avgMmrChange > 0 ? '+' : ''}{advancedStats.avgMmrChange}
+                          </span>
+                        </div>
+                      )}
+                      {advancedStats.currentStreak && advancedStats.currentStreak.count > 1 && (
+                        <div className="flex justify-between items-center p-2 bg-white/5 rounded">
+                          <span className="text-gray-400 text-sm">Série actuelle</span>
+                          <span className={`font-bold ${advancedStats.currentStreak.type === 'win' ? 'text-green-400' : 'text-red-400'}`}>
+                            {advancedStats.currentStreak.count} {advancedStats.currentStreak.type === 'win' ? 'V' : 'D'}
+                          </span>
+                        </div>
+                      )}
+                      {advancedStats.recentForm && (
+                        <div className="flex justify-between items-center p-2 bg-white/5 rounded">
+                          <span className="text-gray-400 text-sm">Forme (10 derniers)</span>
+                          <span className="font-bold">
+                            <span className="text-green-400">{advancedStats.recentForm.wins}V</span>
+                            {' / '}
+                            <span className="text-red-400">{advancedStats.recentForm.losses}D</span>
+                          </span>
+                        </div>
+                      )}
                     </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-gray-400 text-sm">Jouez des matchs pour voir vos stats avancées</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* MMR Evolution Chart */}
+              <Card className="bg-white/5 border-white/10 lg:col-span-3">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-green-500" />
+                    Évolution du MMR
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {mmrChartData.length > 0 ? (
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={mmrChartData}>
+                          <defs>
+                            <linearGradient id="mmrGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                          <XAxis 
+                            dataKey="date" 
+                            stroke="#666"
+                            tick={{ fontSize: 11 }}
+                            interval="preserveStartEnd"
+                          />
+                          <YAxis 
+                            stroke="#666"
+                            tick={{ fontSize: 11 }}
+                            domain={['dataMin - 100', 'dataMax + 100']}
+                            tickFormatter={(v) => v.toLocaleString('fr-FR')}
+                          />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Area
+                            type="monotone"
+                            dataKey="mmr"
+                            stroke="#3b82f6"
+                            strokeWidth={2}
+                            fill="url(#mmrGradient)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+                      <p className="text-gray-400">Pas assez de données pour afficher le graphique</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Match History */}
+              <Card className="bg-white/5 border-white/10 lg:col-span-4">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <History className="w-5 h-5 text-blue-500" />
+                      Historique des Matchs
+                    </div>
+                    {matchHistory.length > 0 && (
+                      <span className="text-sm font-normal text-gray-400">
+                        {matchHistory.length} matchs récents
+                      </span>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {matchHistory.length > 0 ? (
+                    <>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-white/10">
+                              <th className="text-left py-3 px-4 text-gray-400 font-medium">Date</th>
+                              <th className="text-center py-3 px-4 text-gray-400 font-medium">Tier</th>
+                              <th className="text-center py-3 px-4 text-gray-400 font-medium">Format</th>
+                              <th className="text-center py-3 px-4 text-gray-400 font-medium">Score</th>
+                              <th className="text-center py-3 px-4 text-gray-400 font-medium">Δ MMR</th>
+                              <th className="text-right py-3 px-4 text-gray-400 font-medium">Nouveau MMR</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {displayedMatches.map((match, index) => (
+                              <tr 
+                                key={match.id || index} 
+                                className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                              >
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-gray-500" />
+                                    <span className="text-sm">
+                                      {new Date(match.time).toLocaleDateString('fr-FR', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <Badge variant="outline" className="border-white/20">
+                                    T{match.tier || '?'}
+                                  </Badge>
+                                </td>
+                                <td className="py-3 px-4 text-center text-sm text-gray-400">
+                                  {match.numTeams ? `${match.numTeams}v${match.numTeams}` : '-'}
+                                  {match.numPlayers && <span className="ml-1">({match.numPlayers}p)</span>}
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <span className="font-semibold">{match.score ?? '-'}</span>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <span className={`font-bold ${
+                                    match.mmrDelta > 0 ? 'text-green-400' : 
+                                    match.mmrDelta < 0 ? 'text-red-400' : 'text-gray-400'
+                                  }`}>
+                                    {match.mmrDelta > 0 ? '+' : ''}{match.mmrDelta}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-right font-semibold">
+                                  {(match.newMmr || 0).toLocaleString('fr-FR')}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      {matchHistory.length > 10 && (
+                        <div className="mt-4 text-center">
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowAllMatches(!showAllMatches)}
+                            className="border-white/20 hover:bg-white/10"
+                          >
+                            {showAllMatches ? (
+                              <>
+                                <ChevronUp className="w-4 h-4 mr-2" />
+                                Voir moins
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="w-4 h-4 mr-2" />
+                                Voir tout ({matchHistory.length} matchs)
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div className="text-center py-8">
                       <Gamepad2 className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                      <p className="text-gray-400">Aucune activité récente</p>
-                      <p className="text-xs text-gray-500 mt-2">Jouez des matchs sur le Lounge pour voir vos statistiques</p>
+                      <p className="text-gray-400">Aucun match récent</p>
+                      <p className="text-xs text-gray-500 mt-2">Jouez des matchs sur le Lounge pour voir votre historique</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
               {/* Quick Links */}
-              <Card className="bg-white/5 border-white/10 lg:col-span-3">
+              <Card className="bg-white/5 border-white/10 lg:col-span-4">
                 <CardHeader>
                   <CardTitle>Accès Rapide</CardTitle>
                 </CardHeader>
