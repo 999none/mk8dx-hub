@@ -22,6 +22,29 @@ const getCountryFlag = (countryCode) => {
   return String.fromCodePoint(...codePoints);
 };
 
+// Get format info with details
+const getFormatInfo = (numTeams, numPlayers) => {
+  if (!numTeams || !numPlayers) return { format: '-', isTeamFormat: false, playersPerTeam: 1 };
+  if (numTeams === numPlayers) return { format: 'FFA', isTeamFormat: false, playersPerTeam: 1 };
+  const playersPerTeam = Math.floor(numPlayers / numTeams);
+  return { 
+    format: `${playersPerTeam}v${playersPerTeam}`, 
+    isTeamFormat: playersPerTeam >= 2, 
+    playersPerTeam,
+    numTeams 
+  };
+};
+
+// Team colors for different ranks
+const TEAM_COLORS = [
+  { bg: 'bg-gray-100', text: 'text-black', rankBg: 'bg-black', rankText: 'text-white' },     // 1st
+  { bg: 'bg-gray-400', text: 'text-black', rankBg: 'bg-gray-700', rankText: 'text-white' },  // 2nd  
+  { bg: 'bg-gray-600', text: 'text-white', rankBg: 'bg-gray-900', rankText: 'text-white' },  // 3rd
+  { bg: 'bg-blue-900', text: 'text-white', rankBg: 'bg-blue-600', rankText: 'text-white' },  // 4th
+  { bg: 'bg-purple-900', text: 'text-white', rankBg: 'bg-purple-600', rankText: 'text-white' }, // 5th
+  { bg: 'bg-pink-900', text: 'text-white', rankBg: 'bg-pink-600', rankText: 'text-white' },  // 6th
+];
+
 export default function MatchDetailsPage() {
   const params = useParams();
   const router = useRouter();
