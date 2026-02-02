@@ -311,41 +311,41 @@ export default function MatchDetailsPage() {
               </CardContent>
             </Card>
 
-            {/* ========== MATCH STATISTICS ========== */}
+            {/* ========== MATCH STATISTICS - Mobile Optimized ========== */}
             {matchData.stats && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 bg-zinc-900 border border-white/20 rounded-xl text-center">
-                  <Users className="w-6 h-6 mx-auto mb-2 text-white" />
-                  <p className="text-2xl font-bold">{matchData.stats.totalPlayers}</p>
-                  <p className="text-sm text-gray-400">Joueurs</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+                <div className="p-3 sm:p-4 bg-zinc-900 border border-white/20 rounded-lg sm:rounded-xl text-center">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-white" />
+                  <p className="text-xl sm:text-2xl font-bold">{matchData.stats.totalPlayers}</p>
+                  <p className="text-[10px] sm:text-sm text-gray-400">Joueurs</p>
                 </div>
-                <div className="p-4 bg-zinc-900 border border-white/20 rounded-xl text-center">
-                  <Target className="w-6 h-6 mx-auto mb-2 text-white" />
-                  <p className="text-2xl font-bold">{matchData.stats.avgScore}</p>
-                  <p className="text-sm text-gray-400">Score Moyen</p>
+                <div className="p-3 sm:p-4 bg-zinc-900 border border-white/20 rounded-lg sm:rounded-xl text-center">
+                  <Target className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-white" />
+                  <p className="text-xl sm:text-2xl font-bold">{matchData.stats.avgScore}</p>
+                  <p className="text-[10px] sm:text-sm text-gray-400">Score Moy.</p>
                 </div>
-                <div className="p-4 bg-zinc-900 border border-white/20 rounded-xl text-center">
-                  <TrendingUp className="w-6 h-6 mx-auto mb-2 text-white" />
-                  <p className="text-2xl font-bold">{matchData.stats.highestScore}</p>
-                  <p className="text-sm text-gray-400">Meilleur Score</p>
+                <div className="p-3 sm:p-4 bg-zinc-900 border border-white/20 rounded-lg sm:rounded-xl text-center">
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-white" />
+                  <p className="text-xl sm:text-2xl font-bold">{matchData.stats.highestScore}</p>
+                  <p className="text-[10px] sm:text-sm text-gray-400">Max Score</p>
                 </div>
-                <div className="p-4 bg-zinc-900 border border-white/20 rounded-xl text-center">
-                  <TrendingDown className="w-6 h-6 mx-auto mb-2 text-white" />
-                  <p className="text-2xl font-bold">{matchData.stats.lowestScore}</p>
-                  <p className="text-sm text-gray-400">Score Minimum</p>
+                <div className="p-3 sm:p-4 bg-zinc-900 border border-white/20 rounded-lg sm:rounded-xl text-center">
+                  <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2 text-white" />
+                  <p className="text-xl sm:text-2xl font-bold">{matchData.stats.lowestScore}</p>
+                  <p className="text-[10px] sm:text-sm text-gray-400">Min Score</p>
                 </div>
               </div>
             )}
 
-            {/* ========== EXTERNAL LINK ========== */}
-            <div className="text-center pb-8">
+            {/* ========== EXTERNAL LINK - Mobile Optimized ========== */}
+            <div className="text-center pb-4 sm:pb-8">
               <a 
                 href={loungeTableUrl}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Button className="bg-white text-black hover:bg-gray-200 font-bold px-8 py-3">
-                  <ExternalLink className="w-5 h-5 mr-2" />
+                <Button className="bg-white text-black hover:bg-gray-200 font-bold px-6 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-base">
+                  <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Voir sur MK8DX Lounge
                 </Button>
               </a>
