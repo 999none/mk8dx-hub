@@ -396,6 +396,7 @@ export async function GET(request, context) {
     // Get player full details from Lounge
     if (path.startsWith('lounge/player-details/')) {
       const playerName = decodeURIComponent(path.replace('lounge/player-details/', ''));
+      const { searchParams } = new URL(request.url);
       const season = searchParams.get('season') || '';
       
       try {
@@ -421,22 +422,30 @@ export async function GET(request, context) {
             numPlayers: change.numPlayers
           }));
         
-        // Calculate stats
-        const recentMatches = matchHistory.slice(0, 30);
-        const recentWins = recentMatches.filter(m => m.mmrDelta > 0).length;
-        const recentLosses = recentMatches.filter(m => m.mmrDelta < 0).length;
+        // Calculate wins/losses from all mmrChanges
+        const allTableMatches = (playerDetails.mmrChanges || []).filter(c => c.reason === 'Table');
+        const wins = allTableMatches.filter(m => m.mmrDelta > 0).length;
+        const losses = allTableMatches.filter(m => m.mmrDelta < 0).length;
+        
+        // Build the correct MKCentral URL
+        const playerId = playerDetails.playerId || playerDetails.id;
+        const loungeProfileUrl = season 
+          ? `https://lounge.mkcentral.com/mk8dx/PlayerDetails/${playerId}?season=${season}`
+          : `https://lounge.mkcentral.com/mk8dx/PlayerDetails/${playerId}`;
         
         return NextResponse.json({
           ...playerDetails,
+          wins,
+          losses,
           matchHistory,
           recentStats: {
             last30: {
-              wins: recentWins,
-              losses: recentLosses,
-              total: recentMatches.length
+              wins: matchHistory.slice(0, 30).filter(m => m.mmrDelta > 0).length,
+              losses: matchHistory.slice(0, 30).filter(m => m.mmrDelta < 0).length,
+              total: Math.min(matchHistory.length, 30)
             }
           },
-          loungeProfileUrl: `https://lounge.mkcentral.com/mk8dx/PlayerDetails/${playerDetails.playerId || playerDetails.id}`
+          loungeProfileUrl
         });
         
       } catch (error) {
