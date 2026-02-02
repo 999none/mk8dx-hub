@@ -76,33 +76,43 @@ export default function MatchDetailsPage() {
     });
   };
 
+  // Format date compact for mobile
+  const formatDateCompact = (dateStr) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit'
+    });
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar />
 
-      <div className="container mx-auto px-4 py-8 pt-24">
-        {/* Back Button */}
-        <div className="mb-6">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 pt-20 sm:pt-24">
+        {/* Back Button - Compact on mobile */}
+        <div className="mb-4 sm:mb-6">
           <Button 
             variant="ghost" 
             onClick={() => router.back()}
-            className="hover:bg-white/10"
+            className="hover:bg-white/10 h-9 px-3 text-sm"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
             Retour
           </Button>
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <RefreshCw className="w-12 h-12 animate-spin mb-4 text-white/50" />
-            <p className="text-gray-400">Chargement des détails du match...</p>
+          <div className="flex flex-col items-center justify-center py-16 sm:py-20">
+            <RefreshCw className="w-10 h-10 sm:w-12 sm:h-12 animate-spin mb-3 sm:mb-4 text-white/50" />
+            <p className="text-gray-400 text-sm sm:text-base">Chargement des détails du match...</p>
           </div>
         ) : error ? (
-          <div className="text-center py-20">
-            <Swords className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-            <h2 className="text-2xl font-bold mb-2">Match introuvable</h2>
-            <p className="text-gray-400 mb-6">{error}</p>
+          <div className="text-center py-16 sm:py-20 px-4">
+            <Swords className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-gray-600" />
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">Match introuvable</h2>
+            <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">{error}</p>
             <Button 
               onClick={() => router.back()}
               className="bg-white text-black hover:bg-white/90"
@@ -111,36 +121,40 @@ export default function MatchDetailsPage() {
             </Button>
           </div>
         ) : matchData ? (
-          <div className="max-w-5xl mx-auto space-y-8">
+          <div className="max-w-5xl mx-auto space-y-5 sm:space-y-8">
             
-            {/* ========== HEADER INFO ========== */}
+            {/* ========== HEADER INFO - Mobile Optimized ========== */}
             <div className="text-center">
-              <h1 className="text-4xl md:text-5xl font-black mb-6">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 sm:mb-6">
                 Table #{matchId}
               </h1>
               
-              {/* Match Info Grid - Black & White Style */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 bg-white text-black rounded-xl">
-                  <Swords className="w-6 h-6 mx-auto mb-2" />
-                  <p className="text-xs uppercase tracking-wider opacity-70">Tier</p>
-                  <p className="font-black text-2xl">{matchData.tier || '?'}</p>
+              {/* Match Info Grid - 2x2 on mobile, 4 columns on desktop */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+                <div className="p-3 sm:p-4 bg-white text-black rounded-lg sm:rounded-xl">
+                  <Swords className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2" />
+                  <p className="text-[10px] sm:text-xs uppercase tracking-wider opacity-70">Tier</p>
+                  <p className="font-black text-xl sm:text-2xl">{matchData.tier || '?'}</p>
                 </div>
-                <div className="p-4 bg-white text-black rounded-xl">
-                  <Users className="w-6 h-6 mx-auto mb-2" />
-                  <p className="text-xs uppercase tracking-wider opacity-70">Format</p>
-                  <p className="font-black text-2xl">{matchData.format || `${matchData.numTeams}v${matchData.numTeams}`}</p>
+                <div className="p-3 sm:p-4 bg-white text-black rounded-lg sm:rounded-xl">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2" />
+                  <p className="text-[10px] sm:text-xs uppercase tracking-wider opacity-70">Format</p>
+                  <p className="font-black text-xl sm:text-2xl">{matchData.format || `${matchData.numTeams}v${matchData.numTeams}`}</p>
                 </div>
-                <div className="p-4 bg-white text-black rounded-xl">
-                  <Trophy className="w-6 h-6 mx-auto mb-2" />
-                  <p className="text-xs uppercase tracking-wider opacity-70">Joueurs</p>
-                  <p className="font-black text-2xl">{matchData.numPlayers}</p>
+                <div className="p-3 sm:p-4 bg-white text-black rounded-lg sm:rounded-xl">
+                  <Trophy className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2" />
+                  <p className="text-[10px] sm:text-xs uppercase tracking-wider opacity-70">Joueurs</p>
+                  <p className="font-black text-xl sm:text-2xl">{matchData.numPlayers}</p>
                 </div>
-                <div className="p-4 bg-white text-black rounded-xl">
-                  <Calendar className="w-6 h-6 mx-auto mb-2" />
-                  <p className="text-xs uppercase tracking-wider opacity-70">Date</p>
-                  <p className="font-bold text-sm">
+                <div className="p-3 sm:p-4 bg-white text-black rounded-lg sm:rounded-xl">
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-1 sm:mb-2" />
+                  <p className="text-[10px] sm:text-xs uppercase tracking-wider opacity-70">Date</p>
+                  {/* Compact date on mobile, full on desktop */}
+                  <p className="font-bold text-xs sm:text-sm hidden sm:block">
                     {formatDate(matchData.createdOn || matchData.verifiedOn)}
+                  </p>
+                  <p className="font-bold text-sm sm:hidden">
+                    {formatDateCompact(matchData.createdOn || matchData.verifiedOn)}
                   </p>
                 </div>
               </div>
