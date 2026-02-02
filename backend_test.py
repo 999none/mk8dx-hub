@@ -311,61 +311,113 @@ class BackendTester:
         except Exception as e:
             self.log_test("Leaderboard API", False, f"Request failed: {str(e)}")
     
-    def test_discord_oauth_endpoints(self):
-        """Test Discord OAuth endpoints (without actual authentication)"""
+    def test_nextauth_endpoints(self):
+        """Test NextAuth endpoints (Discord OAuth handled by NextAuth.js)"""
         try:
-            # Test Discord auth initiation endpoint
-            response = self.session.get(f"{API_BASE}/auth/discord", allow_redirects=False)
+            # Test NextAuth signin endpoint
+            response = self.session.get(f"{API_BASE}/auth/signin", allow_redirects=False)
             
-            if response.status_code == 302:
-                redirect_url = response.headers.get('Location', '')
-                if 'discord.com/api/oauth2/authorize' in redirect_url:
-                    self.log_test(
-                        "Discord OAuth Initiation", 
-                        True, 
-                        "Correctly redirects to Discord OAuth"
-                    )
-                else:
-                    self.log_test(
-                        "Discord OAuth Initiation", 
-                        False, 
-                        f"Unexpected redirect URL: {redirect_url}"
-                    )
+            if response.status_code in [200, 302]:
+                self.log_test(
+                    "NextAuth Signin Endpoint", 
+                    True, 
+                    f"NextAuth signin endpoint accessible (HTTP {response.status_code})"
+                )
             else:
                 self.log_test(
-                    "Discord OAuth Initiation", 
+                    "NextAuth Signin Endpoint", 
                     False, 
-                    f"Expected redirect (302), got HTTP {response.status_code}"
+                    f"Unexpected status code: {response.status_code}"
                 )
         except Exception as e:
-            self.log_test("Discord OAuth Initiation", False, f"Request failed: {str(e)}")
+            self.log_test("NextAuth Signin Endpoint", False, f"Request failed: {str(e)}")
         
         try:
-            # Test Discord callback without code (should return error)
-            response = self.session.get(f"{API_BASE}/auth/discord/callback")
+            # Test NextAuth providers endpoint
+            response = self.session.get(f"{API_BASE}/auth/providers")
             
-            if response.status_code == 400:
+            if response.status_code == 200:
                 data = response.json()
-                if 'error' in data and 'code' in data['error'].lower():
+                if 'discord' in data:
                     self.log_test(
-                        "Discord OAuth Callback (No Code)", 
+                        "NextAuth Providers", 
                         True, 
-                        "Correctly returns error for missing code"
+                        "Discord provider configured in NextAuth"
                     )
                 else:
                     self.log_test(
-                        "Discord OAuth Callback (No Code)", 
+                        "NextAuth Providers", 
                         False, 
-                        f"Unexpected error response: {data}"
+                        "Discord provider not found in NextAuth config",
+                        {'providers': list(data.keys()) if isinstance(data, dict) else data}
                     )
             else:
                 self.log_test(
-                    "Discord OAuth Callback (No Code)", 
+                    "NextAuth Providers", 
                     False, 
-                    f"Expected 400 error, got HTTP {response.status_code}"
+                    f"HTTP {response.status_code}: {response.text}"
                 )
         except Exception as e:
-            self.log_test("Discord OAuth Callback (No Code)", False, f"Request failed: {str(e)}")
+            self.log_test("NextAuth Providers", False, f"Request failed: {str(e)}")
+    
+    def test_admin_endpoints(self):
+        """Test admin endpoints (without authentication)"""
+        try:
+            # Test admin pending verifications endpoint
+            response = self.session.get(f"{API_BASE}/admin/pending-verifications")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    self.log_test(
+                        "Admin Pending Verifications", 
+                        True, 
+                        f"Admin endpoint accessible, returned {len(data)} pending verifications"
+                    )
+                else:
+                    self.log_test(
+                        "Admin Pending Verifications", 
+                        False, 
+                        "Expected array response",
+                        {'response_type': type(data).__name__}
+                    )
+            else:
+                self.log_test(
+                    "Admin Pending Verifications", 
+                    False, 
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+        except Exception as e:
+            self.log_test("Admin Pending Verifications", False, f"Request failed: {str(e)}")
+        
+        try:
+            # Test Lounge search endpoint
+            response = self.session.get(f"{API_BASE}/admin/lounge-search?name=TestPlayer")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'found' in data:
+                    found = data.get('found', False)
+                    self.log_test(
+                        "Admin Lounge Search", 
+                        True, 
+                        f"Lounge search endpoint working (found: {found})"
+                    )
+                else:
+                    self.log_test(
+                        "Admin Lounge Search", 
+                        False, 
+                        "Missing 'found' field in response",
+                        {'response': data}
+                    )
+            else:
+                self.log_test(
+                    "Admin Lounge Search", 
+                    False, 
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+        except Exception as e:
+            self.log_test("Admin Lounge Search", False, f"Request failed: {str(e)}")
     
     def run_all_tests(self):
         """Run all backend tests"""
