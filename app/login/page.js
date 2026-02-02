@@ -8,7 +8,7 @@ import UserProfile from '@/components/UserProfile';
 import Navbar from '@/components/Navbar';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, XCircle } from 'lucide-react';
+import { RefreshCw, XCircle, Trophy } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -20,59 +20,47 @@ export default function LoginPage() {
   useEffect(() => {
     if (status === 'loading') return;
     
-    // Si connecté via NextAuth
     if (status === 'authenticated' && session) {
       setChecking(true);
       
-      // Vérifier si l'utilisateur est membre du serveur Lounge
       if (session.user.isInServer === false) {
         setChecking(false);
         return;
       }
 
-      // Créer ou vérifier l'inscription
       const processVerification = async () => {
         try {
-          // D'abord vérifier le statut actuel
           const statusRes = await fetch(`/api/verification/status?discordId=${session.user.discordId}`);
           const statusData = await statusRes.json();
           
           if (statusData.verified) {
-            // Déjà vérifié → Dashboard
             router.push('/dashboard');
             return;
           }
           
           if (statusData.status && statusData.status !== 'not_logged_in' && statusData.status !== 'not_found') {
-            // En attente de vérification → Page d'attente
             router.push('/waiting');
             return;
           }
           
-          // Première connexion - créer l'inscription avec le nom Lounge (serverNickname)
           const createRes = await fetch('/api/verification/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               discordId: session.user.discordId,
               username: session.user.username,
-              serverNickname: session.user.serverNickname, // Nom sur le serveur Lounge
+              serverNickname: session.user.serverNickname,
               avatar: session.user.avatar,
               isInServer: session.user.isInServer
             })
           });
           
           const createData = await createRes.json();
-          
-          if (createData.verified) {
-            router.push('/dashboard');
-          } else {
-            router.push('/waiting');
-          }
+          router.push(createData.verified ? '/dashboard' : '/waiting');
           
         } catch (err) {
-          console.error('Error processing verification:', err);
-          setError('Erreur lors de la vérification. Veuillez réessayer.');
+          console.error('Error:', err);
+          setError('Erreur lors de la vérification.');
           setChecking(false);
         }
       };
@@ -81,34 +69,27 @@ export default function LoginPage() {
     }
   }, [session, status, router]);
 
-  // Chargement
   if (status === 'loading' || checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
         <Navbar />
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Vérification de votre compte...</p>
-          {checking && session?.user?.serverNickname && (
-            <p className="text-sm text-gray-500 mt-2">
-              Recherche de "{session.user.serverNickname}" sur le Lounge...
-            </p>
-          )}
+          <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-4 text-gray-600" />
+          <p className="text-gray-500 text-sm">Vérification...</p>
         </div>
       </div>
     );
   }
 
-  // Erreur
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-black pt-20">
         <Navbar />
-        <Card className="w-full max-w-md bg-red-500/10 border-red-500/30">
+        <Card className="w-full max-w-sm bg-red-500/5 border-red-500/20">
           <CardContent className="p-8 text-center">
-            <XCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
+            <XCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
             <p className="text-white mb-4">{error}</p>
-            <Button onClick={() => window.location.reload()}>
+            <Button onClick={() => window.location.reload()} className="bg-white text-black hover:bg-gray-200">
               Réessayer
             </Button>
           </CardContent>
@@ -117,43 +98,37 @@ export default function LoginPage() {
     );
   }
 
-  // NON membre du serveur Lounge
   if (session && session.user.isInServer === false) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-black pt-20">
         <Navbar />
-        <Card className="w-full max-w-md bg-red-500/10 border-red-500/30">
+        <Card className="w-full max-w-sm bg-red-500/5 border-red-500/20">
           <CardHeader className="text-center">
-            <XCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
+            <XCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
             <CardTitle className="text-white">Accès Refusé</CardTitle>
-            <CardDescription className="text-gray-300">
-              Vous devez être membre du serveur Discord MK8DX Lounge pour accéder à cette application.
+            <CardDescription className="text-gray-400">
+              Vous devez être membre du serveur Discord MK8DX Lounge.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-4 bg-white/5 rounded-lg">
-              <p className="text-sm text-gray-400 mb-2">Connecté en tant que:</p>
-              <p className="font-bold text-white">{session.user.username}</p>
+            <div className="p-4 bg-white/[0.02] border border-white/[0.04] rounded-lg">
+              <p className="text-xs text-gray-500 mb-1">Connecté en tant que</p>
+              <p className="font-medium text-white">{session.user.username}</p>
             </div>
             
-            <a 
-              href="https://discord.gg/revmGkE" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="block"
-            >
+            <a href="https://discord.gg/revmGkE" target="_blank" rel="noopener noreferrer" className="block">
               <Button className="w-full bg-[#5865F2] hover:bg-[#4752C4]">
-                Rejoindre le Serveur Lounge
+                Rejoindre le Serveur
               </Button>
             </a>
             
-            <p className="text-xs text-gray-500 text-center">
-              Après avoir rejoint le serveur, déconnectez-vous et reconnectez-vous.
+            <p className="text-xs text-gray-600 text-center">
+              Après avoir rejoint, déconnectez-vous et reconnectez-vous.
             </p>
             
             <Link href="/">
-              <Button variant="ghost" className="w-full text-gray-400">
-                Retour à l'accueil
+              <Button variant="ghost" className="w-full text-gray-500 hover:text-white">
+                Retour
               </Button>
             </Link>
           </CardContent>
@@ -162,30 +137,29 @@ export default function LoginPage() {
     );
   }
 
-  // Page de connexion normale
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-black pt-20">
       <Navbar />
-      <Card className="w-full max-w-md bg-white/5 border-white/10">
+      <Card className="w-full max-w-sm bg-white/[0.02] border-white/[0.04]">
         <CardHeader className="text-center">
-          <CardTitle className="text-white">Connexion à MK8DX Hub</CardTitle>
-          <CardDescription className="text-gray-400">
-            Connectez-vous avec votre compte Discord pour accéder au hub compétitif
+          <div className="w-12 h-12 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center mx-auto mb-4">
+            <Trophy className="w-6 h-6 text-yellow-500" />
+          </div>
+          <CardTitle className="text-white">Connexion</CardTitle>
+          <CardDescription className="text-gray-500">
+            Connectez Discord pour accéder au hub
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {session ? (
             <UserProfile />
           ) : (
-            <DiscordLoginButton 
-              className="w-full"
-              buttonText="Se connecter avec Discord"
-            />
+            <DiscordLoginButton className="w-full" buttonText="Se connecter avec Discord" />
           )}
           
-          <div className="mt-4 text-center text-sm text-gray-500">
-            En vous connectant, vous acceptez nos conditions d'utilisation
-          </div>
+          <p className="text-xs text-gray-600 text-center">
+            En vous connectant, vous acceptez nos conditions
+          </p>
         </CardContent>
       </Card>
     </div>
