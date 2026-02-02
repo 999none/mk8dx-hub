@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Calendar, Users, Trophy, RefreshCw, ExternalLink, Swords, Shield } from 'lucide-react';
+import Link from 'next/link';
 
 const getCountryFlag = (countryCode) => {
   if (!countryCode || countryCode.length !== 2) return '';
