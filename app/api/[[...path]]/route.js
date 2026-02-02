@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getDatabase } from '@/lib/mongodb';
 import { LoungeApi } from '@/lib/loungeApi';
 import { MkCentralApi } from '@/lib/mkcentral';
+import { MkCentralTournamentsApi } from '@/lib/mkcentralTournaments';
 import { mockPlayerData, mockMMRHistory, mockMatchHistory, mockTeamMembers, mockTournaments } from '@/lib/mockData';
 
 // Helper function to get user session (simple implementation)
