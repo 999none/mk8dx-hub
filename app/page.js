@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Trophy, Target, Users, Clock, ArrowRight, Zap, BarChart3, BookOpen } from 'lucide-react';
+import { Trophy, ArrowRight, BarChart3, BookOpen, Zap, Users, Calendar, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
@@ -19,159 +19,154 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Navigation */}
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="absolute inset-0 grid-pattern opacity-20"></div>
+      <section className="relative pt-32 pb-24 overflow-hidden">
+        <div className="absolute inset-0 grid-pattern"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black"></div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-block mb-4 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm">
-              🏁 Hub Compétitif Officiel MK8DX
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-white/[0.03] border border-white/[0.06] rounded-full text-sm text-gray-400">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              Hub Compétitif MK8DX
             </div>
-            <h1 className="text-6xl md:text-7xl font-black mb-6 tracking-tight animate-float">
-              Master the Track.<br />
+            
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-black mb-6 tracking-tight leading-[1.1]">
+              Master the Track.
+              <br />
               <span className="text-gradient">Rule the Lounge.</span>
             </h1>
-            <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-              Rejoignez la plus grande communauté compétitive de Mario Kart 8 Deluxe. 
-              Suivez vos stats, progressez avec l'Academy, et dominez le Lounge.
+            
+            <p className="text-lg text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
+              La communauté compétitive Mario Kart 8 Deluxe. Suivez vos stats, 
+              progressez avec l'Academy, dominez le classement.
             </p>
-            <div className="flex gap-4 justify-center">
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/login">
-                <Button size="lg" className="bg-white text-black hover:bg-white/90 text-lg px-8">
-                  Commencer Maintenant
-                  <ArrowRight className="ml-2 w-5 h-5" />
+                <Button size="lg" className="w-full sm:w-auto bg-white text-black hover:bg-gray-100 font-semibold px-8 h-12">
+                  Commencer
+                  <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
-              <Link href="/academy">
-                <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 text-lg px-8">
-                  Explorer l'Academy
+              <Link href="/leaderboard">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto border-white/10 text-white hover:bg-white/[0.03] font-medium px-8 h-12">
+                  Voir le Leaderboard
                 </Button>
               </Link>
             </div>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-20 max-w-4xl mx-auto">
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-              <CardContent className="p-6 text-center">
-                <div className="text-3xl font-bold mb-1">{stats?.players || '2K+'}</div>
-                <div className="text-sm text-gray-400">Joueurs Actifs</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-              <CardContent className="p-6 text-center">
-                <div className="text-3xl font-bold mb-1">{stats?.races || '100K+'}</div>
-                <div className="text-sm text-gray-400">Courses Jouées</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-              <CardContent className="p-6 text-center">
-                <div className="text-3xl font-bold mb-1">96</div>
-                <div className="text-sm text-gray-400">Circuits DLC</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-              <CardContent className="p-6 text-center">
-                <div className="text-3xl font-bold mb-1">24/7</div>
-                <div className="text-sm text-gray-400">Squad Queue</div>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-20 max-w-3xl mx-auto">
+            {[
+              { value: stats?.players || '2K+', label: 'Joueurs', color: 'text-green-500' },
+              { value: stats?.races || '100K+', label: 'Courses', color: 'text-blue-500' },
+              { value: '96', label: 'Circuits', color: 'text-yellow-500' },
+              { value: '24/7', label: 'Squad Queue', color: 'text-purple-500' },
+            ].map((stat, i) => (
+              <div key={i} className="text-center p-6 bg-white/[0.02] border border-white/[0.04] rounded-xl">
+                <div className={`text-3xl font-bold mb-1 ${stat.color}`}>{stat.value}</div>
+                <div className="text-sm text-gray-500">{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-gradient-to-b from-black to-zinc-950">
+      <section className="py-24 border-t border-white/[0.04]">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold text-center mb-16">Pourquoi MK8DX Hub ?</h2>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold mb-4">Fonctionnalités</h2>
+            <p className="text-gray-500">Tout ce dont vous avez besoin pour progresser</p>
+          </div>
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
-              <CardContent className="p-8">
-                <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mb-4">
-                  <BarChart3 className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Stats en Temps Réel</h3>
-                <p className="text-gray-400">
-                  Synchronisation automatique avec le Lounge MKCentral. Suivez votre MMR, win rate, 
-                  et historique de matchs en direct.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
-              <CardContent className="p-8">
-                <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mb-4">
-                  <BookOpen className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">MK8DX Academy</h3>
-                <p className="text-gray-400">
-                  Apprenez les techniques avancées : Soft Drift, Motion Glider, Counter Hop. 
-                  Guides complets et combos meta.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
-              <CardContent className="p-8">
-                <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center mb-4">
-                  <Trophy className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Tournois & Lounge</h3>
-                <p className="text-gray-400">
-                  Participez aux Squad Queues, Wars 6v6, et tournois officiels. 
-                  Notifications en temps réel.
-                </p>
-              </CardContent>
-            </Card>
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {[
+              {
+                icon: BarChart3,
+                title: 'Stats Temps Réel',
+                description: 'MMR, win rate, historique. Synchronisé avec MKCentral Lounge.',
+                color: 'text-blue-500',
+                bg: 'bg-blue-500/10'
+              },
+              {
+                icon: BookOpen,
+                title: 'Academy',
+                description: 'Techniques avancées, combos meta, mindset compétitif.',
+                color: 'text-purple-500',
+                bg: 'bg-purple-500/10'
+              },
+              {
+                icon: Trophy,
+                title: 'Tournois',
+                description: 'Événements officiels, Squad Queue, Wars 6v6.',
+                color: 'text-yellow-500',
+                bg: 'bg-yellow-500/10'
+              }
+            ].map((feature, i) => (
+              <Card key={i} className="bg-white/[0.02] border-white/[0.04] card-hover">
+                <CardContent className="p-8">
+                  <div className={`w-12 h-12 ${feature.bg} rounded-lg flex items-center justify-center mb-5`}>
+                    <feature.icon className={`w-6 h-6 ${feature.color}`} />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">{feature.description}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20">
+      <section className="py-24 border-t border-white/[0.04]">
         <div className="container mx-auto px-4">
-          <Card className="bg-gradient-to-br from-white/10 to-white/5 border-white/20 backdrop-blur-sm">
-            <CardContent className="p-12 text-center">
-              <Zap className="w-12 h-12 mx-auto mb-4 animate-pulse-subtle" />
-              <h2 className="text-3xl font-bold mb-4">Prêt à Dominer le Lounge ?</h2>
-              <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
-                Connectez votre compte Discord et accédez instantanément à vos stats, 
-                votre progression MMR, et rejoignez la communauté compétitive.
-              </p>
-              <Link href="/login">
-                <Button size="lg" className="bg-white text-black hover:bg-white/90 text-lg px-8">
-                  Connecter avec Discord
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="w-16 h-16 bg-white/[0.03] border border-white/[0.06] rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Zap className="w-8 h-8 text-yellow-500" />
+            </div>
+            <h2 className="text-3xl font-bold mb-4">Prêt à jouer ?</h2>
+            <p className="text-gray-500 mb-8">
+              Connectez Discord et accédez à vos stats en temps réel.
+            </p>
+            <Link href="/login">
+              <Button size="lg" className="bg-white text-black hover:bg-gray-100 font-semibold px-8 h-12">
+                Connexion Discord
+                <ChevronRight className="ml-2 w-4 h-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-8">
-        <div className="container mx-auto px-4 text-center text-gray-500">
-          <p>MK8DX Competitive Hub - Communauté non officielle</p>
-          <div className="flex justify-center gap-6 mt-4">
-            <a href="https://lounge.mkcentral.com/mk8dx/" target="_blank" rel="noopener noreferrer" 
-               className="hover:text-white transition-colors">
-              MKCentral Lounge
-            </a>
-            <a href="https://www.mkworldbuilder.com/" target="_blank" rel="noopener noreferrer"
-               className="hover:text-white transition-colors">
-              MK World Builder
-            </a>
-            <a href="https://discord.gg/revmGkE" target="_blank" rel="noopener noreferrer"
-               className="hover:text-white transition-colors">
-              Discord Lounge
-            </a>
+      <footer className="border-t border-white/[0.04] py-12">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-gray-600" />
+              <span className="text-gray-500 text-sm">MK8DX Hub</span>
+            </div>
+            <div className="flex items-center gap-8">
+              {[
+                { href: 'https://lounge.mkcentral.com/mk8dx/', label: 'MKCentral' },
+                { href: 'https://discord.gg/revmGkE', label: 'Discord' },
+              ].map((link, i) => (
+                <a 
+                  key={i}
+                  href={link.href} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-gray-600 hover:text-gray-400 transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </footer>
