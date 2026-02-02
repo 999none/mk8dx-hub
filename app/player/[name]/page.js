@@ -100,7 +100,7 @@ export default function PlayerProfilePage() {
             <div className="text-center py-12">
               <Trophy className="w-12 h-12 mx-auto mb-4 text-gray-600" />
               <h2 className="text-2xl font-bold mb-2">{error}</h2>
-              <p className="text-gray-400 mb-6">Le joueur "{playerName}" n'a pas été trouvé.</p>
+              <p className="text-gray-400 mb-6">Le joueur &quot;{playerName}&quot; n&apos;a pas été trouvé.</p>
               <Link href="/leaderboard">
                 <Button variant="outline" className="border-white/20">
                   <ArrowLeft className="w-4 h-4 mr-2" />
