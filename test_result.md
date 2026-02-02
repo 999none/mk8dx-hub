@@ -103,13 +103,10 @@
 #====================================================================================================
 
 user_problem_statement: |
-  Finaliser et fiabiliser l'authentification Discord pour MK8DX Competitive Hub.
-  - Mettre à jour DISCORD_CLIENT_SECRET avec le nouveau secret
-  - Vérifier les scopes OAuth Discord (identify, email, guilds, guilds.members.read)
-  - Vérifier l'appartenance au serveur Discord Lounge
-  - Récupérer le nickname du serveur
-  - Enrichir la session NextAuth avec toutes les données requises
-  - Implémenter le flux de redirection complet
+  Phase 2-3: Amélioration des APIs MKCentral et Frontend
+  - Améliorer la page Leaderboard avec filtres (pays, MMR range, events), recherche, pagination et tri
+  - Améliorer le Dashboard avec historique matchs, graphique MMR, stats avancées
+  - Améliorer la page Tournois avec filtre par jeu (MK8DX, MKWII, etc.)
 
 backend:
   - task: "Discord OAuth Configuration (NextAuth)"
