@@ -102,7 +102,8 @@ export default function LoginPage() {
   // Erreur
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-black">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-black pt-20">
+        <Navbar />
         <Card className="w-full max-w-md bg-red-500/10 border-red-500/30">
           <CardContent className="p-8 text-center">
             <XCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
@@ -119,7 +120,8 @@ export default function LoginPage() {
   // NON membre du serveur Lounge
   if (session && session.user.isInServer === false) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-black">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-black pt-20">
+        <Navbar />
         <Card className="w-full max-w-md bg-red-500/10 border-red-500/30">
           <CardHeader className="text-center">
             <XCircle className="w-16 h-16 mx-auto text-red-500 mb-4" />
@@ -162,7 +164,8 @@ export default function LoginPage() {
 
   // Page de connexion normale
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-black">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-black pt-20">
+      <Navbar />
       <Card className="w-full max-w-md bg-white/5 border-white/10">
         <CardHeader className="text-center">
           <CardTitle className="text-white">Connexion à MK8DX Hub</CardTitle>
