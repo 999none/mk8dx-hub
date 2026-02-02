@@ -20,18 +20,16 @@ import {
   Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart
 } from 'recharts';
 
-// Saisons disponibles (à mettre à jour quand de nouvelles saisons sont ajoutées)
+// Saisons disponibles (Saison 15 actuelle - Juillet 2025)
 const AVAILABLE_SEASONS = [
-  { value: '', label: 'Saison Actuelle' },
-  { value: '20', label: 'Saison 20' },
-  { value: '19', label: 'Saison 19' },
-  { value: '18', label: 'Saison 18' },
-  { value: '17', label: 'Saison 17' },
-  { value: '16', label: 'Saison 16' },
-  { value: '15', label: 'Saison 15' },
+  { value: '', label: 'Saison 15 (Actuelle)' },
   { value: '14', label: 'Saison 14' },
   { value: '13', label: 'Saison 13' },
   { value: '12', label: 'Saison 12' },
+  { value: '11', label: 'Saison 11' },
+  { value: '10', label: 'Saison 10' },
+  { value: '9', label: 'Saison 9' },
+  { value: '8', label: 'Saison 8' },
 ];
 
 export default function DashboardPage() {
