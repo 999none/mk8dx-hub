@@ -105,9 +105,161 @@ export async function GET(request, context) {
       return NextResponse.json(mockTeamMembers);
     }
 
-    // Tournaments
+    // Tournaments - Scrape from MKCentral with 24h cache
     if (path === 'tournaments') {
-      return NextResponse.json(mockTournaments);
+      try {
+        const { searchParams } = new URL(request.url);
+        const page = parseInt(searchParams.get('page') || '1', 10);
+        const limit = parseInt(searchParams.get('limit') || '20', 10);
+        const game = searchParams.get('game') || 'all'; // mk8dx, mkwii, mkworld, all
+        const forceRefresh = searchParams.get('refresh') === 'true';
+        
+        const db = await getDatabase();
+        
+        // Check cache (24 hours)
+        const cacheKey = `tournaments_${game}`;
+        const cache = await db.collection('tournaments_cache').findOne({ key: cacheKey });
+        
+        const cacheAge = cache ? Date.now() - new Date(cache.lastUpdate).getTime() : Infinity;
+        const cacheValid = cacheAge < 24 * 60 * 60 * 1000; // 24 hours
+        
+        if (cache && cacheValid && !forceRefresh) {
+          // Apply pagination to cached data
+          const tournaments = cache.data || [];
+          const filteredTournaments = game === 'all' 
+            ? tournaments 
+            : tournaments.filter(t => t.game === game || t.badges?.some(b => b.toLowerCase().includes(game)));
+          
+          const total = filteredTournaments.length;
+          const totalPages = Math.ceil(total / limit);
+          const startIdx = (page - 1) * limit;
+          const paginatedTournaments = filteredTournaments.slice(startIdx, startIdx + limit);
+          
+          return NextResponse.json({
+            tournaments: paginatedTournaments,
+            total,
+            page,
+            limit,
+            totalPages,
+            lastUpdate: cache.lastUpdate,
+            cached: true,
+            nextRefresh: new Date(new Date(cache.lastUpdate).getTime() + 24 * 60 * 60 * 1000).toISOString()
+          });
+        }
+        
+        // Scrape from MKCentral
+        const tournamentsApi = new MkCentralTournamentsApi();
+        const result = await tournamentsApi.getTournaments({ game: 'all', page: 1, limit: 100 });
+        
+        // Store in cache
+        await db.collection('tournaments_cache').updateOne(
+          { key: cacheKey },
+          { 
+            $set: { 
+              key: cacheKey,
+              data: result.tournaments, 
+              lastUpdate: new Date()
+            } 
+          },
+          { upsert: true }
+        );
+        
+        // Filter and paginate
+        const tournaments = result.tournaments || [];
+        const filteredTournaments = game === 'all' 
+          ? tournaments 
+          : tournaments.filter(t => t.game === game || t.badges?.some(b => b.toLowerCase().includes(game)));
+        
+        const total = filteredTournaments.length;
+        const totalPages = Math.ceil(total / limit);
+        const startIdx = (page - 1) * limit;
+        const paginatedTournaments = filteredTournaments.slice(startIdx, startIdx + limit);
+        
+        return NextResponse.json({
+          tournaments: paginatedTournaments,
+          total,
+          page,
+          limit,
+          totalPages,
+          lastUpdate: new Date().toISOString(),
+          cached: false,
+          nextRefresh: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        });
+        
+      } catch (error) {
+        console.error('Tournaments API error:', error);
+        
+        // Fallback to mock data
+        return NextResponse.json({
+          tournaments: mockTournaments,
+          total: mockTournaments.length,
+          page: 1,
+          limit: 20,
+          totalPages: 1,
+          lastUpdate: new Date().toISOString(),
+          cached: false,
+          error: 'Using fallback data - MKCentral scraping failed'
+        });
+      }
+    }
+    
+    // Tournament details with results
+    if (path.startsWith('tournaments/')) {
+      const tournamentId = parseInt(path.replace('tournaments/', ''), 10);
+      
+      if (isNaN(tournamentId)) {
+        return NextResponse.json({ error: 'Invalid tournament ID' }, { status: 400 });
+      }
+      
+      try {
+        const db = await getDatabase();
+        
+        // Check cache for tournament details (24h)
+        const cacheKey = `tournament_${tournamentId}`;
+        const cache = await db.collection('tournament_details_cache').findOne({ key: cacheKey });
+        
+        const cacheAge = cache ? Date.now() - new Date(cache.lastUpdate).getTime() : Infinity;
+        // Live tournaments refresh every hour, others every 24h
+        const cacheValidDuration = cache?.data?.status === 'live' ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+        
+        if (cache && cacheAge < cacheValidDuration) {
+          return NextResponse.json({
+            ...cache.data,
+            cached: true,
+            lastUpdate: cache.lastUpdate
+          });
+        }
+        
+        // Scrape tournament details
+        const tournamentsApi = new MkCentralTournamentsApi();
+        const details = await tournamentsApi.getTournamentDetails(tournamentId);
+        
+        // Cache results
+        await db.collection('tournament_details_cache').updateOne(
+          { key: cacheKey },
+          { 
+            $set: { 
+              key: cacheKey,
+              data: details, 
+              lastUpdate: new Date()
+            } 
+          },
+          { upsert: true }
+        );
+        
+        return NextResponse.json({
+          ...details,
+          cached: false,
+          lastUpdate: new Date().toISOString()
+        });
+        
+      } catch (error) {
+        console.error('Tournament details API error:', error);
+        return NextResponse.json({ 
+          error: 'Failed to fetch tournament details',
+          message: error.message 
+        }, { status: 500 });
+      }
     }
 
     // Leaderboard with pagination and filters
