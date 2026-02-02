@@ -138,6 +138,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: Discord OAuth configuration working. Client ID and secret properly configured for production environment"
+      - working: true
+        agent: "main"
+        comment: "Secret mis à jour avec cYRB0vv1eNZA2dBwuFF-Xfy3TM1Wj85J dans .env et .env.local"
 
   - task: "Server Membership Verification (isInServer)"
     implemented: true
