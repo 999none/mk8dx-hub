@@ -437,8 +437,11 @@ class BackendTester:
         self.test_verification_status_with_discord_id()
         self.test_verification_recheck()
         
-        # Discord OAuth tests
-        self.test_discord_oauth_endpoints()
+        # Discord OAuth tests (NextAuth)
+        self.test_nextauth_endpoints()
+        
+        # Admin endpoints tests
+        self.test_admin_endpoints()
         
         print("=" * 60)
         
