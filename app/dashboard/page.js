@@ -195,24 +195,6 @@ export default function DashboardPage() {
   const advancedStats = calculateAdvancedStats();
   const displayedMatches = showAllMatches ? matchHistory : matchHistory.slice(0, 10);
 
-  // Custom tooltip for chart
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-gray-900 border border-white/20 p-3 rounded-lg shadow-xl">
-          <p className="text-sm text-gray-400">{data.date}</p>
-          <p className="text-lg font-bold">{data.mmr.toLocaleString('fr-FR')} MMR</p>
-          <p className={`text-sm ${data.delta > 0 ? 'text-green-400' : 'text-red-400'}`}>
-            {data.delta > 0 ? '+' : ''}{data.delta}
-          </p>
-          {data.tier && <p className="text-xs text-gray-500">Tier {data.tier}</p>}
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
     <RequireAuth>
       <div className="min-h-screen bg-black text-white">
