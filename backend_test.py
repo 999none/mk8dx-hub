@@ -277,39 +277,555 @@ class BackendTester:
             self.log_test("Stats API", False, f"Request failed: {str(e)}")
     
     def test_leaderboard_api(self):
-        """Test GET /api/leaderboard"""
+        """Test GET /api/leaderboard - Basic endpoint"""
         try:
             response = self.session.get(f"{API_BASE}/leaderboard")
             
             if response.status_code == 200:
                 data = response.json()
-                expected_fields = ['players', 'lastUpdate']
+                expected_fields = ['players', 'lastUpdate', 'total', 'page', 'limit']
                 
                 if all(field in data for field in expected_fields):
                     players = data.get('players', [])
                     player_count = len(players)
                     cached = data.get('cached', False)
+                    total = data.get('total', 0)
                     
                     self.log_test(
-                        "Leaderboard API", 
+                        "Leaderboard API - Basic", 
                         True, 
-                        f"Leaderboard returned {player_count} players (cached: {cached})"
+                        f"Leaderboard returned {player_count} players, total: {total} (cached: {cached})"
                     )
                 else:
                     self.log_test(
-                        "Leaderboard API", 
+                        "Leaderboard API - Basic", 
                         False, 
                         "Missing expected fields in leaderboard response",
                         {'response': data, 'expected': expected_fields}
                     )
             else:
                 self.log_test(
-                    "Leaderboard API", 
+                    "Leaderboard API - Basic", 
                     False, 
                     f"HTTP {response.status_code}: {response.text}"
                 )
         except Exception as e:
-            self.log_test("Leaderboard API", False, f"Request failed: {str(e)}")
+            self.log_test("Leaderboard API - Basic", False, f"Request failed: {str(e)}")
+    
+    def test_leaderboard_pagination(self):
+        """Test GET /api/leaderboard with pagination"""
+        try:
+            # Test page 1 with limit 10
+            response1 = self.session.get(f"{API_BASE}/leaderboard?page=1&limit=10")
+            
+            if response1.status_code == 200:
+                data1 = response1.json()
+                players1 = data1.get('players', [])
+                
+                if len(players1) <= 10 and data1.get('page') == 1 and data1.get('limit') == 10:
+                    self.log_test(
+                        "Leaderboard Pagination - Page 1", 
+                        True, 
+                        f"Page 1 returned {len(players1)} players (limit 10)"
+                    )
+                else:
+                    self.log_test(
+                        "Leaderboard Pagination - Page 1", 
+                        False, 
+                        f"Pagination parameters incorrect: page={data1.get('page')}, limit={data1.get('limit')}, count={len(players1)}"
+                    )
+            else:
+                self.log_test(
+                    "Leaderboard Pagination - Page 1", 
+                    False, 
+                    f"HTTP {response1.status_code}: {response1.text}"
+                )
+            
+            # Test page 2 with limit 10
+            response2 = self.session.get(f"{API_BASE}/leaderboard?page=2&limit=10")
+            
+            if response2.status_code == 200:
+                data2 = response2.json()
+                players2 = data2.get('players', [])
+                
+                if data2.get('page') == 2 and data2.get('limit') == 10:
+                    self.log_test(
+                        "Leaderboard Pagination - Page 2", 
+                        True, 
+                        f"Page 2 returned {len(players2)} players (limit 10)"
+                    )
+                else:
+                    self.log_test(
+                        "Leaderboard Pagination - Page 2", 
+                        False, 
+                        f"Pagination parameters incorrect: page={data2.get('page')}, limit={data2.get('limit')}"
+                    )
+            else:
+                self.log_test(
+                    "Leaderboard Pagination - Page 2", 
+                    False, 
+                    f"HTTP {response2.status_code}: {response2.text}"
+                )
+                
+        except Exception as e:
+            self.log_test("Leaderboard Pagination", False, f"Request failed: {str(e)}")
+    
+    def test_leaderboard_filters(self):
+        """Test GET /api/leaderboard with filters"""
+        try:
+            # Test MMR range filter
+            response = self.session.get(f"{API_BASE}/leaderboard?minMmr=10000&maxMmr=15000")
+            
+            if response.status_code == 200:
+                data = response.json()
+                players = data.get('players', [])
+                filters = data.get('filters', {})
+                
+                # Check if filters are applied
+                if filters.get('minMmr') == 10000 and filters.get('maxMmr') == 15000:
+                    # Verify players are within MMR range (if any players returned)
+                    valid_mmr = True
+                    for player in players:
+                        mmr = player.get('mmr', 0)
+                        if mmr < 10000 or mmr > 15000:
+                            valid_mmr = False
+                            break
+                    
+                    if valid_mmr:
+                        self.log_test(
+                            "Leaderboard MMR Filter", 
+                            True, 
+                            f"MMR filter (10000-15000) returned {len(players)} players"
+                        )
+                    else:
+                        self.log_test(
+                            "Leaderboard MMR Filter", 
+                            False, 
+                            "Some players outside MMR range returned"
+                        )
+                else:
+                    self.log_test(
+                        "Leaderboard MMR Filter", 
+                        False, 
+                        f"Filter parameters not applied correctly: {filters}"
+                    )
+            else:
+                self.log_test(
+                    "Leaderboard MMR Filter", 
+                    False, 
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+            
+            # Test events filter
+            response2 = self.session.get(f"{API_BASE}/leaderboard?minEvents=50")
+            
+            if response2.status_code == 200:
+                data2 = response2.json()
+                players2 = data2.get('players', [])
+                filters2 = data2.get('filters', {})
+                
+                if filters2.get('minEvents') == 50:
+                    # Verify players have minimum events (if any players returned)
+                    valid_events = True
+                    for player in players2:
+                        events = player.get('eventsPlayed', 0)
+                        if events < 50:
+                            valid_events = False
+                            break
+                    
+                    if valid_events:
+                        self.log_test(
+                            "Leaderboard Events Filter", 
+                            True, 
+                            f"Events filter (min 50) returned {len(players2)} players"
+                        )
+                    else:
+                        self.log_test(
+                            "Leaderboard Events Filter", 
+                            False, 
+                            "Some players with less than 50 events returned"
+                        )
+                else:
+                    self.log_test(
+                        "Leaderboard Events Filter", 
+                        False, 
+                        f"Events filter not applied correctly: {filters2}"
+                    )
+            else:
+                self.log_test(
+                    "Leaderboard Events Filter", 
+                    False, 
+                    f"HTTP {response2.status_code}: {response2.text}"
+                )
+                
+        except Exception as e:
+            self.log_test("Leaderboard Filters", False, f"Request failed: {str(e)}")
+    
+    def test_leaderboard_search(self):
+        """Test GET /api/leaderboard with search"""
+        try:
+            # Test search for "Mariji" (a known player name)
+            response = self.session.get(f"{API_BASE}/leaderboard?search=Mariji")
+            
+            if response.status_code == 200:
+                data = response.json()
+                players = data.get('players', [])
+                filters = data.get('filters', {})
+                
+                if filters.get('search') == 'Mariji':
+                    # Check if returned players contain the search term
+                    valid_search = True
+                    for player in players:
+                        name = player.get('name', '').lower()
+                        if 'mariji' not in name:
+                            valid_search = False
+                            break
+                    
+                    if valid_search or len(players) == 0:  # Empty result is also valid
+                        self.log_test(
+                            "Leaderboard Search", 
+                            True, 
+                            f"Search for 'Mariji' returned {len(players)} players"
+                        )
+                    else:
+                        self.log_test(
+                            "Leaderboard Search", 
+                            False, 
+                            "Search returned players not matching search term"
+                        )
+                else:
+                    self.log_test(
+                        "Leaderboard Search", 
+                        False, 
+                        f"Search parameter not applied correctly: {filters}"
+                    )
+            else:
+                self.log_test(
+                    "Leaderboard Search", 
+                    False, 
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_test("Leaderboard Search", False, f"Request failed: {str(e)}")
+    
+    def test_leaderboard_sorting(self):
+        """Test GET /api/leaderboard with sorting"""
+        try:
+            # Test sort by name
+            response1 = self.session.get(f"{API_BASE}/leaderboard?sortBy=name&limit=20")
+            
+            if response1.status_code == 200:
+                data1 = response1.json()
+                players1 = data1.get('players', [])
+                filters1 = data1.get('filters', {})
+                
+                if filters1.get('sortBy') == 'name' and len(players1) > 1:
+                    # Check if players are sorted alphabetically by name
+                    sorted_correctly = True
+                    for i in range(1, len(players1)):
+                        if players1[i-1].get('name', '').lower() > players1[i].get('name', '').lower():
+                            sorted_correctly = False
+                            break
+                    
+                    if sorted_correctly:
+                        self.log_test(
+                            "Leaderboard Sort by Name", 
+                            True, 
+                            f"Players sorted by name correctly ({len(players1)} players)"
+                        )
+                    else:
+                        self.log_test(
+                            "Leaderboard Sort by Name", 
+                            False, 
+                            "Players not sorted alphabetically by name"
+                        )
+                else:
+                    self.log_test(
+                        "Leaderboard Sort by Name", 
+                        True, 
+                        f"Sort by name parameter applied (insufficient data to verify sorting)"
+                    )
+            else:
+                self.log_test(
+                    "Leaderboard Sort by Name", 
+                    False, 
+                    f"HTTP {response1.status_code}: {response1.text}"
+                )
+            
+            # Test sort by eventsPlayed
+            response2 = self.session.get(f"{API_BASE}/leaderboard?sortBy=eventsPlayed&limit=20")
+            
+            if response2.status_code == 200:
+                data2 = response2.json()
+                players2 = data2.get('players', [])
+                filters2 = data2.get('filters', {})
+                
+                if filters2.get('sortBy') == 'eventsPlayed' and len(players2) > 1:
+                    # Check if players are sorted by events played (descending)
+                    sorted_correctly = True
+                    for i in range(1, len(players2)):
+                        if players2[i-1].get('eventsPlayed', 0) < players2[i].get('eventsPlayed', 0):
+                            sorted_correctly = False
+                            break
+                    
+                    if sorted_correctly:
+                        self.log_test(
+                            "Leaderboard Sort by Events", 
+                            True, 
+                            f"Players sorted by events played correctly ({len(players2)} players)"
+                        )
+                    else:
+                        self.log_test(
+                            "Leaderboard Sort by Events", 
+                            False, 
+                            "Players not sorted by events played (descending)"
+                        )
+                else:
+                    self.log_test(
+                        "Leaderboard Sort by Events", 
+                        True, 
+                        f"Sort by events parameter applied (insufficient data to verify sorting)"
+                    )
+            else:
+                self.log_test(
+                    "Leaderboard Sort by Events", 
+                    False, 
+                    f"HTTP {response2.status_code}: {response2.text}"
+                )
+                
+        except Exception as e:
+            self.log_test("Leaderboard Sorting", False, f"Request failed: {str(e)}")
+    
+    def test_player_details_api(self):
+        """Test GET /api/lounge/player-details/{name}"""
+        try:
+            # Test with known player names
+            test_players = ["WeeklyShonenJump", "Mariji"]
+            
+            for player_name in test_players:
+                response = self.session.get(f"{API_BASE}/lounge/player-details/{player_name}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    expected_fields = ['name', 'mmr', 'matchHistory', 'mmrChanges']
+                    
+                    if all(field in data for field in expected_fields):
+                        match_history = data.get('matchHistory', [])
+                        mmr_changes = data.get('mmrChanges', [])
+                        
+                        self.log_test(
+                            f"Player Details - {player_name}", 
+                            True, 
+                            f"Player details returned: MMR={data.get('mmr')}, {len(match_history)} matches, {len(mmr_changes)} MMR changes"
+                        )
+                    else:
+                        self.log_test(
+                            f"Player Details - {player_name}", 
+                            False, 
+                            "Missing expected fields in player details response",
+                            {'response': data, 'expected': expected_fields}
+                        )
+                elif response.status_code == 404:
+                    self.log_test(
+                        f"Player Details - {player_name}", 
+                        True, 
+                        f"Player not found (404) - expected for some test players"
+                    )
+                else:
+                    self.log_test(
+                        f"Player Details - {player_name}", 
+                        False, 
+                        f"HTTP {response.status_code}: {response.text}"
+                    )
+                    
+        except Exception as e:
+            self.log_test("Player Details API", False, f"Request failed: {str(e)}")
+    
+    def test_tournaments_api(self):
+        """Test GET /api/tournaments"""
+        try:
+            # Test basic tournaments endpoint
+            response = self.session.get(f"{API_BASE}/tournaments")
+            
+            if response.status_code == 200:
+                data = response.json()
+                expected_fields = ['tournaments', 'total', 'page', 'limit', 'lastUpdate']
+                
+                if all(field in data for field in expected_fields):
+                    tournaments = data.get('tournaments', [])
+                    total = data.get('total', 0)
+                    cached = data.get('cached', False)
+                    
+                    self.log_test(
+                        "Tournaments API - Basic", 
+                        True, 
+                        f"Tournaments returned {len(tournaments)} tournaments, total: {total} (cached: {cached})"
+                    )
+                else:
+                    self.log_test(
+                        "Tournaments API - Basic", 
+                        False, 
+                        "Missing expected fields in tournaments response",
+                        {'response': data, 'expected': expected_fields}
+                    )
+            else:
+                self.log_test(
+                    "Tournaments API - Basic", 
+                    False, 
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_test("Tournaments API - Basic", False, f"Request failed: {str(e)}")
+    
+    def test_tournaments_pagination(self):
+        """Test GET /api/tournaments with pagination"""
+        try:
+            # Test page 1 with limit 5
+            response = self.session.get(f"{API_BASE}/tournaments?page=1&limit=5")
+            
+            if response.status_code == 200:
+                data = response.json()
+                tournaments = data.get('tournaments', [])
+                
+                if len(tournaments) <= 5 and data.get('page') == 1 and data.get('limit') == 5:
+                    self.log_test(
+                        "Tournaments Pagination", 
+                        True, 
+                        f"Tournaments pagination returned {len(tournaments)} tournaments (limit 5)"
+                    )
+                else:
+                    self.log_test(
+                        "Tournaments Pagination", 
+                        False, 
+                        f"Pagination parameters incorrect: page={data.get('page')}, limit={data.get('limit')}, count={len(tournaments)}"
+                    )
+            else:
+                self.log_test(
+                    "Tournaments Pagination", 
+                    False, 
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_test("Tournaments Pagination", False, f"Request failed: {str(e)}")
+    
+    def test_tournaments_game_filter(self):
+        """Test GET /api/tournaments with game filter"""
+        try:
+            # Test MK8DX filter
+            response = self.session.get(f"{API_BASE}/tournaments?game=mk8dx")
+            
+            if response.status_code == 200:
+                data = response.json()
+                tournaments = data.get('tournaments', [])
+                
+                # Check if tournaments are filtered by game (if any tournaments returned)
+                valid_filter = True
+                for tournament in tournaments:
+                    game = tournament.get('game', '').lower()
+                    badges = tournament.get('badges', [])
+                    
+                    # Tournament should either have game=mk8dx or contain mk8dx in badges
+                    if game != 'mk8dx' and not any('mk8dx' in str(badge).lower() for badge in badges):
+                        valid_filter = False
+                        break
+                
+                if valid_filter:
+                    self.log_test(
+                        "Tournaments Game Filter", 
+                        True, 
+                        f"MK8DX filter returned {len(tournaments)} tournaments"
+                    )
+                else:
+                    self.log_test(
+                        "Tournaments Game Filter", 
+                        False, 
+                        "Some tournaments not matching MK8DX filter returned"
+                    )
+            else:
+                self.log_test(
+                    "Tournaments Game Filter", 
+                    False, 
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+                
+        except Exception as e:
+            self.log_test("Tournaments Game Filter", False, f"Request failed: {str(e)}")
+    
+    def test_admin_lounge_search_api(self):
+        """Test GET /api/admin/lounge-search?name={name}"""
+        try:
+            # Test with known player names
+            test_players = ["WeeklyShonenJump", "Mariji", "TestPlayer"]
+            
+            for player_name in test_players:
+                response = self.session.get(f"{API_BASE}/admin/lounge-search?name={player_name}")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    expected_fields = ['found']
+                    
+                    if all(field in data for field in expected_fields):
+                        found = data.get('found', False)
+                        
+                        if found:
+                            # If player found, check for player info and activity data
+                            player_info = data.get('player', {})
+                            activity_info = data.get('activity', {})
+                            
+                            if 'name' in player_info and 'mmr' in player_info and 'matchCount' in activity_info:
+                                self.log_test(
+                                    f"Admin Lounge Search - {player_name}", 
+                                    True, 
+                                    f"Player found: MMR={player_info.get('mmr')}, matches={activity_info.get('matchCount')}"
+                                )
+                            else:
+                                self.log_test(
+                                    f"Admin Lounge Search - {player_name}", 
+                                    False, 
+                                    "Player found but missing expected player/activity data",
+                                    {'player': player_info, 'activity': activity_info}
+                                )
+                        else:
+                            self.log_test(
+                                f"Admin Lounge Search - {player_name}", 
+                                True, 
+                                f"Player not found (expected for some test players)"
+                            )
+                    else:
+                        self.log_test(
+                            f"Admin Lounge Search - {player_name}", 
+                            False, 
+                            "Missing expected fields in admin search response",
+                            {'response': data, 'expected': expected_fields}
+                        )
+                else:
+                    self.log_test(
+                        f"Admin Lounge Search - {player_name}", 
+                        False, 
+                        f"HTTP {response.status_code}: {response.text}"
+                    )
+            
+            # Test missing name parameter
+            response_no_name = self.session.get(f"{API_BASE}/admin/lounge-search")
+            
+            if response_no_name.status_code == 400:
+                self.log_test(
+                    "Admin Lounge Search - Missing Name", 
+                    True, 
+                    "Correctly returns 400 for missing name parameter"
+                )
+            else:
+                self.log_test(
+                    "Admin Lounge Search - Missing Name", 
+                    False, 
+                    f"Expected 400 for missing name, got HTTP {response_no_name.status_code}"
+                )
+                
+        except Exception as e:
+            self.log_test("Admin Lounge Search API", False, f"Request failed: {str(e)}")
     
     def test_nextauth_endpoints(self):
         """Test NextAuth endpoints (Discord OAuth handled by NextAuth.js)"""
