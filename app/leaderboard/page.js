@@ -273,8 +273,8 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
-        {/* Leaderboard */}
-        <div className="bg-neutral-900 border border-gray-800 rounded-lg overflow-hidden">
+        {/* Leaderboard - Style MKCentral */}
+        <div className="bg-[#1a1a2e] border border-[#252540] rounded-lg overflow-hidden">
           {loading ? (
             <div className="text-center py-16">
               <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-gray-600" />
@@ -295,37 +295,49 @@ export default function LeaderboardPage() {
           ) : (
             <>
               {/* Table Header - Desktop */}
-              <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800 text-xs text-gray-500 font-medium">
-                <div className="col-span-1">#</div>
-                <div className="col-span-5">Joueur</div>
-                <div className="col-span-2 text-center">Rang</div>
+              <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-3 bg-[#12122a] text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                <div className="col-span-1">Rank</div>
+                <div className="col-span-5">Player</div>
+                <div className="col-span-2 text-center">Tier</div>
                 <div className="col-span-2 text-center">Events</div>
                 <div className="col-span-2 text-right">MMR</div>
               </div>
 
               {/* Players List */}
-              <div className="divide-y divide-gray-800/50">
+              <div className="divide-y divide-[#252540]/50">
                 {leaderboard.map((player, index) => {
                   const rank = getCurrentRank(player.mmr || 0);
                   const globalRank = player.rank || ((page - 1) * limit + index + 1);
                   const isTop3 = globalRank <= 3;
+                  
+                  // Podium styling
+                  let podiumBg = '';
+                  let rankBadgeClass = 'bg-[#252548] text-gray-400';
+                  
+                  if (globalRank === 1) {
+                    podiumBg = 'bg-yellow-500/10';
+                    rankBadgeClass = 'bg-yellow-500 text-black';
+                  } else if (globalRank === 2) {
+                    podiumBg = 'bg-gray-400/10';
+                    rankBadgeClass = 'bg-gray-400 text-black';
+                  } else if (globalRank === 3) {
+                    podiumBg = 'bg-orange-600/10';
+                    rankBadgeClass = 'bg-orange-600 text-white';
+                  }
+                  
+                  const rowBg = index % 2 === 0 ? 'bg-[#1e1e38]' : 'bg-[#1a1a2e]';
                   
                   return (
                     <Link 
                       key={player.id || index}
                       href={`/player/${encodeURIComponent(player.name)}`}
                     >
-                      <div className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-neutral-800/50 transition-colors cursor-pointer ${
-                        isTop3 ? 'bg-neutral-800/30' : ''
+                      <div className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-[#252548] transition-colors cursor-pointer ${
+                        isTop3 ? podiumBg : rowBg
                       }`}>
                         {/* Rank */}
                         <div className="col-span-2 sm:col-span-1">
-                          <span className={`text-sm font-medium ${
-                            globalRank === 1 ? 'text-gray-100' :
-                            globalRank === 2 ? 'text-gray-300' :
-                            globalRank === 3 ? 'text-gray-400' :
-                            'text-gray-500'
-                          }`}>
+                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded text-xs font-bold ${rankBadgeClass}`}>
                             {globalRank}
                           </span>
                         </div>
@@ -337,7 +349,7 @@ export default function LeaderboardPage() {
                               {getCountryFlag(player.countryCode)}
                             </span>
                           )}
-                          <span className="text-sm font-medium text-gray-200 truncate">
+                          <span className={`text-sm truncate ${isTop3 ? 'font-semibold text-gray-100' : 'font-medium text-gray-300'}`}>
                             {player.name}
                           </span>
                         </div>
@@ -354,7 +366,7 @@ export default function LeaderboardPage() {
                         
                         {/* Events - Hidden on mobile */}
                         <div className="hidden sm:block sm:col-span-2 text-center">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-sm text-gray-400">
                             {player.eventsPlayed || 0}
                           </span>
                         </div>
