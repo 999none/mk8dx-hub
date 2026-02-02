@@ -57,14 +57,14 @@ export default function DashboardPage() {
           const loungeName = verifyData.user.loungeName;
           
           // Fetch activity stats
-          const loungeRes = await fetch(`/api/admin/lounge-search?name=${encodeURIComponent(loungeName)}`);
+          const loungeRes = await fetch(`/api/admin/lounge-search?name=${encodeURIComponent(loungeName)}${selectedSeason ? `&season=${selectedSeason}` : ''}`);
           const loungeData = await loungeRes.json();
           if (loungeData.found) {
             setPlayerStats(loungeData);
           }
 
           // Fetch full player details with MMR history
-          const detailsRes = await fetch(`/api/lounge/player-details/${encodeURIComponent(loungeName)}`);
+          const detailsRes = await fetch(`/api/lounge/player-details/${encodeURIComponent(loungeName)}${selectedSeason ? `?season=${selectedSeason}` : ''}`);
           const detailsData = await detailsRes.json();
           if (detailsData && detailsData.name) {
             setPlayerDetails(detailsData);
@@ -78,7 +78,7 @@ export default function DashboardPage() {
     };
 
     fetchData();
-  }, []);
+  }, [selectedSeason]);
 
   const user = session?.user;
   const loungeData = verificationData?.user?.loungeData || playerStats?.player;
