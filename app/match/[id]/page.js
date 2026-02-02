@@ -1,20 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   ArrowLeft, Calendar, Users, Trophy, Medal,
-  RefreshCw, ExternalLink, Swords, Target, TrendingUp, TrendingDown
+  RefreshCw, ExternalLink, Swords, Target, TrendingUp, TrendingDown, Clock
 } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 
 // Helper function to get country flag emoji
 const getCountryFlag = (countryCode) => {
-  if (!countryCode || countryCode.length !== 2) return '🌍';
+  if (!countryCode || countryCode.length !== 2) return '';
   const codePoints = countryCode
     .toUpperCase()
     .split('')
@@ -24,12 +24,14 @@ const getCountryFlag = (countryCode) => {
 
 export default function MatchDetailsPage() {
   const params = useParams();
+  const router = useRouter();
   const matchId = params.id;
   
   const [matchData, setMatchData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [imageLoaded, setImageLoaded] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const fetchMatchDetails = async () => {
@@ -62,6 +64,18 @@ export default function MatchDetailsPage() {
   const tableImageUrl = `https://lounge.mkcentral.com/TableImage/${matchId}.png`;
   const loungeTableUrl = `https://lounge.mkcentral.com/mk8dx/TableDetails/${matchId}`;
 
+  // Format match date
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar />
@@ -69,12 +83,14 @@ export default function MatchDetailsPage() {
       <div className="container mx-auto px-4 py-8 pt-24">
         {/* Back Button */}
         <div className="mb-6">
-          <Link href="/dashboard">
-            <Button variant="ghost" className="hover:bg-white/10">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour
-            </Button>
-          </Link>
+          <Button 
+            variant="ghost" 
+            onClick={() => router.back()}
+            className="hover:bg-white/10"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Retour
+          </Button>
         </div>
 
         {loading ? (
@@ -87,91 +103,96 @@ export default function MatchDetailsPage() {
             <Swords className="w-16 h-16 mx-auto mb-4 text-gray-600" />
             <h2 className="text-2xl font-bold mb-2">Match introuvable</h2>
             <p className="text-gray-400 mb-6">{error}</p>
-            <Link href="/dashboard">
-              <Button className="bg-white text-black hover:bg-white/90">
-                Retour au Dashboard
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => router.back()}
+              className="bg-white text-black hover:bg-white/90"
+            >
+              Retour
+            </Button>
           </div>
         ) : matchData ? (
           <div className="max-w-5xl mx-auto space-y-8">
-            {/* Header Info */}
+            
+            {/* ========== HEADER INFO ========== */}
             <div className="text-center">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full mb-4">
-                <Swords className="w-5 h-5" />
-                <span>Table #{matchId}</span>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-black mb-4">
-                Résultat du Match
+              <h1 className="text-4xl md:text-5xl font-black mb-6">
+                Table #{matchId}
               </h1>
               
-              {/* Match Info Grid */}
-              <div className="flex flex-wrap justify-center gap-4 mt-6">
-                <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg">
-                  <span className="text-gray-400 text-sm">Tier</span>
-                  <p className="font-bold text-xl">{matchData.tier || '?'}</p>
+              {/* Match Info Grid - Black & White Style */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 bg-white text-black rounded-xl">
+                  <Swords className="w-6 h-6 mx-auto mb-2" />
+                  <p className="text-xs uppercase tracking-wider opacity-70">Tier</p>
+                  <p className="font-black text-2xl">{matchData.tier || '?'}</p>
                 </div>
-                <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg">
-                  <span className="text-gray-400 text-sm">Format</span>
-                  <p className="font-bold text-xl">{matchData.format || `${matchData.numTeams}v${matchData.numTeams}`}</p>
+                <div className="p-4 bg-white text-black rounded-xl">
+                  <Users className="w-6 h-6 mx-auto mb-2" />
+                  <p className="text-xs uppercase tracking-wider opacity-70">Format</p>
+                  <p className="font-black text-2xl">{matchData.format || `${matchData.numTeams}v${matchData.numTeams}`}</p>
                 </div>
-                <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg">
-                  <span className="text-gray-400 text-sm">Joueurs</span>
-                  <p className="font-bold text-xl">{matchData.numPlayers}</p>
+                <div className="p-4 bg-white text-black rounded-xl">
+                  <Trophy className="w-6 h-6 mx-auto mb-2" />
+                  <p className="text-xs uppercase tracking-wider opacity-70">Joueurs</p>
+                  <p className="font-black text-2xl">{matchData.numPlayers}</p>
                 </div>
-                <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg">
-                  <span className="text-gray-400 text-sm">Date</span>
-                  <p className="font-bold">
-                    {new Date(matchData.createdOn || matchData.verifiedOn).toLocaleDateString('fr-FR', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                <div className="p-4 bg-white text-black rounded-xl">
+                  <Calendar className="w-6 h-6 mx-auto mb-2" />
+                  <p className="text-xs uppercase tracking-wider opacity-70">Date</p>
+                  <p className="font-bold text-sm">
+                    {formatDate(matchData.createdOn || matchData.verifiedOn)}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Official Table Image */}
-            <Card className="bg-white/5 border-white/10 overflow-hidden">
-              <CardHeader className="border-b border-white/10">
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-yellow-500" />
-                  Image Officielle
+            {/* ========== OFFICIAL TABLE IMAGE ========== */}
+            <Card className="bg-zinc-900 border-white/20 overflow-hidden">
+              <CardHeader className="border-b border-white/10 bg-white text-black">
+                <CardTitle className="flex items-center gap-2 text-black">
+                  <Trophy className="w-5 h-5" />
+                  Image Officielle du Match
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                {imageLoaded ? (
+                {!imageError ? (
                   <div className="relative bg-black">
                     <img
                       src={tableImageUrl}
                       alt={`Table ${matchId} Results`}
                       className="w-full h-auto"
-                      onError={() => setImageLoaded(false)}
+                      onError={() => setImageError(true)}
                     />
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                    <Trophy className="w-12 h-12 mb-4 opacity-50" />
-                    <p>Image non disponible</p>
+                  <div className="flex flex-col items-center justify-center py-16 bg-zinc-900">
+                    <Trophy className="w-12 h-12 mb-4 text-gray-600" />
+                    <p className="text-gray-400">Image non disponible</p>
+                    <a 
+                      href={loungeTableUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 text-blue-400 hover:underline flex items-center gap-2"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Voir sur MKCentral
+                    </a>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Results Table */}
-            <Card className="bg-white/5 border-white/10">
-              <CardHeader className="border-b border-white/10">
-                <CardTitle className="flex items-center justify-between">
+            {/* ========== SCORES TABLE - Black & White ========== */}
+            <Card className="bg-zinc-900 border-white/20">
+              <CardHeader className="border-b border-white/10 bg-white text-black">
+                <CardTitle className="flex items-center justify-between text-black">
                   <div className="flex items-center gap-2">
-                    <Medal className="w-5 h-5 text-yellow-500" />
+                    <Medal className="w-5 h-5" />
                     Classement & Scores
                   </div>
                   {matchData.stats && (
-                    <div className="text-sm font-normal text-gray-400">
-                      Score moyen: <span className="text-white">{matchData.stats.avgScore}</span>
+                    <div className="text-sm font-normal">
+                      Score moyen: <span className="font-bold">{matchData.stats.avgScore}</span>
                     </div>
                   )}
                 </CardTitle>
@@ -180,76 +201,95 @@ export default function MatchDetailsPage() {
                 {/* Teams */}
                 <div className="divide-y divide-white/10">
                   {matchData.teams?.sort((a, b) => a.rank - b.rank).map((team, teamIndex) => (
-                    <div key={teamIndex} className="p-4">
+                    <div key={teamIndex} className="p-6">
                       {/* Team Header */}
-                      <div className={`flex items-center justify-between p-4 rounded-lg mb-3 ${
+                      <div className={`flex items-center justify-between p-4 rounded-xl mb-4 ${
                         team.rank === 1 
-                          ? 'bg-gradient-to-r from-yellow-500/20 to-transparent border border-yellow-500/30' 
+                          ? 'bg-white text-black' 
                           : team.rank === 2 
-                            ? 'bg-gradient-to-r from-gray-400/20 to-transparent border border-gray-400/30'
+                            ? 'bg-gray-300 text-black'
                             : team.rank === 3
-                              ? 'bg-gradient-to-r from-orange-600/20 to-transparent border border-orange-600/30'
-                              : 'bg-white/5 border border-white/10'
+                              ? 'bg-gray-500 text-white'
+                              : 'bg-zinc-800 text-white border border-white/20'
                       }`}>
                         <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-xl ${
+                          <div className={`w-14 h-14 rounded-full flex items-center justify-center font-black text-2xl ${
                             team.rank === 1 
-                              ? 'bg-yellow-500 text-black' 
+                              ? 'bg-black text-white' 
                               : team.rank === 2 
-                                ? 'bg-gray-400 text-black'
+                                ? 'bg-zinc-700 text-white'
                                 : team.rank === 3
-                                  ? 'bg-orange-600 text-white'
+                                  ? 'bg-zinc-900 text-white'
                                   : 'bg-white/20 text-white'
                           }`}>
                             {team.rank === 1 ? '🥇' : team.rank === 2 ? '🥈' : team.rank === 3 ? '🥉' : team.rank}
                           </div>
                           <div>
-                            <p className="font-bold text-lg">Équipe #{team.rank}</p>
-                            <p className="text-sm text-gray-400">{team.playerCount || team.scores?.length} joueur{(team.playerCount || team.scores?.length) > 1 ? 's' : ''}</p>
+                            <p className="font-bold text-xl">Équipe #{team.rank}</p>
+                            <p className="text-sm opacity-70">{team.playerCount || team.scores?.length} joueur{(team.playerCount || team.scores?.length) > 1 ? 's' : ''}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-3xl font-black">{team.totalScore}</p>
-                          <p className="text-sm text-gray-400">points</p>
+                          <p className="text-4xl font-black">{team.totalScore}</p>
+                          <p className="text-sm opacity-70">points</p>
                         </div>
                       </div>
 
-                      {/* Team Players */}
-                      <div className="space-y-2 ml-4">
-                        {team.scores?.sort((a, b) => b.score - a.score).map((player, playerIndex) => (
-                          <Link 
-                            key={playerIndex}
-                            href={`/player/${encodeURIComponent(player.playerName)}`}
-                            className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-lg transition-colors"
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm text-gray-500 w-6">#{playerIndex + 1}</span>
-                              {player.playerCountryCode && (
-                                <span className="text-lg" title={player.playerCountryCode}>
-                                  {getCountryFlag(player.playerCountryCode)}
-                                </span>
-                              )}
-                              <span className="font-medium hover:text-blue-400 transition-colors">{player.playerName}</span>
-                            </div>
-                            <div className="flex items-center gap-8">
-                              <div className="text-center">
-                                <p className="font-bold text-lg">{player.score}</p>
-                                <p className="text-xs text-gray-500">pts</p>
-                              </div>
-                              <div className="text-right min-w-[100px]">
-                                <p className={`font-bold flex items-center justify-end gap-1 ${
-                                  player.delta > 0 ? 'text-green-400' : player.delta < 0 ? 'text-red-400' : 'text-gray-400'
-                                }`}>
-                                  {player.delta > 0 ? <TrendingUp className="w-4 h-4" /> : player.delta < 0 ? <TrendingDown className="w-4 h-4" /> : null}
-                                  {player.delta > 0 ? '+' : ''}{player.delta}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {player.prevMmr?.toLocaleString('fr-FR')} → {player.newMmr?.toLocaleString('fr-FR')}
-                                </p>
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
+                      {/* Team Players Table */}
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="border-b border-white/20 text-gray-400">
+                              <th className="text-left py-2 px-3 text-sm">#</th>
+                              <th className="text-left py-2 px-3 text-sm">Joueur</th>
+                              <th className="text-center py-2 px-3 text-sm">Score</th>
+                              <th className="text-center py-2 px-3 text-sm">Δ MMR</th>
+                              <th className="text-right py-2 px-3 text-sm">Nouveau MMR</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {team.scores?.sort((a, b) => b.score - a.score).map((player, playerIndex) => (
+                              <tr 
+                                key={playerIndex}
+                                className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                              >
+                                <td className="py-3 px-3 text-gray-500">{playerIndex + 1}</td>
+                                <td className="py-3 px-3">
+                                  <Link 
+                                    href={`/player/${encodeURIComponent(player.playerName)}`}
+                                    className="flex items-center gap-2 hover:text-blue-400 transition-colors"
+                                  >
+                                    {player.playerCountryCode && (
+                                      <span className="text-lg" title={player.playerCountryCode}>
+                                        {getCountryFlag(player.playerCountryCode)}
+                                      </span>
+                                    )}
+                                    <span className="font-medium">{player.playerName}</span>
+                                  </Link>
+                                </td>
+                                <td className="py-3 px-3 text-center">
+                                  <span className="font-bold text-lg">{player.score}</span>
+                                </td>
+                                <td className="py-3 px-3 text-center">
+                                  <span className={`font-bold flex items-center justify-center gap-1 ${
+                                    player.delta > 0 ? 'text-green-400' : player.delta < 0 ? 'text-red-400' : 'text-gray-400'
+                                  }`}>
+                                    {player.delta > 0 ? <TrendingUp className="w-4 h-4" /> : player.delta < 0 ? <TrendingDown className="w-4 h-4" /> : null}
+                                    {player.delta > 0 ? '+' : ''}{player.delta}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-3 text-right">
+                                  <div>
+                                    <span className="font-semibold">{player.newMmr?.toLocaleString('fr-FR')}</span>
+                                    <span className="text-xs text-gray-500 ml-2">
+                                      ({player.prevMmr?.toLocaleString('fr-FR')})
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
                   ))}
@@ -257,49 +297,41 @@ export default function MatchDetailsPage() {
               </CardContent>
             </Card>
 
-            {/* Statistics */}
+            {/* ========== MATCH STATISTICS ========== */}
             {matchData.stats && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-white/5 border-white/10">
-                  <CardContent className="p-4 text-center">
-                    <Users className="w-6 h-6 mx-auto mb-2 text-blue-400" />
-                    <p className="text-2xl font-bold">{matchData.stats.totalPlayers}</p>
-                    <p className="text-sm text-gray-400">Joueurs</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white/5 border-white/10">
-                  <CardContent className="p-4 text-center">
-                    <Target className="w-6 h-6 mx-auto mb-2 text-purple-400" />
-                    <p className="text-2xl font-bold">{matchData.stats.avgScore}</p>
-                    <p className="text-sm text-gray-400">Score Moyen</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white/5 border-white/10">
-                  <CardContent className="p-4 text-center">
-                    <TrendingUp className="w-6 h-6 mx-auto mb-2 text-green-400" />
-                    <p className="text-2xl font-bold">{matchData.stats.highestScore}</p>
-                    <p className="text-sm text-gray-400">Meilleur Score</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-white/5 border-white/10">
-                  <CardContent className="p-4 text-center">
-                    <TrendingDown className="w-6 h-6 mx-auto mb-2 text-red-400" />
-                    <p className="text-2xl font-bold">{matchData.stats.lowestScore}</p>
-                    <p className="text-sm text-gray-400">Score le Plus Bas</p>
-                  </CardContent>
-                </Card>
+                <div className="p-4 bg-zinc-900 border border-white/20 rounded-xl text-center">
+                  <Users className="w-6 h-6 mx-auto mb-2 text-white" />
+                  <p className="text-2xl font-bold">{matchData.stats.totalPlayers}</p>
+                  <p className="text-sm text-gray-400">Joueurs</p>
+                </div>
+                <div className="p-4 bg-zinc-900 border border-white/20 rounded-xl text-center">
+                  <Target className="w-6 h-6 mx-auto mb-2 text-white" />
+                  <p className="text-2xl font-bold">{matchData.stats.avgScore}</p>
+                  <p className="text-sm text-gray-400">Score Moyen</p>
+                </div>
+                <div className="p-4 bg-zinc-900 border border-white/20 rounded-xl text-center">
+                  <TrendingUp className="w-6 h-6 mx-auto mb-2 text-white" />
+                  <p className="text-2xl font-bold">{matchData.stats.highestScore}</p>
+                  <p className="text-sm text-gray-400">Meilleur Score</p>
+                </div>
+                <div className="p-4 bg-zinc-900 border border-white/20 rounded-xl text-center">
+                  <TrendingDown className="w-6 h-6 mx-auto mb-2 text-white" />
+                  <p className="text-2xl font-bold">{matchData.stats.lowestScore}</p>
+                  <p className="text-sm text-gray-400">Score Minimum</p>
+                </div>
               </div>
             )}
 
-            {/* External Link */}
-            <div className="text-center">
+            {/* ========== EXTERNAL LINK ========== */}
+            <div className="text-center pb-8">
               <a 
                 href={loungeTableUrl}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Button className="bg-white text-black hover:bg-white/90">
-                  <ExternalLink className="w-4 h-4 mr-2" />
+                <Button className="bg-white text-black hover:bg-gray-200 font-bold px-8 py-3">
+                  <ExternalLink className="w-5 h-5 mr-2" />
                   Voir sur MK8DX Lounge
                 </Button>
               </a>
