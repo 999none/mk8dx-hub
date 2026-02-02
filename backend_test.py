@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration from .env
-BASE_URL = "https://coherent-menus.preview.emergentagent.com"
+BASE_URL = "https://score-dashboard-9.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class BackendTester:
