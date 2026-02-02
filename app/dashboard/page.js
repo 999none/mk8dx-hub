@@ -974,6 +974,9 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+
+        {/* Match Detail Modal */}
+        <MatchDetailModal />
       </div>
     </RequireAuth>
   );
