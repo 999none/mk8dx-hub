@@ -64,6 +64,7 @@ export default function PlayerProfilePage() {
   
   const [player, setPlayer] = useState(null);
   const [playerDetails, setPlayerDetails] = useState(null);
+  const [registryData, setRegistryData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSeason, setSelectedSeason] = useState('');
