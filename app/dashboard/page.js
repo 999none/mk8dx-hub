@@ -639,8 +639,7 @@ export default function DashboardPage() {
                                   </Badge>
                                 </td>
                                 <td className="py-3 px-4 text-center text-sm text-gray-400">
-                                  {match.numTeams ? `${match.numTeams}v${match.numTeams}` : '-'}
-                                  {match.numPlayers && <span className="ml-1">({match.numPlayers}p)</span>}
+                                  {getMatchFormat(match.numTeams, match.numPlayers)}
                                 </td>
                                 <td className="py-3 px-4 text-center">
                                   <span className="font-semibold">{match.score ?? '-'}</span>
