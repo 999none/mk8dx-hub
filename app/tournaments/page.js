@@ -181,16 +181,29 @@ export default function TournamentsPage() {
                         tournament.status === 'live' ? 'ring-1 ring-green-500/30' : ''
                       }`}
                     >
-                      {tournament.logo && (
-                        <div className="h-24 bg-gradient-to-b from-white/[0.02] to-transparent flex items-center justify-center">
-                          <img 
-                            src={tournament.logo} 
-                            alt=""
-                            className="max-h-16 object-contain opacity-80"
-                            onError={(e) => e.target.style.display = 'none'}
-                          />
-                        </div>
-                      )}
+                      {/* Tournament/Series Logo */}
+                      <div className="h-28 bg-gradient-to-b from-white/[0.04] to-transparent flex items-center justify-center p-4 relative">
+                        <img 
+                          src={tournament.logo || tournament.seriesLogo || tournament.tournamentLogo} 
+                          alt={tournament.name}
+                          className="max-h-20 max-w-full object-contain"
+                          onError={(e) => {
+                            // Try series logo if main logo fails
+                            if (tournament.seriesLogo && e.target.src !== tournament.seriesLogo) {
+                              e.target.src = tournament.seriesLogo;
+                            } else if (tournament.tournamentLogo && e.target.src !== tournament.tournamentLogo) {
+                              e.target.src = tournament.tournamentLogo;
+                            } else {
+                              e.target.style.display = 'none';
+                            }
+                          }}
+                        />
+                        {tournament.series?.name && (
+                          <div className="absolute bottom-1 left-2 right-2">
+                            <span className="text-[10px] text-gray-500 truncate block">{tournament.series.name}</span>
+                          </div>
+                        )}
+                      </div>
                       
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between gap-2 mb-3">
