@@ -29,6 +29,14 @@ const COUNTRY_NAMES = {
   'IE': 'Irlande', 'CZ': 'Tchéquie', 'RU': 'Russie', 'UA': 'Ukraine'
 };
 
+// Function to get country flag emoji
+const getCountryFlag = (countryCode) => {
+  if (!countryCode) return '';
+  return countryCode.toUpperCase().replace(/./g, char => 
+    String.fromCodePoint(127397 + char.charCodeAt())
+  );
+};
+
 const MMR_RANGES = [
   { label: 'Tous les MMR', value: 'all' },
   { label: 'Master (14000+)', value: '14000-99999', min: 14000 },
