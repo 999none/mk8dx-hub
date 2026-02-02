@@ -891,6 +891,87 @@ export async function POST(request, context) {
       }
     }
 
+    // Create verification for NextAuth session (first login)
+    if (path === 'verification/create') {
+      try {
+        const body = await request.json();
+        const { discordId, username, serverNickname, avatar, isInServer } = body;
+        
+        if (!discordId || !username) {
+          return NextResponse.json({ success: false, message: 'discordId and username are required' }, { status: 400 });
+        }
+
+        // User must be in the Lounge server
+        if (!isInServer) {
+          return NextResponse.json({ success: false, message: 'User is not in the Lounge server', status: 'not_in_server' });
+        }
+
+        const db = await getDatabase();
+
+        // Check if already verified
+        const existingUser = await db.collection('users').findOne({ discordId, verified: true });
+        if (existingUser) {
+          return NextResponse.json({ success: true, status: 'approved', verified: true });
+        }
+
+        // Check if pending verification already exists
+        const existingPending = await db.collection('pending_verifications').findOne({ discordId });
+        if (existingPending) {
+          return NextResponse.json({ 
+            success: true, 
+            status: existingPending.status, 
+            verified: false,
+            matchCount: existingPending.matchCount || 0
+          });
+        }
+
+        // Check Lounge activity using serverNickname
+        const loungeApi = new LoungeApi();
+        let matchCount = 0;
+        let lastMatchDate = null;
+
+        try {
+          const matches = await loungeApi.getPlayerMatchHistory(serverNickname || username, { limit: 100 });
+          if (Array.isArray(matches)) {
+            const now = Date.now();
+            const cutoff = now - (30 * 24 * 60 * 60 * 1000);
+            const recent = matches
+              .map(m => ({ ...m, date: new Date(m.date || m.createdAt || m.time) }))
+              .filter(m => m.date && m.date.getTime() >= cutoff)
+              .sort((a, b) => b.date - a.date);
+
+            matchCount = recent.length;
+            lastMatchDate = recent.length > 0 ? recent[0].date.toISOString() : null;
+          }
+        } catch (err) {
+          console.warn('Could not fetch lounge matches during create:', err);
+        }
+
+        const status = matchCount >= 2 ? 'pending' : 'waiting_activity';
+
+        // Create pending verification
+        await db.collection('pending_verifications').insertOne({
+          discordId,
+          username,
+          serverNickname: serverNickname || username,
+          avatar,
+          createdAt: new Date(),
+          status,
+          matchCount,
+          lastMatchDate
+        });
+
+        // Set cookie for client
+        const res = NextResponse.json({ success: true, status, matchCount, lastMatchDate, verified: false });
+        res.cookies.set('verification_status', JSON.stringify({ discordId, status, matchCount, lastMatchDate }), { httpOnly: false, path: '/', maxAge: 60 * 60 * 24 * 30 });
+        return res;
+
+      } catch (err) {
+        console.error('verification/create error:', err);
+        return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
+      }
+    }
+
     // Admin: Set Lounge name and auto-approve if conditions met
     if (path === 'admin/set-lounge-name') {
       try {
