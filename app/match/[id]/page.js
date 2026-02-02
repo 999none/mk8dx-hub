@@ -209,85 +209,95 @@ export default function MatchDetailsPage() {
             </div>
 
             {/* ========== SCORES TABLE ========== */}
-            <div className="bg-neutral-900 border border-gray-800 rounded-lg overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-300">Classement</span>
-                {matchData.stats && (
-                  <span className="text-xs text-gray-500">
-                    Moy: <span className="text-gray-400">{matchData.stats.avgScore}</span>
-                  </span>
-                )}
-              </div>
+            {(() => {
+              const formatInfo = getFormatInfo(matchData.numTeams, matchData.numPlayers);
               
-              {/* Teams */}
-              <div className="divide-y divide-gray-800">
-                {matchData.teams?.sort((a, b) => a.rank - b.rank).map((team, teamIndex) => (
-                  <div key={teamIndex} className="p-3 sm:p-4">
-                    {/* Team Header */}
-                    <div className={`flex items-center justify-between p-3 rounded-lg mb-3 ${
-                      team.rank === 1 
-                        ? 'bg-gray-100 text-black' 
-                        : team.rank === 2 
-                          ? 'bg-gray-400 text-black'
-                          : team.rank === 3
-                            ? 'bg-gray-600 text-white'
-                            : 'bg-neutral-800 text-gray-300 border border-gray-700'
-                    }`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm sm:text-lg ${
-                          team.rank === 1 
-                            ? 'bg-black text-white' 
-                            : team.rank === 2 
-                              ? 'bg-gray-700 text-white'
-                              : team.rank === 3
-                                ? 'bg-gray-900 text-white'
-                                : 'bg-gray-700 text-gray-300'
-                        }`}>
-                          {team.rank === 1 ? '1' : team.rank === 2 ? '2' : team.rank === 3 ? '3' : team.rank}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm sm:text-base">Équipe {team.rank}</p>
-                          <p className="text-[10px] sm:text-xs opacity-60">{team.playerCount || team.scores?.length} joueur{(team.playerCount || team.scores?.length) > 1 ? 's' : ''}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl sm:text-2xl font-bold">{team.totalScore}</p>
-                      </div>
+              return (
+                <div className="bg-neutral-900 border border-gray-800 rounded-lg overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-gray-300">Classement</span>
+                      {formatInfo.isTeamFormat && (
+                        <span className="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                          {formatInfo.format} • {formatInfo.numTeams} équipes
+                        </span>
+                      )}
                     </div>
+                    {matchData.stats && (
+                      <span className="text-xs text-gray-500">
+                        Moy: <span className="text-gray-400">{matchData.stats.avgScore}</span>
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Teams */}
+                  <div className="divide-y divide-gray-800">
+                    {matchData.teams?.sort((a, b) => a.rank - b.rank).map((team, teamIndex) => {
+                      const teamColor = TEAM_COLORS[Math.min(teamIndex, TEAM_COLORS.length - 1)];
+                      const teamAvgDelta = team.scores?.length > 0 
+                        ? Math.round(team.scores.reduce((sum, p) => sum + (p.delta || 0), 0) / team.scores.length)
+                        : 0;
+                      
+                      return (
+                        <div key={teamIndex} className="p-3 sm:p-4">
+                          {/* Team Header */}
+                          <div className={`flex items-center justify-between p-3 rounded-lg mb-3 ${teamColor.bg} ${teamColor.text}`}>
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm sm:text-lg ${teamColor.rankBg} ${teamColor.rankText}`}>
+                                {team.rank}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-sm sm:text-base">
+                                  {formatInfo.isTeamFormat ? `Équipe ${team.rank}` : `Position ${team.rank}`}
+                                </p>
+                                <p className="text-[10px] sm:text-xs opacity-60">
+                                  {team.playerCount || team.scores?.length} joueur{(team.playerCount || team.scores?.length) > 1 ? 's' : ''}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xl sm:text-2xl font-bold">{team.totalScore}</p>
+                              {formatInfo.isTeamFormat && (
+                                <p className={`text-[10px] sm:text-xs ${teamAvgDelta >= 0 ? 'opacity-80' : 'opacity-80'}`}>
+                                  Δ moy: {teamAvgDelta > 0 ? '+' : ''}{teamAvgDelta}
+                                </p>
+                              )}
+                            </div>
+                          </div>
 
-                    {/* Team Players */}
-                    <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
-                      <table className="w-full min-w-[360px] sm:min-w-0">
-                        <thead>
-                          <tr className="text-gray-500 text-xs">
-                            <th className="text-left py-2 px-2 font-medium">#</th>
-                            <th className="text-left py-2 px-2 font-medium">Joueur</th>
-                            <th className="text-center py-2 px-2 font-medium">Score</th>
-                            <th className="text-center py-2 px-2 font-medium">Δ MMR</th>
-                            <th className="text-right py-2 px-2 font-medium">MMR</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {team.scores?.sort((a, b) => b.score - a.score).map((player, playerIndex) => (
-                            <tr 
-                              key={playerIndex}
-                              className="border-t border-gray-800/50 hover:bg-neutral-800/50 transition-colors"
-                            >
-                              <td className="py-2 px-2 text-gray-600 text-xs">{playerIndex + 1}</td>
-                              <td className="py-2 px-2">
-                                <Link 
-                                  href={`/player/${encodeURIComponent(player.playerName)}`}
-                                  className="flex items-center gap-1.5 hover:text-gray-100 transition-colors text-gray-300"
-                                >
-                                  {player.playerCountryCode && (
-                                    <span className="text-sm">{getCountryFlag(player.playerCountryCode)}</span>
-                                  )}
-                                  <span className="text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none">{player.playerName}</span>
-                                </Link>
-                              </td>
-                              <td className="py-2 px-2 text-center">
-                                <span className="font-semibold text-sm text-gray-200">{player.score}</span>
-                              </td>
+                          {/* Team Players */}
+                          <div className="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0">
+                            <table className="w-full min-w-[360px] sm:min-w-0">
+                              <thead>
+                                <tr className="text-gray-500 text-xs">
+                                  <th className="text-left py-2 px-2 font-medium">#</th>
+                                  <th className="text-left py-2 px-2 font-medium">Joueur</th>
+                                  <th className="text-center py-2 px-2 font-medium">Score</th>
+                                  <th className="text-center py-2 px-2 font-medium">Δ MMR</th>
+                                  <th className="text-right py-2 px-2 font-medium">MMR</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {team.scores?.sort((a, b) => b.score - a.score).map((player, playerIndex) => (
+                                  <tr 
+                                    key={playerIndex}
+                                    className="border-t border-gray-800/50 hover:bg-neutral-800/50 transition-colors"
+                                  >
+                                    <td className="py-2 px-2 text-gray-600 text-xs">{playerIndex + 1}</td>
+                                    <td className="py-2 px-2">
+                                      <Link 
+                                        href={`/player/${encodeURIComponent(player.playerName)}`}
+                                        className="flex items-center gap-1.5 hover:text-gray-100 transition-colors text-gray-300"
+                                      >
+                                        {player.playerCountryCode && (
+                                          <span className="text-sm">{getCountryFlag(player.playerCountryCode)}</span>
+                                        )}
+                                        <span className="text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none">{player.playerName}</span>
+                                      </Link>
+                                    </td>
+                                    <td className="py-2 px-2 text-center">
+                                      <span className="font-semibold text-sm text-gray-200">{player.score}</span>
+                                    </td>
                               <td className="py-2 px-2 text-center">
                                 <span className={`font-medium text-xs sm:text-sm ${
                                   player.delta > 0 ? 'text-gray-200' : player.delta < 0 ? 'text-gray-500' : 'text-gray-600'
