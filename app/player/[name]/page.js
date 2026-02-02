@@ -615,6 +615,14 @@ export default function PlayerProfilePage() {
           </a>
         </div>
       </div>
+
+      {/* Match Detail Modal */}
+      {selectedMatchId && (
+        <MatchDetailModal 
+          matchId={selectedMatchId} 
+          onClose={() => setSelectedMatchId(null)} 
+        />
+      )}
     </div>
   );
 }
