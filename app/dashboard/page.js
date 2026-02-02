@@ -371,39 +371,66 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              {/* Win/Loss Card */}
-              <Card className="bg-white/5 border-white/10">
+              {/* Win/Loss Card - Statistiques améliorées */}
+              <Card className="bg-white/5 border-white/10 lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="w-5 h-5 text-blue-500" />
-                    Statistiques
+                    Statistiques {selectedSeason ? `(S${selectedSeason})` : '(Saison Actuelle)'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {loungeData ? (
-                    <div className="grid grid-cols-2 gap-3">
+                  {loungeData || playerDetails ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="text-center p-3 bg-green-500/10 rounded-lg">
                         <div className="flex items-center justify-center gap-1 mb-1">
                           <TrendingUp className="w-4 h-4 text-green-500" />
                         </div>
-                        <div className="text-2xl font-bold text-green-400">{loungeData.wins || 0}</div>
+                        <div className="text-2xl font-bold text-green-400">{playerDetails?.wins || loungeData?.wins || 0}</div>
                         <p className="text-xs text-gray-400">Victoires</p>
                       </div>
                       <div className="text-center p-3 bg-red-500/10 rounded-lg">
                         <div className="flex items-center justify-center gap-1 mb-1">
                           <TrendingDown className="w-4 h-4 text-red-500" />
                         </div>
-                        <div className="text-2xl font-bold text-red-400">{loungeData.losses || 0}</div>
+                        <div className="text-2xl font-bold text-red-400">{playerDetails?.losses || loungeData?.losses || 0}</div>
                         <p className="text-xs text-gray-400">Défaites</p>
                       </div>
-                      {(loungeData.wins || loungeData.losses) && (
-                        <div className="col-span-2 text-center p-3 bg-white/5 rounded-lg">
-                          <div className="text-2xl font-bold">
-                            {Math.round((loungeData.wins / (loungeData.wins + loungeData.losses)) * 100)}%
-                          </div>
-                          <p className="text-xs text-gray-400">Taux de victoire</p>
+                      <div className="text-center p-3 bg-blue-500/10 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-400">{playerDetails?.eventsPlayed || loungeData?.eventsPlayed || 0}</div>
+                        <p className="text-xs text-gray-400">Events joués</p>
+                      </div>
+                      <div className="text-center p-3 bg-purple-500/10 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-400">
+                          {(() => {
+                            const wins = playerDetails?.wins || loungeData?.wins || 0;
+                            const losses = playerDetails?.losses || loungeData?.losses || 0;
+                            const total = wins + losses;
+                            return total > 0 ? Math.round((wins / total) * 100) : 0;
+                          })()}%
                         </div>
-                      )}
+                        <p className="text-xs text-gray-400">Taux victoire</p>
+                      </div>
+                      
+                      {/* Ligne 2: Stats supplémentaires */}
+                      <div className="text-center p-3 bg-white/5 rounded-lg">
+                        <div className="text-xl font-bold text-yellow-400">{playerDetails?.maxMmr || loungeData?.maxMmr || '-'}</div>
+                        <p className="text-xs text-gray-400">MMR Max</p>
+                      </div>
+                      <div className="text-center p-3 bg-white/5 rounded-lg">
+                        <div className="text-xl font-bold text-cyan-400">
+                          {playerDetails?.gainLoss !== undefined ? (playerDetails.gainLoss > 0 ? '+' : '') + playerDetails.gainLoss : '-'}
+                        </div>
+                        <p className="text-xs text-gray-400">Gain/Perte</p>
+                      </div>
+                      <div className="text-center p-3 bg-white/5 rounded-lg">
+                        <div className="text-xl font-bold text-orange-400">{playerDetails?.largestGain || '-'}</div>
+                        <p className="text-xs text-gray-400">+ Grand Gain</p>
+                      </div>
+                      <div className="text-center p-3 bg-white/5 rounded-lg">
+                        <div className="text-xl font-bold text-pink-400">{playerDetails?.largestLoss ? `-${Math.abs(playerDetails.largestLoss)}` : '-'}</div>
+                        <p className="text-xs text-gray-400">+ Grande Perte</p>
+                      </div>
                     </div>
                   ) : (
                     <div className="text-center py-4">
