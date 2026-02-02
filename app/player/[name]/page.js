@@ -451,25 +451,25 @@ export default function PlayerProfilePage() {
                     </div>
                   )}
                   {advancedStats.avgMmrChange !== null && (
-                    <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                      <span className="text-gray-400 text-sm">Δ MMR moyen</span>
-                      <span className={`font-bold ${advancedStats.avgMmrChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    <div className="flex justify-between items-center p-2 sm:p-3 bg-white/5 rounded-lg">
+                      <span className="text-gray-400 text-xs sm:text-sm">Δ MMR moyen</span>
+                      <span className={`font-bold text-sm sm:text-base ${advancedStats.avgMmrChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         {advancedStats.avgMmrChange > 0 ? '+' : ''}{advancedStats.avgMmrChange}
                       </span>
                     </div>
                   )}
                   {advancedStats.currentStreak && advancedStats.currentStreak.count > 1 && (
-                    <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                      <span className="text-gray-400 text-sm">Série actuelle</span>
-                      <span className={`font-bold ${advancedStats.currentStreak.type === 'win' ? 'text-green-400' : 'text-red-400'}`}>
+                    <div className="flex justify-between items-center p-2 sm:p-3 bg-white/5 rounded-lg">
+                      <span className="text-gray-400 text-xs sm:text-sm">Série actuelle</span>
+                      <span className={`font-bold text-sm sm:text-base ${advancedStats.currentStreak.type === 'win' ? 'text-green-400' : 'text-red-400'}`}>
                         {advancedStats.currentStreak.count} {advancedStats.currentStreak.type === 'win' ? 'V' : 'D'}
                       </span>
                     </div>
                   )}
                   {advancedStats.recentForm && (
-                    <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                      <span className="text-gray-400 text-sm">Forme (10 derniers)</span>
-                      <span className="font-bold">
+                    <div className="flex justify-between items-center p-2 sm:p-3 bg-white/5 rounded-lg">
+                      <span className="text-gray-400 text-xs sm:text-sm">Forme (10 derniers)</span>
+                      <span className="font-bold text-sm sm:text-base">
                         <span className="text-green-400">{advancedStats.recentForm.wins}V</span>
                         {' / '}
                         <span className="text-red-400">{advancedStats.recentForm.losses}D</span>
@@ -478,25 +478,25 @@ export default function PlayerProfilePage() {
                   )}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-400 text-sm">Pas assez de données</p>
+                <div className="text-center py-6 sm:py-8">
+                  <BarChart3 className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-gray-600" />
+                  <p className="text-gray-400 text-xs sm:text-sm">Pas assez de données</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* MMR Chart */}
+          {/* MMR Chart - Mobile Optimized */}
           <Card className="bg-white/5 border-white/10 lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-500" />
+            <CardHeader className="py-3 sm:py-4 px-4 sm:px-6">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
                 Évolution du MMR
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-2 sm:px-6 pb-4 sm:pb-6">
               {mmrChartData.length > 0 ? (
-                <div className="h-64">
+                <div className="h-48 sm:h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={mmrChartData}>
                       <defs>
@@ -509,14 +509,15 @@ export default function PlayerProfilePage() {
                       <XAxis 
                         dataKey="date" 
                         stroke="#666"
-                        tick={{ fontSize: 11 }}
+                        tick={{ fontSize: 9 }}
                         interval="preserveStartEnd"
                       />
                       <YAxis 
                         stroke="#666"
-                        tick={{ fontSize: 11 }}
+                        tick={{ fontSize: 9 }}
                         domain={['dataMin - 100', 'dataMax + 100']}
                         tickFormatter={(v) => v.toLocaleString('fr-FR')}
+                        width={45}
                       />
                       <Tooltip content={<CustomTooltip />} />
                       <Area
@@ -530,21 +531,21 @@ export default function PlayerProfilePage() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-400">Pas assez de données pour afficher le graphique</p>
+                <div className="text-center py-8 sm:py-12">
+                  <BarChart3 className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-gray-600" />
+                  <p className="text-gray-400 text-xs sm:text-sm">Pas assez de données pour afficher le graphique</p>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* ========== MATCH HISTORY ========== */}
+        {/* ========== MATCH HISTORY - Mobile Optimized ========== */}
         <Card className="bg-white/5 border-white/10">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
+          <CardHeader className="py-3 sm:py-4 px-4 sm:px-6">
+            <CardTitle className="flex items-center justify-between text-sm sm:text-base">
               <div className="flex items-center gap-2">
-                <History className="w-5 h-5 text-blue-500" />
+                <History className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
                 Historique des Matchs
               </div>
               {matchHistory.length > 0 && (
