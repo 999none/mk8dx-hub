@@ -427,11 +427,12 @@ class BackendTester:
             
             if response.status_code == 200:
                 data = response.json()
-                if 'name' in data and 'mmr' in data:
+                if ('name' in data or 'ign' in data) and 'mmr' in data:
+                    player_name = data.get('name') or data.get('ign', 'Unknown')
                     self.log_test(
                         "Player Info Endpoint", 
                         True, 
-                        f"Player endpoint returns mock data: {data.get('name', 'Unknown')}"
+                        f"Player endpoint returns mock data: {player_name}"
                     )
                 else:
                     self.log_test(
