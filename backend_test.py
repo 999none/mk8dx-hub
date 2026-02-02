@@ -416,8 +416,154 @@ class BackendTester:
                     False, 
                     f"HTTP {response.status_code}: {response.text}"
                 )
+    def test_additional_endpoints(self):
+        """Test additional API endpoints"""
+        try:
+            # Test player endpoint
+            response = self.session.get(f"{API_BASE}/player")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'name' in data and 'mmr' in data:
+                    self.log_test(
+                        "Player Info Endpoint", 
+                        True, 
+                        f"Player endpoint returns mock data: {data.get('name', 'Unknown')}"
+                    )
+                else:
+                    self.log_test(
+                        "Player Info Endpoint", 
+                        False, 
+                        "Missing expected fields in player response",
+                        {'response': data}
+                    )
+            else:
+                self.log_test(
+                    "Player Info Endpoint", 
+                    False, 
+                    f"HTTP {response.status_code}: {response.text}"
+                )
         except Exception as e:
-            self.log_test("Admin Lounge Search", False, f"Request failed: {str(e)}")
+            self.log_test("Player Info Endpoint", False, f"Request failed: {str(e)}")
+        
+        try:
+            # Test tournaments endpoint
+            response = self.session.get(f"{API_BASE}/tournaments")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list):
+                    self.log_test(
+                        "Tournaments Endpoint", 
+                        True, 
+                        f"Tournaments endpoint returns {len(data)} tournaments"
+                    )
+                else:
+                    self.log_test(
+                        "Tournaments Endpoint", 
+                        False, 
+                        "Expected array response",
+                        {'response_type': type(data).__name__}
+                    )
+            else:
+                self.log_test(
+                    "Tournaments Endpoint", 
+                    False, 
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+        except Exception as e:
+            self.log_test("Tournaments Endpoint", False, f"Request failed: {str(e)}")
+        
+        try:
+            # Test MKCentral registry endpoint
+            response = self.session.get(f"{API_BASE}/mkcentral/registry?name=TestPlayer")
+            
+            if response.status_code in [200, 404]:
+                # Both 200 and 404 are acceptable responses
+                if response.status_code == 200:
+                    data = response.json()
+                    success = data.get('success', False)
+                    self.log_test(
+                        "MKCentral Registry Endpoint", 
+                        True, 
+                        f"MKCentral registry endpoint working (success: {success})"
+                    )
+                else:
+                    self.log_test(
+                        "MKCentral Registry Endpoint", 
+                        True, 
+                        "MKCentral registry endpoint working (404 expected for test data)"
+                    )
+            else:
+                self.log_test(
+                    "MKCentral Registry Endpoint", 
+                    False, 
+                    f"HTTP {response.status_code}: {response.text}"
+                )
+        except Exception as e:
+            self.log_test("MKCentral Registry Endpoint", False, f"Request failed: {str(e)}")
+    
+    def test_error_handling(self):
+        """Test error handling for invalid endpoints"""
+        try:
+            # Test non-existent endpoint
+            response = self.session.get(f"{API_BASE}/nonexistent")
+            
+            if response.status_code == 404:
+                data = response.json()
+                if 'error' in data:
+                    self.log_test(
+                        "Error Handling (404)", 
+                        True, 
+                        "Correctly returns 404 for non-existent endpoints"
+                    )
+                else:
+                    self.log_test(
+                        "Error Handling (404)", 
+                        False, 
+                        "404 response missing error field",
+                        {'response': data}
+                    )
+            else:
+                self.log_test(
+                    "Error Handling (404)", 
+                    False, 
+                    f"Expected 404, got HTTP {response.status_code}"
+                )
+        except Exception as e:
+            self.log_test("Error Handling (404)", False, f"Request failed: {str(e)}")
+        
+        try:
+            # Test verification create with missing data
+            response = self.session.post(
+                f"{API_BASE}/verification/create",
+                json={},  # Empty payload
+                headers={'Content-Type': 'application/json'}
+            )
+            
+            if response.status_code == 400:
+                data = response.json()
+                if not data.get('success', True) and 'message' in data:
+                    self.log_test(
+                        "Error Handling (Bad Request)", 
+                        True, 
+                        "Correctly validates required fields in verification create"
+                    )
+                else:
+                    self.log_test(
+                        "Error Handling (Bad Request)", 
+                        False, 
+                        "Bad request response format unexpected",
+                        {'response': data}
+                    )
+            else:
+                self.log_test(
+                    "Error Handling (Bad Request)", 
+                    False, 
+                    f"Expected 400, got HTTP {response.status_code}"
+                )
+        except Exception as e:
+            self.log_test("Error Handling (Bad Request)", False, f"Request failed: {str(e)}")
     
     def run_all_tests(self):
         """Run all backend tests"""
