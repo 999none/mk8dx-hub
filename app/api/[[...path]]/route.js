@@ -396,10 +396,11 @@ export async function GET(request, context) {
     // Get player full details from Lounge
     if (path.startsWith('lounge/player-details/')) {
       const playerName = decodeURIComponent(path.replace('lounge/player-details/', ''));
+      const season = searchParams.get('season') || '';
       
       try {
         const loungeApi = new LoungeApi();
-        const playerDetails = await loungeApi.getPlayerDetailsByName(playerName);
+        const playerDetails = await loungeApi.getPlayerDetailsByName(playerName, season);
         
         if (!playerDetails || !playerDetails.name) {
           return NextResponse.json({ error: 'Player not found' }, { status: 404 });
@@ -435,7 +436,7 @@ export async function GET(request, context) {
               total: recentMatches.length
             }
           },
-          loungeProfileUrl: `https://www.mk8dx-lounge.com/PlayerDetails/${encodeURIComponent(playerName)}`
+          loungeProfileUrl: `https://lounge.mkcentral.com/mk8dx/PlayerDetails/${playerDetails.playerId || playerDetails.id}`
         });
         
       } catch (error) {
