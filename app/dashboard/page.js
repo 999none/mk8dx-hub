@@ -712,7 +712,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Match Detail Modal */}
-        <MatchDetailModal />
+        {selectedMatchId && (
+          <MatchDetailModal 
+            matchId={selectedMatchId} 
+            onClose={() => setSelectedMatchId(null)} 
+          />
+        )}
       </div>
     </RequireAuth>
   );
