@@ -4,54 +4,21 @@ export async function GET(request, { params }) {
   try {
     const playerName = decodeURIComponent(params.name);
     
-    // For now, we'll use mock data since we don't have a real database
-    // In a real implementation, you would query your database here
+    // Search for the player in the leaderboard data
+    const leaderboardUrl = new URL('/api/leaderboard', request.url);
+    leaderboardUrl.searchParams.set('search', playerName);
+    leaderboardUrl.searchParams.set('limit', '1');
     
-    // Mock player data - in reality this would come from your database
-    const mockPlayers = [
-      {
-        id: 1,
-        name: 'Player1',
-        mmr: 12500,
-        rank: 1,
-        countryCode: 'FR',
-        eventsPlayed: 45,
-        winRate: 75,
-        peakMmr: 13200,
-        wins: 34,
-        losses: 11,
-        lastActive: new Date().toISOString()
-      },
-      {
-        id: 2,
-        name: 'Player2',
-        mmr: 11800,
-        rank: 2,
-        countryCode: 'US',
-        eventsPlayed: 38,
-        winRate: 68,
-        peakMmr: 12100,
-        wins: 26,
-        losses: 12,
-        lastActive: new Date().toISOString()
-      },
-      {
-        id: 3,
-        name: 'Player3',
-        mmr: 11200,
-        rank: 3,
-        countryCode: 'JP',
-        eventsPlayed: 52,
-        winRate: 71,
-        peakMmr: 11800,
-        wins: 37,
-        losses: 15,
-        lastActive: new Date().toISOString()
-      }
-    ];
+    const leaderboardResponse = await fetch(leaderboardUrl.toString());
     
-    // Find player by name (case insensitive)
-    const player = mockPlayers.find(p => 
+    if (!leaderboardResponse.ok) {
+      throw new Error('Failed to fetch leaderboard data');
+    }
+    
+    const leaderboardData = await leaderboardResponse.json();
+    
+    // Find exact match (case insensitive)
+    const player = leaderboardData.players?.find(p => 
       p.name.toLowerCase() === playerName.toLowerCase()
     );
     
@@ -62,7 +29,17 @@ export async function GET(request, { params }) {
       );
     }
     
-    return NextResponse.json(player);
+    // Add some mock additional data that might not be in leaderboard
+    const enrichedPlayer = {
+      ...player,
+      winRate: Math.floor(Math.random() * 30) + 60, // Mock win rate 60-90%
+      peakMmr: player.mmr + Math.floor(Math.random() * 500), // Mock peak MMR
+      wins: Math.floor((player.eventsPlayed || 0) * 0.7), // Mock wins
+      losses: Math.floor((player.eventsPlayed || 0) * 0.3), // Mock losses
+      lastActive: new Date().toISOString()
+    };
+    
+    return NextResponse.json(enrichedPlayer);
     
   } catch (error) {
     console.error('Error fetching player:', error);
