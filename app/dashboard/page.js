@@ -647,7 +647,7 @@ export default function DashboardPage() {
                       </div>
                     </Link>
                     <a 
-                      href={loungeData?.name ? `https://www.mk8dx-lounge.com/PlayerDetails/${encodeURIComponent(loungeData.name)}` : 'https://www.mk8dx-lounge.com'} 
+                      href={loungeData?.name ? `https://lounge.mkcentral.com/mk8dx/PlayerDetails/${playerDetails?.playerId || loungeData?.id || ''}` : 'https://lounge.mkcentral.com/mk8dx'} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="block"
@@ -655,7 +655,7 @@ export default function DashboardPage() {
                       <div className="p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all text-center">
                         <Gamepad2 className="w-8 h-8 mx-auto mb-2 text-green-500" />
                         <p className="font-semibold">Profil Lounge</p>
-                        <p className="text-xs text-gray-400">Voir sur MK8DX Lounge</p>
+                        <p className="text-xs text-gray-400">Voir sur MKCentral</p>
                       </div>
                     </a>
                   </div>
