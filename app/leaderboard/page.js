@@ -1,19 +1,17 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
-  Home, Trophy, TrendingUp, RefreshCw, Search, 
-  ChevronLeft, ChevronRight, Filter, X, Globe,
+  Trophy, RefreshCw, Search, 
+  ChevronLeft, ChevronRight, X, Globe,
   ArrowUpDown, Users, ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import { getCurrentRank } from '@/lib/mockData';
-import RequireAuth from '@/components/RequireAuth';
 import Navbar from '@/components/Navbar';
 
 // Country codes to names mapping (common ones)
@@ -38,30 +36,29 @@ const getCountryFlag = (countryCode) => {
 };
 
 const MMR_RANGES = [
-  { label: 'Tous les MMR', value: 'all' },
+  { label: 'Tous MMR', value: 'all' },
   { label: 'Master (14000+)', value: '14000-99999', min: 14000 },
-  { label: 'Grandmaster (12000-14000)', value: '12000-14000', min: 12000, max: 14000 },
-  { label: 'Diamond (10000-12000)', value: '10000-12000', min: 10000, max: 12000 },
-  { label: 'Platinum (8000-10000)', value: '8000-10000', min: 8000, max: 10000 },
-  { label: 'Gold (6000-8000)', value: '6000-8000', min: 6000, max: 8000 },
-  { label: 'Silver (4000-6000)', value: '4000-6000', min: 4000, max: 6000 },
-  { label: 'Bronze (2000-4000)', value: '2000-4000', min: 2000, max: 4000 },
-  { label: 'Iron (0-2000)', value: '0-2000', min: 0, max: 2000 },
+  { label: 'Grandmaster', value: '12000-14000', min: 12000, max: 14000 },
+  { label: 'Diamond', value: '10000-12000', min: 10000, max: 12000 },
+  { label: 'Platinum', value: '8000-10000', min: 8000, max: 10000 },
+  { label: 'Gold', value: '6000-8000', min: 6000, max: 8000 },
+  { label: 'Silver', value: '4000-6000', min: 4000, max: 6000 },
+  { label: 'Bronze', value: '2000-4000', min: 2000, max: 4000 },
+  { label: 'Iron', value: '0-2000', min: 0, max: 2000 },
 ];
 
 const EVENTS_RANGES = [
-  { label: 'Tous les events', value: 'all' },
-  { label: '100+ events', value: '100', min: 100 },
-  { label: '50+ events', value: '50', min: 50 },
-  { label: '25+ events', value: '25', min: 25 },
-  { label: '10+ events', value: '10', min: 10 },
-  { label: '5+ events', value: '5', min: 5 },
+  { label: 'Tous', value: 'all' },
+  { label: '100+', value: '100', min: 100 },
+  { label: '50+', value: '50', min: 50 },
+  { label: '25+', value: '25', min: 25 },
+  { label: '10+', value: '10', min: 10 },
 ];
 
 const SORT_OPTIONS = [
-  { label: 'MMR (décroissant)', value: 'mmr' },
-  { label: 'Nom (A-Z)', value: 'name' },
-  { label: 'Events joués', value: 'eventsPlayed' },
+  { label: 'MMR', value: 'mmr' },
+  { label: 'Nom', value: 'name' },
+  { label: 'Events', value: 'eventsPlayed' },
 ];
 
 export default function LeaderboardPage() {
@@ -173,315 +170,301 @@ export default function LeaderboardPage() {
   const hasActiveFilters = search || country !== 'all' || mmrRange !== 'all' || eventsRange !== 'all' || sortBy !== 'mmr';
 
   return (
-    <RequireAuth>
-      <div className="min-h-screen bg-black text-white">
-        {/* Navigation */}
-        <Navbar />
+    <div className="min-h-screen bg-black text-white">
+      <Navbar />
 
-        <div className="container mx-auto px-4 py-8 pt-24">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-5xl font-black mb-4 flex items-center justify-center gap-3">
-              <Trophy className="w-12 h-12 text-yellow-500" />
-              Leaderboard Global
-            </h1>
-            <p className="text-xl text-gray-400">
-              Classement des meilleurs joueurs du Lounge MK8DX
-              {season && <span className="ml-2 text-blue-400">• Saison {season}</span>}
-            </p>
-            {lastUpdate && (
-              <p className="text-sm text-gray-500 mt-2">
-                Dernière mise à jour : {new Date(lastUpdate).toLocaleString('fr-FR')}
-              </p>
-            )}
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 pt-20 sm:pt-24">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-100 mb-1">
+            Leaderboard
+          </h1>
+          <p className="text-sm text-gray-500">
+            {season && <span>Saison {season} • </span>}
+            {total.toLocaleString('fr-FR')} joueurs
+          </p>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-neutral-900 border border-gray-800 rounded-lg p-3 sm:p-4 mb-4">
+          <div className="flex flex-col gap-3">
+            {/* Search Row */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+                <Input
+                  placeholder="Rechercher..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="pl-9 bg-neutral-800 border-gray-700 text-gray-200 placeholder:text-gray-600 text-sm h-9"
+                />
+              </div>
+              {hasActiveFilters && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={clearFilters}
+                  className="text-gray-500 hover:text-gray-300 hover:bg-neutral-800 h-9 px-2"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Filters Row - Mobile optimized */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <Select value={country} onValueChange={(v) => handleFilterChange(setCountry, v)}>
+                <SelectTrigger className="bg-neutral-800 border-gray-700 text-gray-300 text-xs h-9">
+                  <Globe className="w-3 h-3 mr-1.5 text-gray-500" />
+                  <SelectValue placeholder="Pays" />
+                </SelectTrigger>
+                <SelectContent className="bg-neutral-900 border-gray-700">
+                  <SelectItem value="all">Tous pays</SelectItem>
+                  {availableCountries.map(code => (
+                    <SelectItem key={code} value={code}>
+                      {getCountryFlag(code)} {COUNTRY_NAMES[code] || code}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={mmrRange} onValueChange={(v) => handleFilterChange(setMmrRange, v)}>
+                <SelectTrigger className="bg-neutral-800 border-gray-700 text-gray-300 text-xs h-9">
+                  <Trophy className="w-3 h-3 mr-1.5 text-gray-500" />
+                  <SelectValue placeholder="MMR" />
+                </SelectTrigger>
+                <SelectContent className="bg-neutral-900 border-gray-700">
+                  {MMR_RANGES.map(range => (
+                    <SelectItem key={range.value} value={range.value}>
+                      {range.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={eventsRange} onValueChange={(v) => handleFilterChange(setEventsRange, v)}>
+                <SelectTrigger className="bg-neutral-800 border-gray-700 text-gray-300 text-xs h-9">
+                  <Users className="w-3 h-3 mr-1.5 text-gray-500" />
+                  <SelectValue placeholder="Events" />
+                </SelectTrigger>
+                <SelectContent className="bg-neutral-900 border-gray-700">
+                  {EVENTS_RANGES.map(range => (
+                    <SelectItem key={range.value} value={range.value}>
+                      {range.label} events
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={(v) => handleFilterChange(setSortBy, v)}>
+                <SelectTrigger className="bg-neutral-800 border-gray-700 text-gray-300 text-xs h-9">
+                  <ArrowUpDown className="w-3 h-3 mr-1.5 text-gray-500" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-neutral-900 border-gray-700">
+                  {SORT_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      Tri: {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+        </div>
 
-          {/* Filters */}
-          <Card className="bg-white/5 border-white/10 mb-6">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Filter className="w-5 h-5" />
-                Filtres & Recherche
-                {hasActiveFilters && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={clearFilters}
-                    className="ml-auto text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                  >
-                    <X className="w-4 h-4 mr-1" />
-                    Effacer filtres
-                  </Button>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                {/* Search */}
-                <div className="lg:col-span-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                      placeholder="Rechercher un joueur..."
-                      value={searchInput}
-                      onChange={(e) => setSearchInput(e.target.value)}
-                      className="pl-10 bg-white/5 border-white/20 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Country */}
-                <Select value={country} onValueChange={(v) => handleFilterChange(setCountry, v)}>
-                  <SelectTrigger className="bg-white/5 border-white/20">
-                    <Globe className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Pays" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-white/20">
-                    <SelectItem value="all">Tous les pays</SelectItem>
-                    {availableCountries.map(code => (
-                      <SelectItem key={code} value={code}>
-                        {COUNTRY_NAMES[code] || code}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* MMR Range */}
-                <Select value={mmrRange} onValueChange={(v) => handleFilterChange(setMmrRange, v)}>
-                  <SelectTrigger className="bg-white/5 border-white/20">
-                    <Trophy className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Range MMR" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-white/20">
-                    {MMR_RANGES.map(range => (
-                      <SelectItem key={range.value} value={range.value}>
-                        {range.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Events Range */}
-                <Select value={eventsRange} onValueChange={(v) => handleFilterChange(setEventsRange, v)}>
-                  <SelectTrigger className="bg-white/5 border-white/20">
-                    <Users className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Events" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-white/20">
-                    {EVENTS_RANGES.map(range => (
-                      <SelectItem key={range.value} value={range.value}>
-                        {range.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        {/* Leaderboard */}
+        <div className="bg-neutral-900 border border-gray-800 rounded-lg overflow-hidden">
+          {loading ? (
+            <div className="text-center py-16">
+              <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-gray-600" />
+              <p className="text-gray-500 text-sm">Chargement...</p>
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div className="text-center py-16">
+              <Trophy className="w-10 h-10 mx-auto mb-3 text-gray-700" />
+              <p className="text-gray-500 text-sm">Aucun joueur trouvé</p>
+              <Button 
+                variant="ghost" 
+                className="mt-3 text-gray-400 hover:text-gray-200"
+                onClick={clearFilters}
+              >
+                Effacer les filtres
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Table Header - Desktop */}
+              <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-3 border-b border-gray-800 text-xs text-gray-500 font-medium">
+                <div className="col-span-1">#</div>
+                <div className="col-span-5">Joueur</div>
+                <div className="col-span-2 text-center">Rang</div>
+                <div className="col-span-2 text-center">Events</div>
+                <div className="col-span-2 text-right">MMR</div>
               </div>
 
-              {/* Sort & Stats */}
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-400">Trier par:</span>
-                  <Select value={sortBy} onValueChange={(v) => handleFilterChange(setSortBy, v)}>
-                    <SelectTrigger className="w-48 bg-white/5 border-white/20">
-                      <ArrowUpDown className="w-4 h-4 mr-2" />
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-900 border-white/20">
-                      {SORT_OPTIONS.map(opt => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="text-sm text-gray-400">
-                  <span className="font-semibold text-white">{total.toLocaleString('fr-FR')}</span> joueurs trouvés
-                </div>
+              {/* Players List */}
+              <div className="divide-y divide-gray-800/50">
+                {leaderboard.map((player, index) => {
+                  const rank = getCurrentRank(player.mmr || 0);
+                  const globalRank = player.rank || ((page - 1) * limit + index + 1);
+                  const isTop3 = globalRank <= 3;
+                  
+                  return (
+                    <Link 
+                      key={player.id || index}
+                      href={`/player/${encodeURIComponent(player.name)}`}
+                    >
+                      <div className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-neutral-800/50 transition-colors cursor-pointer ${
+                        isTop3 ? 'bg-neutral-800/30' : ''
+                      }`}>
+                        {/* Rank */}
+                        <div className="col-span-2 sm:col-span-1">
+                          <span className={`text-sm font-medium ${
+                            globalRank === 1 ? 'text-gray-100' :
+                            globalRank === 2 ? 'text-gray-300' :
+                            globalRank === 3 ? 'text-gray-400' :
+                            'text-gray-500'
+                          }`}>
+                            {globalRank}
+                          </span>
+                        </div>
+                        
+                        {/* Player Name */}
+                        <div className="col-span-6 sm:col-span-5 flex items-center gap-2 min-w-0">
+                          {player.countryCode && (
+                            <span className="text-sm flex-shrink-0">
+                              {getCountryFlag(player.countryCode)}
+                            </span>
+                          )}
+                          <span className="text-sm font-medium text-gray-200 truncate">
+                            {player.name}
+                          </span>
+                        </div>
+                        
+                        {/* Rank Badge - Hidden on mobile */}
+                        <div className="hidden sm:flex sm:col-span-2 justify-center">
+                          <Badge 
+                            style={{ backgroundColor: rank.color }} 
+                            className="text-black text-[10px] px-2 py-0 font-medium"
+                          >
+                            {rank.name}
+                          </Badge>
+                        </div>
+                        
+                        {/* Events - Hidden on mobile */}
+                        <div className="hidden sm:block sm:col-span-2 text-center">
+                          <span className="text-xs text-gray-500">
+                            {player.eventsPlayed || 0}
+                          </span>
+                        </div>
+                        
+                        {/* MMR */}
+                        <div className="col-span-4 sm:col-span-2 text-right">
+                          <span className="text-sm font-semibold text-gray-200">
+                            {(player.mmr || 0).toLocaleString('fr-FR')}
+                          </span>
+                          {/* Show rank badge on mobile */}
+                          <div className="sm:hidden mt-0.5">
+                            <Badge 
+                              style={{ backgroundColor: rank.color }} 
+                              className="text-black text-[9px] px-1.5 py-0 font-medium"
+                            >
+                              {rank.name}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Leaderboard */}
-          <Card className="bg-white/5 border-white/10">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Classement</span>
-                <span className="text-sm font-normal text-gray-400">
-                  Page {page} sur {totalPages}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-12">
-                  <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
-                  <p className="text-gray-400">Chargement du leaderboard...</p>
-                </div>
-              ) : leaderboard.length === 0 ? (
-                <div className="text-center py-12">
-                  <Trophy className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-400">Aucun joueur trouvé avec ces critères</p>
-                  <Button 
-                    variant="outline" 
-                    className="mt-4 border-white/20"
-                    onClick={clearFilters}
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-1 p-4 border-t border-gray-800">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
+                    className="text-gray-500 hover:text-gray-300 hover:bg-neutral-800 h-8 px-2 text-xs"
                   >
-                    Effacer les filtres
+                    Début
                   </Button>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-2">
-                    {leaderboard.map((player, index) => {
-                      const rank = getCurrentRank(player.mmr || 0);
-                      const globalRank = player.rank || ((page - 1) * limit + index + 1);
-                      const isTop3 = globalRank <= 3;
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="text-gray-500 hover:text-gray-300 hover:bg-neutral-800 h-8 w-8"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  
+                  {/* Page numbers */}
+                  <div className="flex gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (page <= 3) {
+                        pageNum = i + 1;
+                      } else if (page >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = page - 2 + i;
+                      }
                       
                       return (
-                        <Link 
-                          key={player.id || index}
-                          href={`/player/${encodeURIComponent(player.name)}`}
-                          className="block"
+                        <Button
+                          key={pageNum}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPage(pageNum)}
+                          className={`h-8 w-8 text-xs ${
+                            page === pageNum 
+                              ? 'bg-gray-200 text-black hover:bg-gray-300' 
+                              : 'text-gray-500 hover:text-gray-300 hover:bg-neutral-800'
+                          }`}
                         >
-                          <div 
-                            className={`flex items-center justify-between p-4 rounded-lg transition-all hover:scale-[1.02] cursor-pointer ${
-                              isTop3 ? 'bg-gradient-to-r from-yellow-500/20 to-transparent border border-yellow-500/30' : 'bg-white/5 hover:bg-white/10'
-                            }`}
-                          >
-                            <div className="flex items-center gap-4 flex-1">
-                              <div className={`w-12 h-12 flex items-center justify-center rounded-full ${
-                                globalRank === 1 ? 'bg-yellow-500 text-black' :
-                                globalRank === 2 ? 'bg-gray-300 text-black' :
-                                globalRank === 3 ? 'bg-orange-600 text-white' :
-                                'bg-white/10'
-                              } font-bold text-lg`}>
-                                {globalRank === 1 ? '🥇' : globalRank === 2 ? '🥈' : globalRank === 3 ? '🥉' : `#${globalRank}`}
-                              </div>
-                              
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-lg hover:text-blue-400 transition-colors">
-                                    {player.name}
-                                  </span>
-                                  {player.countryCode && (
-                                    <span className="text-sm" title={COUNTRY_NAMES[player.countryCode] || player.countryCode}>
-                                      {getCountryFlag(player.countryCode)}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Badge style={{ backgroundColor: rank.color }} className="text-black text-xs">
-                                    {rank.name}
-                                  </Badge>
-                                  {player.eventsPlayed > 0 && (
-                                    <span className="text-xs text-gray-400">
-                                      {player.eventsPlayed} events
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-6">
-                              <div className="text-right">
-                                <div className="text-xs text-gray-400">MMR</div>
-                                <div className="text-2xl font-bold">{(player.mmr || 0).toLocaleString('fr-FR')}</div>
-                              </div>
-                              <div 
-                                onClick={(e) => e.stopPropagation()}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <Button variant="ghost" size="sm" className="hover:bg-white/10">
-                                  <ExternalLink className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </Link>
+                          {pageNum}
+                        </Button>
                       );
                     })}
                   </div>
 
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2 mt-6 pt-6 border-t border-white/10">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage(1)}
-                        disabled={page === 1}
-                        className="border-white/20 hover:bg-white/10"
-                      >
-                        Début
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                        className="border-white/20 hover:bg-white/10"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
-                      
-                      {/* Page numbers */}
-                      <div className="flex gap-1">
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                          let pageNum;
-                          if (totalPages <= 5) {
-                            pageNum = i + 1;
-                          } else if (page <= 3) {
-                            pageNum = i + 1;
-                          } else if (page >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
-                          } else {
-                            pageNum = page - 2 + i;
-                          }
-                          
-                          return (
-                            <Button
-                              key={pageNum}
-                              variant={page === pageNum ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => setPage(pageNum)}
-                              className={page === pageNum 
-                                ? "bg-white text-black" 
-                                : "border-white/20 hover:bg-white/10"
-                              }
-                            >
-                              {pageNum}
-                            </Button>
-                          );
-                        })}
-                      </div>
-
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                        disabled={page === totalPages}
-                        className="border-white/20 hover:bg-white/10"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage(totalPages)}
-                        disabled={page === totalPages}
-                        className="border-white/20 hover:bg-white/10"
-                      >
-                        Fin
-                      </Button>
-                    </div>
-                  )}
-                </>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="text-gray-500 hover:text-gray-300 hover:bg-neutral-800 h-8 w-8"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPage(totalPages)}
+                    disabled={page === totalPages}
+                    className="text-gray-500 hover:text-gray-300 hover:bg-neutral-800 h-8 px-2 text-xs"
+                  >
+                    Fin
+                  </Button>
+                </div>
               )}
-            </CardContent>
-          </Card>
+            </>
+          )}
         </div>
+
+        {/* Last Update */}
+        {lastUpdate && (
+          <p className="text-xs text-gray-600 mt-3 text-center">
+            Mis à jour : {new Date(lastUpdate).toLocaleString('fr-FR')}
+          </p>
+        )}
       </div>
-    </RequireAuth>
+    </div>
   );
 }
