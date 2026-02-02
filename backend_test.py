@@ -586,8 +586,11 @@ class BackendTester:
         # Discord OAuth tests (NextAuth)
         self.test_nextauth_endpoints()
         
-        # Admin endpoints tests
-        self.test_admin_endpoints()
+        # Additional endpoints tests
+        self.test_additional_endpoints()
+        
+        # Error handling tests
+        self.test_error_handling()
         
         print("=" * 60)
         
