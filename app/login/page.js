@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import DiscordLoginButton from '@/components/DiscordLoginButton';
 import UserProfile from '@/components/UserProfile';
+import Navbar from '@/components/Navbar';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, XCircle } from 'lucide-react';
