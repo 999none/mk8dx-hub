@@ -85,6 +85,7 @@ export default function LoginPage() {
   if (status === 'loading' || checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <Navbar />
         <div className="text-center">
           <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
           <p className="text-gray-400">Vérification de votre compte...</p>
