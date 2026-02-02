@@ -122,13 +122,9 @@ export default function Navbar() {
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div 
-          className="fixed inset-0 top-16 bg-black md:hidden z-40"
-          onClick={closeMobileMenu}
+          className="fixed inset-x-0 top-16 bottom-0 bg-black md:hidden z-50 overflow-y-auto"
         >
-          <div 
-            className="container mx-auto px-4 py-6 bg-black min-h-full"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="container mx-auto px-4 py-6">
             {/* User Info (si connecté) */}
             {isAuthenticated && user && (
               <div className="flex items-center gap-4 p-4 bg-white/5 rounded-xl mb-6">
