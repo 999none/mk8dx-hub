@@ -427,6 +427,15 @@ export async function GET(request, context) {
         const wins = allTableMatches.filter(m => m.mmrDelta > 0).length;
         const losses = allTableMatches.filter(m => m.mmrDelta < 0).length;
         
+        // Calculate gainLoss (total MMR change from all matches this season)
+        const gainLoss = allTableMatches.reduce((sum, m) => sum + (m.mmrDelta || 0), 0);
+        
+        // Calculate largestGain and largestLoss
+        const gains = allTableMatches.filter(m => m.mmrDelta > 0).map(m => m.mmrDelta);
+        const lossesValues = allTableMatches.filter(m => m.mmrDelta < 0).map(m => m.mmrDelta);
+        const largestGain = gains.length > 0 ? Math.max(...gains) : null;
+        const largestLoss = lossesValues.length > 0 ? Math.min(...lossesValues) : null;
+        
         // Build the correct MKCentral URL
         const playerId = playerDetails.playerId || playerDetails.id;
         const loungeProfileUrl = season 
@@ -437,6 +446,9 @@ export async function GET(request, context) {
           ...playerDetails,
           wins,
           losses,
+          gainLoss,
+          largestGain,
+          largestLoss,
           matchHistory,
           recentStats: {
             last30: {
