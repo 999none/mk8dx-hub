@@ -839,7 +839,9 @@ export default function DashboardPage() {
                             {displayedMatches.map((match, index) => (
                               <tr 
                                 key={match.id || index} 
-                                className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                                className="border-b border-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                                onClick={() => loadMatchDetails(match.id)}
+                                title="Cliquez pour voir les détails du match"
                               >
                                 <td className="py-3 px-4">
                                   <div className="flex items-center gap-2">
