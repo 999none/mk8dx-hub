@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Calendar, Users, Trophy, RefreshCw, ExternalLink, Swords } from 'lucide-react';
+import { X, Calendar, Users, Trophy, RefreshCw, ExternalLink, Swords, Shield } from 'lucide-react';
 
 const getCountryFlag = (countryCode) => {
   if (!countryCode || countryCode.length !== 2) return '';
@@ -14,6 +14,29 @@ const getMatchFormat = (numTeams, numPlayers) => {
   const playersPerTeam = Math.floor(numPlayers / numTeams);
   return `${playersPerTeam}v${playersPerTeam}`;
 };
+
+// Get format info with details
+const getFormatInfo = (numTeams, numPlayers) => {
+  if (!numTeams || !numPlayers) return { format: '-', isTeamFormat: false, playersPerTeam: 1 };
+  if (numTeams === numPlayers) return { format: 'FFA', isTeamFormat: false, playersPerTeam: 1 };
+  const playersPerTeam = Math.floor(numPlayers / numTeams);
+  return { 
+    format: `${playersPerTeam}v${playersPerTeam}`, 
+    isTeamFormat: playersPerTeam >= 2, 
+    playersPerTeam,
+    numTeams 
+  };
+};
+
+// Team colors for different ranks
+const TEAM_COLORS = [
+  { bg: 'bg-yellow-500', text: 'text-black', border: 'border-yellow-500/30', light: 'bg-yellow-500/10' }, // 1st
+  { bg: 'bg-gray-400', text: 'text-black', border: 'border-gray-400/30', light: 'bg-gray-400/10' },      // 2nd
+  { bg: 'bg-orange-600', text: 'text-white', border: 'border-orange-600/30', light: 'bg-orange-600/10' }, // 3rd
+  { bg: 'bg-blue-600', text: 'text-white', border: 'border-blue-600/30', light: 'bg-blue-600/10' },      // 4th
+  { bg: 'bg-purple-600', text: 'text-white', border: 'border-purple-600/30', light: 'bg-purple-600/10' }, // 5th
+  { bg: 'bg-pink-600', text: 'text-white', border: 'border-pink-600/30', light: 'bg-pink-600/10' },      // 6th
+];
 
 export default function MatchDetailModal({ matchId, onClose }) {
   const [matchDetails, setMatchDetails] = useState(null);
