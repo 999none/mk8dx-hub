@@ -66,6 +66,9 @@ export default function MatchDetailModal({ matchId, onClose }) {
 
   const tableImageUrl = `https://lounge.mkcentral.com/TableImage/${matchId}.png`;
   const loungeMatchUrl = `https://lounge.mkcentral.com/mk8dx/TableDetails/${matchId}`;
+  
+  // Get format info
+  const formatInfo = matchDetails ? getFormatInfo(matchDetails.numTeams, matchDetails.numPlayers) : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/95 backdrop-blur-sm" onClick={onClose}>
@@ -80,7 +83,14 @@ export default function MatchDetailModal({ matchId, onClose }) {
             <div>
               <h2 className="text-sm font-semibold">Match #{matchId}</h2>
               {matchDetails && (
-                <p className="text-xs text-gray-500">Tier {matchDetails.tier} • {getMatchFormat(matchDetails.numTeams, matchDetails.numPlayers)}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-gray-500">Tier {matchDetails.tier}</p>
+                  {formatInfo && (
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${formatInfo.isTeamFormat ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                      {formatInfo.format}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           </div>
