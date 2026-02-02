@@ -406,6 +406,109 @@ export default function PlayerProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Teams & Tournament History Grid */}
+        {registryData && (registryData.teams?.length > 0 || registryData.tournamentHistory?.length > 0) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+            {/* Teams Section */}
+            {registryData.teams && registryData.teams.length > 0 && (
+              <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl">
+                <div className="px-4 py-3 border-b border-white/[0.04]">
+                  <span className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Teams ({registryData.teams.length})
+                  </span>
+                </div>
+                <div className="p-4">
+                  {registryData.teams.map((team, index) => (
+                    <div key={index} className="p-3 mb-2 last:mb-0 bg-white/[0.02] border border-white/[0.04] rounded-lg hover:border-white/[0.08] transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-white">{team.name}</h4>
+                            {team.isCurrent && (
+                              <Badge className="bg-green-500/10 text-green-500 border border-green-500/20 text-xs">
+                                Actuelle
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex gap-1.5">
+                            <Badge variant="outline" className="text-xs border-white/[0.08] text-gray-400">
+                              {team.gameHuman || team.game}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs border-white/[0.08] text-gray-400">
+                              {team.mode}
+                            </Badge>
+                          </div>
+                        </div>
+                        {team.url && (
+                          <a 
+                            href={`https://mkcentral.com${team.url}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-500 hover:text-white transition-colors"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tournament History Section */}
+            {registryData.tournamentHistory && registryData.tournamentHistory.length > 0 && (
+              <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl">
+                <div className="px-4 py-3 border-b border-white/[0.04]">
+                  <span className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                    <Trophy className="w-4 h-4" />
+                    Tournament History ({registryData.tournamentHistory.length})
+                  </span>
+                </div>
+                <div className="p-4 max-h-96 overflow-y-auto">
+                  {registryData.tournamentHistory.slice(0, 10).map((tournament, index) => (
+                    <div key={index} className="p-3 mb-2 last:mb-0 bg-white/[0.02] border border-white/[0.04] rounded-lg hover:border-white/[0.08] transition-colors">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium text-white text-sm">{tournament.name}</h4>
+                            {tournament.url && (
+                              <a 
+                                href={`https://mkcentral.com${tournament.url}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-gray-500 hover:text-white transition-colors"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                        <Badge 
+                          className={`${
+                            tournament.placement === 1 
+                              ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' 
+                              : tournament.placement <= 3 
+                              ? 'bg-gray-500/10 text-gray-400 border border-gray-500/20' 
+                              : 'bg-white/[0.02] text-gray-500 border border-white/[0.04]'
+                          }`}
+                        >
+                          {tournament.placementText || tournament.placement || '?'}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{tournament.dateHuman || `${tournament.startDate || '?'} - ${tournament.endDate || '?'}`}</span>
+                        {tournament.team && <span className="text-gray-400">{tournament.team}</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {selectedMatchId && (
