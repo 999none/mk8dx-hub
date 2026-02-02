@@ -472,7 +472,7 @@ export default function DashboardPage() {
               </Card>
 
               {/* Advanced Stats Card */}
-              <Card className="bg-white/5 border-white/10">
+              <Card className="bg-white/5 border-white/10 lg:row-span-1">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="w-5 h-5 text-purple-500" />
@@ -531,8 +531,8 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
 
-              {/* MMR Evolution Chart */}
-              <Card className="bg-white/5 border-white/10 lg:col-span-3">
+              {/* MMR Evolution Chart - Même ligne que Stats Avancées */}
+              <Card className="bg-white/5 border-white/10 lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-green-500" />
