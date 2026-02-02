@@ -105,30 +105,40 @@ export async function GET(request, context) {
       return NextResponse.json(mockTeamMembers);
     }
 
-    // Tournaments - Scrape from MKCentral with 24h cache
+    // Tournaments - Fetch from MKCentral API with 24h cache
     if (path === 'tournaments') {
       try {
         const { searchParams } = new URL(request.url);
         const page = parseInt(searchParams.get('page') || '1', 10);
         const limit = parseInt(searchParams.get('limit') || '20', 10);
-        const game = searchParams.get('game') || 'all'; // mk8dx, mkwii, mkworld, all
+        const game = searchParams.get('game') || 'all'; // mk8dx, mkw, mkworld, all
         const forceRefresh = searchParams.get('refresh') === 'true';
         
         const db = await getDatabase();
         
-        // Check cache (24 hours)
-        const cacheKey = `tournaments_${game}`;
+        // Check cache (1 hour for fresh data)
+        const cacheKey = `tournaments_v2_${game}`;
         const cache = await db.collection('tournaments_cache').findOne({ key: cacheKey });
         
         const cacheAge = cache ? Date.now() - new Date(cache.lastUpdate).getTime() : Infinity;
-        const cacheValid = cacheAge < 24 * 60 * 60 * 1000; // 24 hours
+        const cacheValid = cacheAge < 60 * 60 * 1000; // 1 hour cache
         
         if (cache && cacheValid && !forceRefresh) {
           // Apply pagination to cached data
           const tournaments = cache.data || [];
           const filteredTournaments = game === 'all' 
             ? tournaments 
-            : tournaments.filter(t => t.game === game || t.badges?.some(b => b.toLowerCase().includes(game)));
+            : tournaments.filter(t => t.game === game);
+          
+          // Calculate summary from all cached data
+          const allTournaments = cache.data || [];
+          const summary = {
+            mkworld: allTournaments.filter(t => t.game === 'mkworld').length,
+            mk8dx: allTournaments.filter(t => t.game === 'mk8dx').length,
+            mkw: allTournaments.filter(t => t.game === 'mkw').length,
+            registrationsOpen: allTournaments.filter(t => t.registrationsOpen).length,
+            total: allTournaments.length
+          };
           
           const total = filteredTournaments.length;
           const totalPages = Math.ceil(total / limit);
@@ -141,17 +151,18 @@ export async function GET(request, context) {
             page,
             limit,
             totalPages,
+            summary,
             lastUpdate: cache.lastUpdate,
             cached: true,
-            nextRefresh: new Date(new Date(cache.lastUpdate).getTime() + 24 * 60 * 60 * 1000).toISOString()
+            nextRefresh: new Date(new Date(cache.lastUpdate).getTime() + 60 * 60 * 1000).toISOString()
           });
         }
         
-        // Scrape from MKCentral
+        // Fetch from MKCentral API
         const tournamentsApi = new MkCentralTournamentsApi();
-        const result = await tournamentsApi.getTournaments({ game: 'all', page: 1, limit: 100 });
+        const result = await tournamentsApi.getTournaments({ game: 'all', page: 1, limit: 10000 });
         
-        // Store in cache
+        // Store all tournaments in cache
         await db.collection('tournaments_cache').updateOne(
           { key: cacheKey },
           { 
@@ -164,11 +175,20 @@ export async function GET(request, context) {
           { upsert: true }
         );
         
-        // Filter and paginate
+        // Filter by game if needed
         const tournaments = result.tournaments || [];
         const filteredTournaments = game === 'all' 
           ? tournaments 
-          : tournaments.filter(t => t.game === game || t.badges?.some(b => b.toLowerCase().includes(game)));
+          : tournaments.filter(t => t.game === game);
+        
+        // Calculate summary
+        const summary = {
+          mkworld: tournaments.filter(t => t.game === 'mkworld').length,
+          mk8dx: tournaments.filter(t => t.game === 'mk8dx').length,
+          mkw: tournaments.filter(t => t.game === 'mkw').length,
+          registrationsOpen: tournaments.filter(t => t.registrationsOpen).length,
+          total: tournaments.length
+        };
         
         const total = filteredTournaments.length;
         const totalPages = Math.ceil(total / limit);
@@ -181,9 +201,10 @@ export async function GET(request, context) {
           page,
           limit,
           totalPages,
+          summary,
           lastUpdate: new Date().toISOString(),
           cached: false,
-          nextRefresh: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          nextRefresh: new Date(Date.now() + 60 * 60 * 1000).toISOString()
         });
         
       } catch (error) {
@@ -196,9 +217,10 @@ export async function GET(request, context) {
           page: 1,
           limit: 20,
           totalPages: 1,
+          summary: { mkworld: 0, mk8dx: 0, mkw: 0, registrationsOpen: 0, total: 0 },
           lastUpdate: new Date().toISOString(),
           cached: false,
-          error: 'Using fallback data - MKCentral scraping failed'
+          error: 'Using fallback data - MKCentral API error'
         });
       }
     }
