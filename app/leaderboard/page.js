@@ -339,51 +339,66 @@ export default function LeaderboardPage() {
                       const isTop3 = globalRank <= 3;
                       
                       return (
-                        <div 
-                          key={player.id || index}
-                          className={`flex items-center justify-between p-4 rounded-lg transition-all ${
-                            isTop3 ? 'bg-gradient-to-r from-yellow-500/20 to-transparent border border-yellow-500/30' : 'bg-white/5 hover:bg-white/10'
-                          }`}
+                        <Link 
+                          href={`/player/${encodeURIComponent(player.name)}`}
+                          className="block"
                         >
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className={`w-12 h-12 flex items-center justify-center rounded-full ${
-                              globalRank === 1 ? 'bg-yellow-500 text-black' :
-                              globalRank === 2 ? 'bg-gray-300 text-black' :
-                              globalRank === 3 ? 'bg-orange-600 text-white' :
-                              'bg-white/10'
-                            } font-bold text-lg`}>
-                              {globalRank === 1 ? '🥇' : globalRank === 2 ? '🥈' : globalRank === 3 ? '🥉' : `#${globalRank}`}
-                            </div>
-                            
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-lg">{player.name}</span>
-                                {player.countryCode && (
-                                  <span className="text-sm" title={COUNTRY_NAMES[player.countryCode] || player.countryCode}>
-                                    {player.countryCode}
-                                  </span>
-                                )}
+                          <div 
+                            key={player.id || index}
+                            className={`flex items-center justify-between p-4 rounded-lg transition-all hover:scale-[1.02] cursor-pointer ${
+                              isTop3 ? 'bg-gradient-to-r from-yellow-500/20 to-transparent border border-yellow-500/30' : 'bg-white/5 hover:bg-white/10'
+                            }`}
+                          >
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className={`w-12 h-12 flex items-center justify-center rounded-full ${
+                                globalRank === 1 ? 'bg-yellow-500 text-black' :
+                                globalRank === 2 ? 'bg-gray-300 text-black' :
+                                globalRank === 3 ? 'bg-orange-600 text-white' :
+                                'bg-white/10'
+                              } font-bold text-lg`}>
+                                {globalRank === 1 ? '🥇' : globalRank === 2 ? '🥈' : globalRank === 3 ? '🥉' : `#${globalRank}`}
                               </div>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge style={{ backgroundColor: rank.color }} className="text-black text-xs">
-                                  {rank.name}
-                                </Badge>
-                                {player.eventsPlayed > 0 && (
-                                  <span className="text-xs text-gray-400">
-                                    {player.eventsPlayed} events
+                              
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-lg hover:text-blue-400 transition-colors">
+                                    {player.name}
                                   </span>
-                                )}
+                                  {player.countryCode && (
+                                    <span className="text-sm" title={COUNTRY_NAMES[player.countryCode] || player.countryCode}>
+                                      {getCountryFlag(player.countryCode)}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge style={{ backgroundColor: rank.color }} className="text-black text-xs">
+                                    {rank.name}
+                                  </Badge>
+                                  {player.eventsPlayed > 0 && (
+                                    <span className="text-xs text-gray-400">
+                                      {player.eventsPlayed} events
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          <div className="flex items-center gap-6">
-                            <div className="text-right">
-                              <div className="text-xs text-gray-400">MMR</div>
-                              <div className="text-2xl font-bold">{(player.mmr || 0).toLocaleString('fr-FR')}</div>
+                            <div className="flex items-center gap-6">
+                              <div className="text-right">
+                                <div className="text-xs text-gray-400">MMR</div>
+                                <div className="text-2xl font-bold">{(player.mmr || 0).toLocaleString('fr-FR')}</div>
+                              </div>
+                              <div 
+                                onClick={(e) => e.stopPropagation()}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Button variant="ghost" size="sm" className="hover:bg-white/10">
+                                  <ExternalLink className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        </Link>
                       );
                     })}
                   </div>
