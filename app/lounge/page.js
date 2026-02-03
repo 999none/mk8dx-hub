@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession, signIn } from 'next-auth/react';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, Clock, Users, RefreshCw, ExternalLink, 
-  ChevronRight, Trophy, Gamepad2, Timer, Zap
+  ChevronRight, Trophy, Gamepad2, Timer, Zap, DoorOpen, LogIn
 } from 'lucide-react';
 
 // Format badge colors based on format type
