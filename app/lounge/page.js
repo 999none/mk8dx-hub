@@ -584,10 +584,25 @@ export default function LoungePage() {
               <Card className="bg-white/[0.02] border-white/[0.06]">
                 <CardContent className="p-8 text-center">
                   <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-400">Aucune Squad Queue à venir</p>
-                  <p className="text-gray-600 text-sm mt-2">
-                    Le planning est généralement mis à jour chaque lundi.
+                  <p className="text-gray-400">
+                    {formatFilter !== 'all' 
+                      ? `Aucune Squad Queue ${formatFilter.toUpperCase()} à venir`
+                      : 'Aucune Squad Queue à venir'
+                    }
                   </p>
+                  {formatFilter !== 'all' ? (
+                    <Button 
+                      variant="link" 
+                      onClick={() => setFormatFilter('all')} 
+                      className="text-purple-400 mt-2"
+                    >
+                      Voir tous les formats
+                    </Button>
+                  ) : (
+                    <p className="text-gray-600 text-sm mt-2">
+                      Le planning est généralement mis à jour chaque lundi.
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             ) : (
