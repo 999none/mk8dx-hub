@@ -1145,8 +1145,15 @@ export async function GET(request, context) {
           });
           
           if (response.ok) {
-            schedule = await response.json();
-            source = 'github';
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json') || contentType.includes('text/plain')) {
+              const text = await response.text();
+              // Verify it's actually JSON before parsing
+              if (text.trim().startsWith('[') || text.trim().startsWith('{')) {
+                schedule = JSON.parse(text);
+                source = 'github';
+              }
+            }
           }
         } catch (githubError) {
           console.warn('Failed to fetch from GitHub:', githubError.message);
