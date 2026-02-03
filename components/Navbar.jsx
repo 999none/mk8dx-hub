@@ -21,6 +21,7 @@ export default function Navbar() {
   const displayName = user?.serverNickname || user?.name || user?.username || 'Joueur';
 
   const menuItems = [
+    { href: '/lounge', label: 'Lounge', icon: Gamepad2 },
     { href: '/leaderboard', label: 'Leaderboard', icon: BarChart3 },
     { href: '/tournaments', label: 'Tournois', icon: Calendar },
     { href: '/academy', label: 'Academy', icon: BookOpen },
