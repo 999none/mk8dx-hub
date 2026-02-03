@@ -20,6 +20,7 @@ export default function PushNotificationManager() {
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(false);
   const [testingNotification, setTestingNotification] = useState(false);
+  const [lastError, setLastError] = useState(null);
   const [preferences, setPreferences] = useState({
     loungeQueue: true,
     sqQueue: true
