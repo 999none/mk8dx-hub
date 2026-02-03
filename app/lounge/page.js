@@ -143,6 +143,134 @@ function SQCard({ sq, isNext }) {
   );
 }
 
+// Lounge Queue Component - Shows hourly queue status
+function LoungeQueue({ session }) {
+  const isAuthenticated = !!session?.user;
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Update time every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+  
+  // Get current hour and next hour in Paris timezone
+  const parisTime = new Date(currentTime.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+  const currentHour = parisTime.getHours();
+  const currentMinutes = parisTime.getMinutes();
+  const nextHour = (currentHour + 1) % 24;
+  
+  // Queue is open for the next hour's lounge, closes at XX:55
+  const isQueueOpen = currentMinutes < 55;
+  const closesIn = 55 - currentMinutes;
+  
+  // Format hour display
+  const formatHour = (hour) => `${hour.toString().padStart(2, '0')}H`;
+  
+  // Discord channel URL for lounge queue
+  const LOUNGE_QUEUE_CHANNEL = 'https://discord.com/channels/445404006177570829/1186158671525318719';
+  
+  return (
+    <Card className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/30 mb-8">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-purple-400 flex items-center gap-2">
+          <DoorOpen className="w-5 h-5" />
+          Lounge Queue
+        </CardTitle>
+        <CardDescription className="text-gray-400">
+          Rejoignez la queue pour participer au prochain Lounge
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          {/* Queue Status */}
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-3">
+              {isQueueOpen ? (
+                <>
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30 animate-pulse">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                    Queue Ouverte
+                  </Badge>
+                  <span className="text-gray-500 text-sm">
+                    Ferme dans {closesIn} min
+                  </span>
+                </>
+              ) : (
+                <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+                  <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                  Queue Fermée
+                </Badge>
+              )}
+            </div>
+            
+            <div className="text-white mb-2">
+              <span className="text-2xl font-bold">Lounge {formatHour(nextHour)}</span>
+              {isQueueOpen && (
+                <span className="text-gray-400 text-sm ml-2">
+                  (ferme à {formatHour(currentHour).replace('H', '')}:55)
+                </span>
+              )}
+            </div>
+            
+            <p className="text-gray-500 text-sm">
+              {isQueueOpen 
+                ? `Inscrivez-vous maintenant pour le Lounge de ${formatHour(nextHour)}`
+                : `La queue réouvrira à ${formatHour(nextHour)} pour le Lounge de ${formatHour((nextHour + 1) % 24)}`
+              }
+            </p>
+          </div>
+          
+          {/* Action Button */}
+          <div className="w-full md:w-auto">
+            {isAuthenticated ? (
+              <a
+                href={LOUNGE_QUEUE_CHANNEL}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button 
+                  className={`w-full md:w-auto ${
+                    isQueueOpen 
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                      : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                  }`}
+                  disabled={!isQueueOpen}
+                >
+                  <DoorOpen className="w-4 h-4 mr-2" />
+                  {isQueueOpen ? 'Rejoindre la Queue' : 'Queue Fermée'}
+                </Button>
+              </a>
+            ) : (
+              <Button 
+                onClick={() => signIn('discord')}
+                className="w-full md:w-auto bg-[#5865F2] hover:bg-[#4752C4] text-white"
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                Se connecter avec Discord
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        {/* Additional Info */}
+        {isQueueOpen && (
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <Clock className="w-4 h-4" />
+              <span>
+                La queue est ouverte de {formatHour(currentHour)} à {formatHour(currentHour).replace('H', '')}:55
+              </span>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // Stats Summary Component
 function ScheduleStats({ schedule }) {
   const now = Date.now();
