@@ -233,6 +233,10 @@ export default function PushNotificationManager() {
       
     } catch (err) {
       console.error('[Push] Subscribe error:', err.name, err.message);
+      setLastError(err.name === 'AbortError' 
+        ? 'Le service push est temporairement indisponible. Ce problème peut être lié à votre navigateur ou votre connexion. Essayez de rafraîchir la page ou utilisez un autre navigateur.'
+        : `Erreur: ${err.message}`
+      );
       if (!err.message?.includes('indisponible') && !err.message?.includes('Erreur:')) {
         toast.error('Erreur lors de l\'activation des notifications');
       }
