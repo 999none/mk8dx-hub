@@ -9,8 +9,15 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, Clock, Users, RefreshCw, ExternalLink, 
-  ChevronRight, Trophy, Gamepad2, Timer, Zap, DoorOpen, LogIn
+  ChevronRight, Trophy, Gamepad2, Timer, Zap, DoorOpen, LogIn, Filter
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // Format badge colors based on format type
 const formatColors = {
