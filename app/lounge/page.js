@@ -545,7 +545,7 @@ function formatTime(timestamp) {
 }
 
 // SQ Card Component
-function SQCard({ sq, isNext }) {
+function SQCard({ sq, isNext, notifications }) {
   const status = getTimeStatus(sq.time);
   const isPast = status === 'past';
   const isSoon = status === 'soon';
@@ -579,6 +579,12 @@ function SQCard({ sq, isNext }) {
                   Bientôt
                 </Badge>
               )}
+              {notifications && notifications.isScheduled(sq.id) && (
+                <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 text-xs">
+                  <BellRing className="w-3 h-3 mr-1" />
+                  Rappel
+                </Badge>
+              )}
             </div>
             
             <div className="text-white font-medium mb-1">
@@ -591,13 +597,18 @@ function SQCard({ sq, isNext }) {
             </div>
           </div>
           
-          {/* Right: Time display */}
-          <div className="text-right">
-            <div className="text-2xl font-bold text-white">
-              {formatTime(sq.time)}
-            </div>
-            <div className="text-xs text-gray-500">
-              {formatShortDate(sq.time)}
+          {/* Right: Time display + Notification button */}
+          <div className="flex items-start gap-2">
+            {notifications && !isPast && (
+              <NotificationButton sq={sq} notifications={notifications} size="sm" />
+            )}
+            <div className="text-right">
+              <div className="text-2xl font-bold text-white">
+                {formatTime(sq.time)}
+              </div>
+              <div className="text-xs text-gray-500">
+                {formatShortDate(sq.time)}
+              </div>
             </div>
           </div>
         </div>
