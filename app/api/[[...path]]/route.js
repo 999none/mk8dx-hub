@@ -522,6 +522,31 @@ export async function GET(request, context) {
         const registryApi = new MkCentralRegistryApi();
         const teamDetails = await registryApi.getTeamDetails(teamId);
         
+        // Enrich players with their Lounge names
+        const loungeApi = new LoungeApi();
+        if (teamDetails.rosters) {
+          for (const roster of teamDetails.rosters) {
+            if (roster.players) {
+              for (const player of roster.players) {
+                if (player.playerId) {
+                  try {
+                    // Fetch Lounge player by mkcId (registryId)
+                    const loungePlayer = await loungeApi.getPlayerByMkcId(player.playerId);
+                    if (loungePlayer && loungePlayer.name) {
+                      player.loungeName = loungePlayer.name;
+                      player.loungeId = loungePlayer.id;
+                      player.loungeMmr = loungePlayer.mmr;
+                    }
+                  } catch (err) {
+                    // Player might not have a Lounge account, that's OK
+                    console.log(`No Lounge account found for mkcId ${player.playerId}`);
+                  }
+                }
+              }
+            }
+          }
+        }
+        
         // Cache results
         await db.collection('registry_cache').updateOne(
           { key: cacheKey },
