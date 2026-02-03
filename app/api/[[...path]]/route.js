@@ -286,6 +286,7 @@ export async function GET(request, context) {
     }
 
     // Leaderboard with pagination and filters
+    // Leaderboard - Uses MKCentral Lounge API for country codes and global ranks
     if (path === 'leaderboard') {
       try {
         const { searchParams } = new URL(request.url);
@@ -296,122 +297,49 @@ export async function GET(request, context) {
         const maxMmr = searchParams.get('maxMmr') ? parseInt(searchParams.get('maxMmr'), 10) : null;
         const minEvents = searchParams.get('minEvents') ? parseInt(searchParams.get('minEvents'), 10) : null;
         const maxEvents = searchParams.get('maxEvents') ? parseInt(searchParams.get('maxEvents'), 10) : null;
-        const sortBy = searchParams.get('sortBy') || 'mmr'; // mmr, name, peakMmr, eventsPlayed
+        const sortBy = searchParams.get('sortBy') || 'mmr'; // mmr, name, eventsPlayed
         const search = searchParams.get('search') || null;
         
-        const db = await getDatabase();
+        const loungeApi = new LoungeApi();
         
-        // Create a cache key based on filters (without search - search is always applied on cached data)
-        const cacheKey = `leaderboard_all`;
+        // Map our sortBy to API sortBy format
+        const sortByMap = {
+          'mmr': 'Mmr',
+          'name': 'Name',
+          'eventsPlayed': 'EventsPlayed'
+        };
         
-        // Check cache (1 hour)
-        const cache = await db.collection('leaderboard_cache').findOne({ key: cacheKey });
-        let allPlayers = [];
-        let lastUpdate = new Date();
-        let cached = false;
-        let season = 15;
+        // Calculate skip for pagination
+        const skip = (page - 1) * limit;
         
-        if (cache && Date.now() - new Date(cache.lastUpdate).getTime() < 3600000) {
-          allPlayers = cache.data;
-          lastUpdate = cache.lastUpdate;
-          cached = true;
-          season = cache.season || 15;
-        } else {
-          // Fetch from Lounge API
-          const loungeApi = new LoungeApi();
-          const response = await loungeApi.getPlayers();
-          
-          if (response && response.players) {
-            season = response.season || 15;
-            // Sort by MMR and assign global ranks BEFORE any filtering
-            const sortedPlayers = [...response.players].sort((a, b) => (b.mmr || 0) - (a.mmr || 0));
-            allPlayers = sortedPlayers.map((p, index) => ({
-              id: p.id,
-              mkcId: p.mkcId,
-              name: p.name,
-              mmr: p.mmr || 0,
-              eventsPlayed: p.eventsPlayed || 0,
-              discordId: p.discordId,
-              countryCode: p.countryCode || null,
-              globalRank: index + 1 // This is the true global rank by MMR
-            }));
-            
-            // Cache full results
-            await db.collection('leaderboard_cache').updateOne(
-              { key: cacheKey },
-              { 
-                $set: { 
-                  key: cacheKey,
-                  data: allPlayers, 
-                  lastUpdate: new Date(),
-                  season
-                } 
-              },
-              { upsert: true }
-            );
-            lastUpdate = new Date();
-          }
-        }
+        // Call the new MKCentral Lounge API which supports country filtering and returns overallRank
+        const response = await loungeApi.getLeaderboard({
+          game: 'mk8dx',
+          skip,
+          pageSize: limit,
+          search: search || undefined,
+          country: country || undefined,
+          minMmr: minMmr || undefined,
+          maxMmr: maxMmr || undefined,
+          minEventsPlayed: minEvents || undefined,
+          maxEventsPlayed: maxEvents || undefined,
+          sortBy: sortByMap[sortBy] || 'Mmr'
+        });
         
-        // Apply filters
-        let filteredPlayers = [...allPlayers];
-        
-        if (country) {
-          // Case-insensitive country filter
-          const countryUpper = country.toUpperCase();
-          filteredPlayers = filteredPlayers.filter(p => p.countryCode && p.countryCode.toUpperCase() === countryUpper);
-        }
-        if (minMmr !== null) {
-          filteredPlayers = filteredPlayers.filter(p => p.mmr >= minMmr);
-        }
-        if (maxMmr !== null) {
-          filteredPlayers = filteredPlayers.filter(p => p.mmr <= maxMmr);
-        }
-        if (minEvents !== null) {
-          filteredPlayers = filteredPlayers.filter(p => p.eventsPlayed >= minEvents);
-        }
-        if (maxEvents !== null) {
-          filteredPlayers = filteredPlayers.filter(p => p.eventsPlayed <= maxEvents);
-        }
-        if (search) {
-          const searchLower = search.toLowerCase();
-          filteredPlayers = filteredPlayers.filter(p => p.name.toLowerCase().includes(searchLower));
-        }
-        
-        // Sort (but preserve globalRank for display)
-        switch (sortBy) {
-          case 'name':
-            filteredPlayers.sort((a, b) => a.name.localeCompare(b.name));
-            break;
-          case 'eventsPlayed':
-            filteredPlayers.sort((a, b) => b.eventsPlayed - a.eventsPlayed);
-            break;
-          case 'mmr':
-          default:
-            filteredPlayers.sort((a, b) => b.mmr - a.mmr);
-        }
-        
-        // Add filtered rank (position in current filtered list) but keep globalRank
-        filteredPlayers = filteredPlayers.map((p, index) => ({ 
-          ...p, 
-          rank: p.globalRank // Always show global rank, not filtered position
-        }));
-        
-        // Pagination
-        const total = filteredPlayers.length;
-        const totalPages = Math.ceil(total / limit);
-        const startIdx = (page - 1) * limit;
-        const paginatedPlayers = filteredPlayers.slice(startIdx, startIdx + limit);
+        const players = response.players || [];
+        const totalCount = response.totalCount || 0;
+        const season = response.season || 15;
+        const totalPages = Math.ceil(totalCount / limit);
         
         return NextResponse.json({
-          players: paginatedPlayers,
+          players,
           season,
-          total,
+          total: totalCount,
           page,
           limit,
           totalPages,
-          lastUpdate: lastUpdate.toISOString ? lastUpdate.toISOString() : lastUpdate,
-          cached,
+          lastUpdate: new Date().toISOString(),
+          cached: false,
           filters: { country, minMmr, maxMmr, minEvents, maxEvents, sortBy, search }
         });
         
@@ -419,6 +347,55 @@ export async function GET(request, context) {
         console.error('Leaderboard API error:', error);
         return NextResponse.json({ 
           error: 'Failed to fetch leaderboard',
+          message: error.message 
+        }, { status: 500 });
+      }
+    }
+    
+    // Get available countries for leaderboard filter
+    if (path === 'leaderboard/countries') {
+      try {
+        const db = await getDatabase();
+        
+        // Check cache (24 hours for countries list)
+        const cacheKey = 'leaderboard_countries';
+        const cache = await db.collection('leaderboard_cache').findOne({ key: cacheKey });
+        
+        if (cache && Date.now() - new Date(cache.lastUpdate).getTime() < 24 * 60 * 60 * 1000) {
+          return NextResponse.json({
+            countries: cache.data,
+            cached: true,
+            lastUpdate: cache.lastUpdate
+          });
+        }
+        
+        // Fetch from API
+        const loungeApi = new LoungeApi();
+        const countries = await loungeApi.getAvailableCountries();
+        
+        // Cache results
+        await db.collection('leaderboard_cache').updateOne(
+          { key: cacheKey },
+          { 
+            $set: { 
+              key: cacheKey,
+              data: countries, 
+              lastUpdate: new Date()
+            } 
+          },
+          { upsert: true }
+        );
+        
+        return NextResponse.json({
+          countries,
+          cached: false,
+          lastUpdate: new Date().toISOString()
+        });
+        
+      } catch (error) {
+        console.error('Countries API error:', error);
+        return NextResponse.json({ 
+          error: 'Failed to fetch countries',
           message: error.message 
         }, { status: 500 });
       }
