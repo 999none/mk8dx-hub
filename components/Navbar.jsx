@@ -75,6 +75,16 @@ export default function Navbar() {
                     <span className="text-sm text-gray-300 max-w-[100px] truncate">{displayName}</span>
                   </div>
                 </Link>
+                <Link href="/settings">
+                  <Button 
+                    variant="ghost"
+                    size="icon"
+                    className="text-gray-600 hover:text-yellow-500 hover:bg-yellow-500/10 h-8 w-8"
+                    title="Notifications & Paramètres"
+                  >
+                    <Bell className="w-4 h-4" />
+                  </Button>
+                </Link>
                 <Button 
                   onClick={() => signOut({ callbackUrl: '/' })}
                   variant="ghost"
