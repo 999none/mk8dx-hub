@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import Navbar from '@/components/Navbar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { 
   Calendar, Clock, Users, RefreshCw, ExternalLink, 
   ChevronRight, Trophy, Gamepad2, Timer, Zap, DoorOpen, LogIn, Filter,
-  Bell, BellOff, BellRing, Settings, Check, X
+  Bell, BellOff, BellRing, Settings, Check, X, Loader2, Send
 } from 'lucide-react';
 import {
   Select,
@@ -30,331 +31,272 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { toast } from 'sonner';
 
 // =====================================================
-// NOTIFICATION SYSTEM
+// PUSH NOTIFICATION SYSTEM
 // =====================================================
 
-// Notification delay options (in minutes)
-const NOTIFICATION_DELAYS = [
-  { value: 5, label: '5 min avant' },
-  { value: 15, label: '15 min avant' },
-  { value: 30, label: '30 min avant' },
-  { value: 60, label: '1h avant' },
-];
-
-// Check if notifications are supported
-function isNotificationSupported() {
-  return typeof window !== 'undefined' && 'Notification' in window;
+// Check if push notifications are supported
+function isPushSupported() {
+  return typeof window !== 'undefined' && 
+    'serviceWorker' in navigator && 
+    'PushManager' in window &&
+    'Notification' in window;
 }
 
-// Get notification permission status
-function getNotificationPermission() {
-  if (!isNotificationSupported()) return 'unsupported';
-  return Notification.permission;
-}
+// Convert VAPID key to Uint8Array
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
 
-// Request notification permission
-async function requestNotificationPermission() {
-  if (!isNotificationSupported()) return 'unsupported';
-  
-  try {
-    const permission = await Notification.requestPermission();
-    return permission;
-  } catch (error) {
-    console.error('Error requesting notification permission:', error);
-    return 'denied';
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
   }
+  return outputArray;
 }
 
-// Send a notification
-function sendNotification(title, options = {}) {
-  if (!isNotificationSupported() || Notification.permission !== 'granted') {
-    return null;
-  }
-  
-  try {
-    const notification = new Notification(title, {
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
-      tag: options.tag || 'sq-notification',
-      renotify: true,
-      ...options,
-    });
-    
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
-    };
-    
-    return notification;
-  } catch (error) {
-    console.error('Error sending notification:', error);
-    return null;
-  }
-}
-
-// Custom hook for notification management
-function useNotifications() {
+// Custom hook for push notification management
+function usePushNotifications() {
   const [permission, setPermission] = useState('default');
-  const [scheduledNotifications, setScheduledNotifications] = useState({});
-  const [notificationDelay, setNotificationDelay] = useState(15); // Default 15 min
-  const [timeouts, setTimeouts] = useState({});
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [subscription, setSubscription] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [preferences, setPreferences] = useState({
+    loungeQueue: true,
+    sqQueue: true
+  });
+  const [swRegistration, setSwRegistration] = useState(null);
   
-  // Load saved settings from localStorage
+  // Initialize service worker and check subscription status
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    setPermission(getNotificationPermission());
-    
-    const savedDelay = localStorage.getItem('sq_notification_delay');
-    if (savedDelay) setNotificationDelay(parseInt(savedDelay, 10));
-    
-    const savedNotifications = localStorage.getItem('sq_scheduled_notifications');
-    if (savedNotifications) {
-      try {
-        setScheduledNotifications(JSON.parse(savedNotifications));
-      } catch (e) {
-        console.error('Error parsing saved notifications:', e);
-      }
-    }
-  }, []);
-  
-  // Save notification delay to localStorage
-  const updateNotificationDelay = (delay) => {
-    setNotificationDelay(delay);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('sq_notification_delay', delay.toString());
-    }
-  };
-  
-  // Save scheduled notifications to localStorage
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('sq_scheduled_notifications', JSON.stringify(scheduledNotifications));
-  }, [scheduledNotifications]);
-  
-  // Request permission
-  const requestPermission = async () => {
-    const result = await requestNotificationPermission();
-    setPermission(result);
-    return result;
-  };
-  
-  // Schedule notification for a SQ
-  const scheduleNotification = (sq) => {
-    const sqId = sq.id.toString();
-    const now = Date.now();
-    const notifyTime = sq.time - (notificationDelay * 60 * 1000);
-    
-    // Don't schedule if already past
-    if (notifyTime <= now) {
-      // If SQ is very soon, notify immediately
-      if (sq.time > now && sq.time - now < 5 * 60 * 1000) {
-        sendNotification(`🎮 SQ ${sq.format.toUpperCase()} commence bientôt!`, {
-          body: `La Squad Queue #${sq.id} commence dans moins de 5 minutes!`,
-          tag: `sq-${sqId}`,
-        });
-      }
+    if (!isPushSupported()) {
+      setIsLoading(false);
       return;
     }
     
-    // Clear existing timeout if any
-    if (timeouts[sqId]) {
-      clearTimeout(timeouts[sqId]);
-    }
-    
-    // Schedule new notification
-    const delay = notifyTime - now;
-    const timeoutId = setTimeout(() => {
-      sendNotification(`🎮 SQ ${sq.format.toUpperCase()} dans ${notificationDelay} min!`, {
-        body: `La Squad Queue #${sq.id} (${sq.format.toUpperCase()}) commence à ${formatTime(sq.time)}`,
-        tag: `sq-${sqId}`,
-      });
-    }, delay);
-    
-    setTimeouts(prev => ({ ...prev, [sqId]: timeoutId }));
-    setScheduledNotifications(prev => ({ 
-      ...prev, 
-      [sqId]: { 
-        sqId, 
-        sqTime: sq.time, 
-        format: sq.format,
-        notifyTime,
-        delay: notificationDelay 
-      } 
-    }));
-  };
-  
-  // Cancel notification for a SQ
-  const cancelNotification = (sqId) => {
-    const id = sqId.toString();
-    
-    if (timeouts[id]) {
-      clearTimeout(timeouts[id]);
-      setTimeouts(prev => {
-        const newTimeouts = { ...prev };
-        delete newTimeouts[id];
-        return newTimeouts;
-      });
-    }
-    
-    setScheduledNotifications(prev => {
-      const newScheduled = { ...prev };
-      delete newScheduled[id];
-      return newScheduled;
-    });
-  };
-  
-  // Check if notification is scheduled for a SQ
-  const isScheduled = (sqId) => {
-    return !!scheduledNotifications[sqId.toString()];
-  };
-  
-  // Toggle notification for a SQ
-  const toggleNotification = async (sq) => {
-    // Check permission first
-    if (permission !== 'granted') {
-      const result = await requestPermission();
-      if (result !== 'granted') return false;
-    }
-    
-    const sqId = sq.id.toString();
-    if (isScheduled(sqId)) {
-      cancelNotification(sqId);
-      return false;
-    } else {
-      scheduleNotification(sq);
-      return true;
-    }
-  };
-  
-  // Reschedule all notifications when delay changes
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    // Reschedule existing notifications with new delay
-    Object.values(scheduledNotifications).forEach(notification => {
-      if (notification.sqTime > Date.now()) {
-        // Clear old timeout
-        if (timeouts[notification.sqId]) {
-          clearTimeout(timeouts[notification.sqId]);
-        }
+    const init = async () => {
+      try {
+        setPermission(Notification.permission);
         
-        // Schedule with new delay
-        const notifyTime = notification.sqTime - (notificationDelay * 60 * 1000);
-        if (notifyTime > Date.now()) {
-          const delay = notifyTime - Date.now();
-          const timeoutId = setTimeout(() => {
-            sendNotification(`🎮 SQ ${notification.format.toUpperCase()} dans ${notificationDelay} min!`, {
-              body: `La Squad Queue #${notification.sqId} (${notification.format.toUpperCase()}) commence bientôt!`,
-              tag: `sq-${notification.sqId}`,
-            });
-          }, delay);
+        // Register service worker
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        console.log('[Push] Service Worker registered');
+        setSwRegistration(registration);
+        
+        // Check existing subscription
+        const existingSubscription = await registration.pushManager.getSubscription();
+        if (existingSubscription) {
+          setSubscription(existingSubscription);
+          setIsSubscribed(true);
           
-          setTimeouts(prev => ({ ...prev, [notification.sqId]: timeoutId }));
+          // Get preferences from server
+          try {
+            const res = await fetch(`/api/push/status?endpoint=${encodeURIComponent(existingSubscription.endpoint)}`);
+            const data = await res.json();
+            if (data.preferences) {
+              setPreferences(data.preferences);
+            }
+          } catch (err) {
+            console.warn('[Push] Could not fetch preferences:', err);
+          }
         }
+      } catch (error) {
+        console.error('[Push] Initialization error:', error);
+      } finally {
+        setIsLoading(false);
       }
-    });
-  }, [notificationDelay]);
-  
-  // Clean up old notifications on mount
-  useEffect(() => {
-    const now = Date.now();
-    const validNotifications = {};
+    };
     
-    Object.entries(scheduledNotifications).forEach(([sqId, notification]) => {
-      if (notification.sqTime > now) {
-        validNotifications[sqId] = notification;
-      }
-    });
-    
-    if (Object.keys(validNotifications).length !== Object.keys(scheduledNotifications).length) {
-      setScheduledNotifications(validNotifications);
-    }
+    init();
   }, []);
   
+  // Subscribe to push notifications
+  const subscribe = useCallback(async () => {
+    if (!swRegistration) {
+      toast.error('Service Worker non disponible');
+      return false;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Request notification permission if needed
+      if (Notification.permission === 'default') {
+        const result = await Notification.requestPermission();
+        setPermission(result);
+        if (result !== 'granted') {
+          toast.error('Permission de notification refusée');
+          setIsLoading(false);
+          return false;
+        }
+      } else if (Notification.permission === 'denied') {
+        toast.error('Les notifications sont bloquées. Veuillez les autoriser dans les paramètres de votre navigateur.');
+        setIsLoading(false);
+        return false;
+      }
+      
+      // Get VAPID public key
+      const vapidRes = await fetch('/api/push/vapid-public-key');
+      const { publicKey } = await vapidRes.json();
+      
+      if (!publicKey) {
+        throw new Error('VAPID key not available');
+      }
+      
+      // Subscribe to push
+      const pushSubscription = await swRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey)
+      });
+      
+      // Send subscription to server
+      const res = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscription: pushSubscription.toJSON(),
+          preferences
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        setSubscription(pushSubscription);
+        setIsSubscribed(true);
+        if (data.preferences) {
+          setPreferences(data.preferences);
+        }
+        toast.success('🔔 Notifications push activées!');
+        return true;
+      } else {
+        throw new Error(data.message || 'Subscription failed');
+      }
+      
+    } catch (error) {
+      console.error('[Push] Subscribe error:', error);
+      toast.error('Erreur lors de l\'activation des notifications');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [swRegistration, preferences]);
+  
+  // Unsubscribe from push notifications
+  const unsubscribe = useCallback(async () => {
+    if (!subscription) return false;
+    
+    setIsLoading(true);
+    
+    try {
+      // Unsubscribe from push manager
+      await subscription.unsubscribe();
+      
+      // Notify server
+      await fetch('/api/push/unsubscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endpoint: subscription.endpoint
+        })
+      });
+      
+      setSubscription(null);
+      setIsSubscribed(false);
+      toast.success('Notifications push désactivées');
+      return true;
+      
+    } catch (error) {
+      console.error('[Push] Unsubscribe error:', error);
+      toast.error('Erreur lors de la désactivation');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [subscription]);
+  
+  // Update preferences
+  const updatePreferences = useCallback(async (newPreferences) => {
+    if (!subscription) return false;
+    
+    try {
+      const res = await fetch('/api/push/preferences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endpoint: subscription.endpoint,
+          preferences: newPreferences
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        setPreferences(newPreferences);
+        toast.success('Préférences mises à jour');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('[Push] Update preferences error:', error);
+      return false;
+    }
+  }, [subscription]);
+  
+  // Send test notification
+  const sendTestNotification = useCallback(async () => {
+    if (!subscription) {
+      toast.error('Veuillez d\'abord activer les notifications');
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/push/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscription: subscription.toJSON()
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        toast.success('Notification de test envoyée!');
+      } else {
+        toast.error('Échec de l\'envoi de la notification');
+      }
+    } catch (error) {
+      console.error('[Push] Test notification error:', error);
+      toast.error('Erreur lors de l\'envoi');
+    }
+  }, [subscription]);
+  
   return {
+    isSupported: isPushSupported(),
     permission,
-    requestPermission,
-    notificationDelay,
-    updateNotificationDelay,
-    scheduleNotification,
-    cancelNotification,
-    isScheduled,
-    toggleNotification,
-    scheduledCount: Object.keys(scheduledNotifications).length,
+    isSubscribed,
+    isLoading,
+    preferences,
+    subscribe,
+    unsubscribe,
+    updatePreferences,
+    sendTestNotification
   };
 }
 
-// Notification Button Component
-function NotificationButton({ sq, notifications, size = 'sm' }) {
-  const isScheduled = notifications.isScheduled(sq.id);
-  const isPast = sq.time <= Date.now();
-  const [isAnimating, setIsAnimating] = useState(false);
-  
-  if (isPast) return null;
-  
-  const handleClick = async (e) => {
-    e.stopPropagation();
-    setIsAnimating(true);
-    await notifications.toggleNotification(sq);
-    setTimeout(() => setIsAnimating(false), 300);
-  };
-  
-  const buttonClasses = size === 'sm' 
-    ? 'p-1.5 h-7 w-7' 
-    : 'p-2 h-9 w-9';
-  
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleClick}
-            className={`
-              ${buttonClasses} rounded-full transition-all duration-200
-              ${isScheduled 
-                ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' 
-                : 'text-gray-500 hover:text-white hover:bg-white/10'
-              }
-              ${isAnimating ? 'scale-110' : ''}
-            `}
-          >
-            {isScheduled ? (
-              <BellRing className={`${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'} ${isAnimating ? 'animate-bounce' : ''}`} />
-            ) : (
-              <Bell className={`${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`} />
-            )}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="left" className="bg-zinc-900 border-white/10">
-          <p>
-            {isScheduled 
-              ? `Notification activée (${notifications.notificationDelay} min avant)` 
-              : 'Activer la notification'
-            }
-          </p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
-
-// Notification Settings Component
-function NotificationSettings({ notifications }) {
+// Push Notification Settings Component
+function PushNotificationSettings({ push }) {
   const [isOpen, setIsOpen] = useState(false);
   
-  const handlePermissionRequest = async () => {
-    await notifications.requestPermission();
-  };
-  
-  const permissionStatus = notifications.permission;
-  const isSupported = isNotificationSupported();
-  
-  if (!isSupported) {
+  if (!push.isSupported) {
     return (
       <TooltipProvider>
         <Tooltip>
@@ -365,7 +307,7 @@ function NotificationSettings({ notifications }) {
             </Button>
           </TooltipTrigger>
           <TooltipContent className="bg-zinc-900 border-white/10">
-            <p>Les notifications ne sont pas supportées par votre navigateur</p>
+            <p>Les notifications push ne sont pas supportées par votre navigateur</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -379,27 +321,32 @@ function NotificationSettings({ notifications }) {
           variant="outline" 
           size="sm" 
           className={`border-white/10 hover:bg-white/[0.05] ${
-            notifications.scheduledCount > 0 ? 'text-yellow-400' : 'text-white'
+            push.isSubscribed ? 'text-green-400' : 'text-white'
           }`}
         >
-          {notifications.scheduledCount > 0 ? (
+          {push.isLoading ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : push.isSubscribed ? (
             <BellRing className="w-4 h-4 mr-2" />
           ) : (
             <Bell className="w-4 h-4 mr-2" />
           )}
-          Notifications
-          {notifications.scheduledCount > 0 && (
-            <Badge className="ml-2 bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
-              {notifications.scheduledCount}
+          Push Notifications
+          {push.isSubscribed && (
+            <Badge className="ml-2 bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+              Actif
             </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 bg-zinc-900 border-white/10" align="end">
+      <PopoverContent className="w-96 bg-zinc-900 border-white/10" align="end">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="font-medium text-white">Paramètres notifications</h4>
-            {permissionStatus === 'granted' && (
+            <h4 className="font-medium text-white flex items-center gap-2">
+              <Bell className="w-4 h-4 text-purple-400" />
+              Notifications Push
+            </h4>
+            {push.isSubscribed && (
               <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
                 <Check className="w-3 h-3 mr-1" />
                 Activé
@@ -407,67 +354,104 @@ function NotificationSettings({ notifications }) {
             )}
           </div>
           
-          {permissionStatus === 'denied' && (
+          {push.permission === 'denied' && (
             <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
               <p className="text-red-400 text-sm">
-                Les notifications sont bloquées. Veuillez les autoriser dans les paramètres de votre navigateur.
+                Les notifications sont bloquées par votre navigateur. Veuillez les autoriser dans les paramètres.
               </p>
             </div>
           )}
           
-          {permissionStatus === 'default' && (
-            <div className="space-y-3">
-              <p className="text-gray-400 text-sm">
-                Autorisez les notifications pour être alerté avant les Squad Queues.
-              </p>
-              <Button 
-                onClick={handlePermissionRequest}
-                className="w-full bg-purple-600 hover:bg-purple-700"
-              >
-                <Bell className="w-4 h-4 mr-2" />
-                Autoriser les notifications
-              </Button>
-            </div>
-          )}
-          
-          {permissionStatus === 'granted' && (
-            <>
-              <div className="space-y-2">
-                <label className="text-sm text-gray-400">Me notifier</label>
-                <Select 
-                  value={notifications.notificationDelay.toString()} 
-                  onValueChange={(v) => notifications.updateNotificationDelay(parseInt(v, 10))}
-                >
-                  <SelectTrigger className="w-full bg-white/[0.02] border-white/[0.06] text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-zinc-900 border-white/[0.1]">
-                    {NOTIFICATION_DELAYS.map(option => (
-                      <SelectItem 
-                        key={option.value} 
-                        value={option.value.toString()}
-                        className="text-white hover:bg-white/[0.1]"
-                      >
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="pt-2 border-t border-white/10">
-                <p className="text-sm text-gray-500">
-                  {notifications.scheduledCount > 0 
-                    ? `${notifications.scheduledCount} notification(s) programmée(s)`
-                    : 'Cliquez sur 🔔 pour activer une notification'
-                  }
+          {!push.isSubscribed ? (
+            <div className="space-y-4">
+              <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                <h5 className="font-medium text-purple-400 mb-2">🔔 Recevez des alertes automatiques</h5>
+                <ul className="text-sm text-gray-400 space-y-1">
+                  <li>• <strong>Lounge Queue</strong> : Notification à chaque heure (XX:00)</li>
+                  <li>• <strong>Squad Queue</strong> : Notification 45 min avant le début</li>
+                </ul>
+                <p className="text-xs text-gray-500 mt-2">
+                  Fonctionne même quand le navigateur est fermé!
                 </p>
               </div>
               
-              <div className="text-xs text-gray-600">
-                💡 Astuce: Gardez cette page ouverte pour recevoir les notifications
+              <Button 
+                onClick={push.subscribe}
+                disabled={push.isLoading}
+                className="w-full bg-purple-600 hover:bg-purple-700"
+              >
+                {push.isLoading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Bell className="w-4 h-4 mr-2" />
+                )}
+                Activer les notifications push
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Preference toggles */}
+              <div className="space-y-3">
+                <h5 className="text-sm font-medium text-gray-300">Préférences</h5>
+                
+                <div className="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg">
+                  <div>
+                    <p className="text-white text-sm font-medium">🏠 Lounge Queue</p>
+                    <p className="text-xs text-gray-500">Notification à l'ouverture (chaque heure)</p>
+                  </div>
+                  <Switch 
+                    checked={push.preferences.loungeQueue}
+                    onCheckedChange={(checked) => {
+                      push.updatePreferences({ ...push.preferences, loungeQueue: checked });
+                    }}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg">
+                  <div>
+                    <p className="text-white text-sm font-medium">🏁 Squad Queue</p>
+                    <p className="text-xs text-gray-500">Notification 45 min avant le début</p>
+                  </div>
+                  <Switch 
+                    checked={push.preferences.sqQueue}
+                    onCheckedChange={(checked) => {
+                      push.updatePreferences({ ...push.preferences, sqQueue: checked });
+                    }}
+                  />
+                </div>
               </div>
-            </>
+              
+              <div className="pt-3 border-t border-white/10 space-y-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={push.sendTestNotification}
+                  className="w-full border-white/10 text-gray-300 hover:text-white"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  Envoyer une notification test
+                </Button>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={push.unsubscribe}
+                  disabled={push.isLoading}
+                  className="w-full text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                >
+                  {push.isLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <BellOff className="w-4 h-4 mr-2" />
+                  )}
+                  Désactiver les notifications
+                </Button>
+              </div>
+              
+              <div className="text-xs text-gray-600 text-center">
+                💡 Les notifications fonctionnent même avec le navigateur fermé
+              </div>
+            </div>
           )}
         </div>
       </PopoverContent>
@@ -545,23 +529,30 @@ function formatTime(timestamp) {
 }
 
 // SQ Card Component
-function SQCard({ sq, isNext, notifications }) {
+function SQCard({ sq, isNext }) {
   const status = getTimeStatus(sq.time);
   const isPast = status === 'past';
   const isSoon = status === 'soon';
+  
+  // Check if queue is open (45 min before to 5 min after start)
+  const now = Date.now();
+  const queueOpenTime = sq.time - (45 * 60 * 1000);
+  const queueCloseTime = sq.time + (55 * 60 * 1000); // After the hour:55
+  const isQueueOpen = now >= queueOpenTime && now < sq.time;
   
   return (
     <Card className={`
       bg-white/[0.02] border-white/[0.06] transition-all duration-300
       ${isNext ? 'ring-2 ring-yellow-500/50 bg-yellow-500/[0.03]' : ''}
-      ${isSoon ? 'ring-2 ring-green-500/50 animate-pulse' : ''}
+      ${isSoon ? 'ring-2 ring-green-500/50' : ''}
+      ${isQueueOpen ? 'ring-2 ring-purple-500/50 bg-purple-500/[0.03]' : ''}
       ${isPast ? 'opacity-50' : 'hover:bg-white/[0.04]'}
     `}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           {/* Left: Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <Badge variant="outline" className={formatColors[sq.format] || 'bg-gray-500/20 text-gray-400'}>
                 <Users className="w-3 h-3 mr-1" />
                 {sq.format.toUpperCase()}
@@ -573,16 +564,16 @@ function SQCard({ sq, isNext, notifications }) {
                   Prochaine
                 </Badge>
               )}
-              {isSoon && !isNext && (
-                <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs animate-pulse">
-                  <Timer className="w-3 h-3 mr-1" />
-                  Bientôt
+              {isQueueOpen && (
+                <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs animate-pulse">
+                  <DoorOpen className="w-3 h-3 mr-1" />
+                  Queue Ouverte
                 </Badge>
               )}
-              {notifications && notifications.isScheduled(sq.id) && (
-                <Badge className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 text-xs">
-                  <BellRing className="w-3 h-3 mr-1" />
-                  Rappel
+              {isSoon && !isNext && !isQueueOpen && (
+                <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                  <Timer className="w-3 h-3 mr-1" />
+                  Bientôt
                 </Badge>
               )}
             </div>
@@ -591,24 +582,25 @@ function SQCard({ sq, isNext, notifications }) {
               {formatDateTime(sq.time)}
             </div>
             
-            <div className={`text-sm ${isSoon ? 'text-green-400 font-medium' : 'text-gray-500'}`}>
+            <div className={`text-sm ${isSoon || isQueueOpen ? 'text-green-400 font-medium' : 'text-gray-500'}`}>
               <Clock className="w-3 h-3 inline mr-1" />
               {formatRelativeTime(sq.time)}
             </div>
+            
+            {!isPast && (
+              <div className="text-xs text-gray-600 mt-1">
+                Queue: {formatTime(queueOpenTime)} - {formatTime(sq.time).replace(':', 'h').slice(0, -2)}55
+              </div>
+            )}
           </div>
           
-          {/* Right: Time display + Notification button */}
-          <div className="flex items-start gap-2">
-            {notifications && !isPast && (
-              <NotificationButton sq={sq} notifications={notifications} size="sm" />
-            )}
-            <div className="text-right">
-              <div className="text-2xl font-bold text-white">
-                {formatTime(sq.time)}
-              </div>
-              <div className="text-xs text-gray-500">
-                {formatShortDate(sq.time)}
-              </div>
+          {/* Right: Time display */}
+          <div className="text-right">
+            <div className="text-2xl font-bold text-white">
+              {formatTime(sq.time)}
+            </div>
+            <div className="text-xs text-gray-500">
+              {formatShortDate(sq.time)}
             </div>
           </div>
         </div>
@@ -654,7 +646,7 @@ function LoungeQueue({ session }) {
           Lounge Queue
         </CardTitle>
         <CardDescription className="text-gray-400">
-          Rejoignez la queue pour participer au prochain Lounge
+          Rejoignez la queue pour participer au prochain Lounge • Ouverte de {formatHour(currentHour)} à {formatHour(currentHour).replace('H', '')}:55
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -729,18 +721,6 @@ function LoungeQueue({ session }) {
             )}
           </div>
         </div>
-        
-        {/* Additional Info */}
-        {isQueueOpen && (
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <Clock className="w-4 h-4" />
-              <span>
-                La queue est ouverte de {formatHour(currentHour)} à {formatHour(currentHour).replace('H', '')}:55
-              </span>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
@@ -808,10 +788,10 @@ export default function LoungePage() {
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [activeTab, setActiveTab] = useState('upcoming');
-  const [formatFilter, setFormatFilter] = useState('all'); // Filter state
+  const [formatFilter, setFormatFilter] = useState('all');
   
-  // Notification system
-  const notifications = useNotifications();
+  // Push notification system
+  const push = usePushNotifications();
 
   const fetchSchedule = async () => {
     setLoading(true);
@@ -856,9 +836,6 @@ export default function LoungePage() {
   const upcomingSQ = filteredSchedule.filter(sq => sq.time > now).sort((a, b) => a.time - b.time);
   const pastSQ = filteredSchedule.filter(sq => sq.time <= now).sort((a, b) => b.time - a.time);
   const nextSQ = upcomingSQ[0];
-  
-  // Available formats for filter
-  const availableFormats = ['all', '2v2', '3v3', '4v4', '6v6'];
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -867,7 +844,7 @@ export default function LoungePage() {
       <main className="container mx-auto px-4 pt-20 pb-12">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
             <div>
               <h1 className="text-3xl font-bold flex items-center gap-3">
                 <Gamepad2 className="w-8 h-8 text-purple-500" />
@@ -878,7 +855,10 @@ export default function LoungePage() {
               </p>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Push Notification Button */}
+              <PushNotificationSettings push={push} />
+              
               <Button
                 variant="outline"
                 size="sm"
@@ -897,7 +877,7 @@ export default function LoungePage() {
               >
                 <Button variant="outline" size="sm" className="border-white/10 hover:bg-white/[0.05]">
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  Discord Lounge
+                  Discord
                 </Button>
               </a>
             </div>
@@ -962,6 +942,9 @@ export default function LoungePage() {
                   <div className="text-green-400 font-medium text-lg">
                     <Timer className="w-4 h-4 inline mr-2" />
                     {formatRelativeTime(nextSQ.time)}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Queue ouverte: {formatTime(nextSQ.time - 45 * 60 * 1000)} - {formatTime(nextSQ.time).replace(':', 'h').slice(0, -2)}55
                   </div>
                 </div>
                 <div className="text-right">
@@ -1160,10 +1143,13 @@ export default function LoungePage() {
                   Les <strong className="text-white">Squad Queues</strong> sont des sessions de matchmaking 
                   compétitif organisées par le MK8DX Lounge.
                 </p>
-                <p>
-                  Les joueurs peuvent s'inscrire sur Discord et jouer en équipe 
-                  pour gagner ou perdre du MMR.
+                <p className="mb-2">
+                  <strong className="text-white">Horaires des queues:</strong>
                 </p>
+                <ul className="list-disc list-inside space-y-1 text-gray-500">
+                  <li><strong className="text-purple-400">Lounge Queue:</strong> XX:00 à XX:55</li>
+                  <li><strong className="text-yellow-400">Squad Queue:</strong> 45 min avant → XX:55</li>
+                </ul>
               </div>
               <div>
                 <p className="mb-2"><strong className="text-white">Formats disponibles:</strong></p>
@@ -1173,6 +1159,9 @@ export default function LoungePage() {
                   <Badge variant="outline" className={formatColors['4v4']}>4v4 - Squad</Badge>
                   <Badge variant="outline" className={formatColors['6v6']}>6v6 - War</Badge>
                 </div>
+                <p className="mt-3 text-xs text-gray-600">
+                  💡 Activez les notifications push pour être alerté automatiquement!
+                </p>
               </div>
             </div>
           </CardContent>
