@@ -63,6 +63,7 @@ export default function DashboardPage() {
   const [showAllMatches, setShowAllMatches] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState('');
   const [selectedMatchId, setSelectedMatchId] = useState(null);
+  const [selectedTeamId, setSelectedTeamId] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
