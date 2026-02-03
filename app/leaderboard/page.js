@@ -130,14 +130,6 @@ export default function LeaderboardPage() {
       setTotalPages(data.totalPages || 1);
       setTotal(data.total || 0);
       setSeason(data.season);
-      
-      if (data.players && data.players.length > 0) {
-        const countries = [...new Set(data.players.map(p => p.countryCode).filter(Boolean))];
-        setAvailableCountries(prev => {
-          const merged = [...new Set([...prev, ...countries])];
-          return merged.sort();
-        });
-      }
     } catch (err) {
       console.error('Erreur chargement leaderboard:', err);
     } finally {
