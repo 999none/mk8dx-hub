@@ -306,3 +306,5 @@ agent_communication:
     message: "Phase 2-3 implémentée: Leaderboard avec filtres/pagination/recherche/tri, Dashboard avec graphique MMR et historique matchs, Tournois avec filtre par jeu. Toutes les APIs utilisent les vraies données MK8DX Lounge et MKCentral."
   - agent: "main"
     message: "Phase 4 implémentée: Intégration MKCentral Registry complète. API Backend créée (GET /api/registry/player/{registryId}) avec cache 6h. Frontend Dashboard et Player Profile mis à jour avec sections Teams et Tournament History. Récupération automatique via mkcId depuis Lounge API. Prêt pour tests."
+  - agent: "testing"
+    message: "✅ BACKEND TESTING COMPLETE: MKCentral Registry API integration tested successfully. All 5 registry-specific tests passed (100% success rate). Key findings: Registry endpoint working correctly with proper data structure, Lounge player details providing mkcId field, integration flow functional (player lookup -> mkcId -> registry data), proper error handling implemented. Registry data format matches expected structure with teams array containing valid team objects. Overall backend test suite: 35/35 tests passed (100% success rate)."
