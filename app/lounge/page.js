@@ -1243,7 +1243,7 @@ export default function LoungePage() {
             
             <div className="flex flex-wrap items-center gap-3">
               {/* Push Notification Button */}
-              <PushNotificationSettings push={push} />
+              <PushNotificationSettings push={push} schedule={schedule} />
               
               <Button
                 variant="outline"
