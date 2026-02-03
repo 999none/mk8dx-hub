@@ -1860,6 +1860,198 @@ export async function POST(request, context) {
         return NextResponse.json({ success: false, message: 'Erreur serveur' }, { status: 500 });
       }
     }
+
+    // =====================================================
+    // PUSH NOTIFICATION POST ENDPOINTS
+    // =====================================================
+
+    // Subscribe to push notifications
+    if (path === 'push/subscribe') {
+      try {
+        const body = await request.json();
+        const { subscription, preferences } = body;
+        
+        if (!subscription || !subscription.endpoint) {
+          return NextResponse.json({ 
+            success: false, 
+            message: 'Invalid subscription data' 
+          }, { status: 400 });
+        }
+        
+        const db = await getDatabase();
+        
+        // Default preferences
+        const defaultPreferences = {
+          loungeQueue: true,  // Notify when Lounge Queue opens (every hour)
+          sqQueue: true,      // Notify when SQ Queue opens (45 min before)
+          ...preferences
+        };
+        
+        // Upsert subscription
+        await db.collection('push_subscriptions').updateOne(
+          { 'subscription.endpoint': subscription.endpoint },
+          { 
+            $set: { 
+              subscription,
+              preferences: defaultPreferences,
+              active: true,
+              updatedAt: new Date()
+            },
+            $setOnInsert: { 
+              createdAt: new Date()
+            }
+          },
+          { upsert: true }
+        );
+        
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Subscribed to push notifications',
+          preferences: defaultPreferences
+        });
+        
+      } catch (error) {
+        console.error('Push subscribe error:', error);
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Failed to subscribe' 
+        }, { status: 500 });
+      }
+    }
+
+    // Unsubscribe from push notifications
+    if (path === 'push/unsubscribe') {
+      try {
+        const body = await request.json();
+        const { endpoint } = body;
+        
+        if (!endpoint) {
+          return NextResponse.json({ 
+            success: false, 
+            message: 'Endpoint required' 
+          }, { status: 400 });
+        }
+        
+        const db = await getDatabase();
+        
+        await db.collection('push_subscriptions').updateOne(
+          { 'subscription.endpoint': endpoint },
+          { $set: { active: false, unsubscribedAt: new Date() } }
+        );
+        
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Unsubscribed from push notifications'
+        });
+        
+      } catch (error) {
+        console.error('Push unsubscribe error:', error);
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Failed to unsubscribe' 
+        }, { status: 500 });
+      }
+    }
+
+    // Update push notification preferences
+    if (path === 'push/preferences') {
+      try {
+        const body = await request.json();
+        const { endpoint, preferences } = body;
+        
+        if (!endpoint || !preferences) {
+          return NextResponse.json({ 
+            success: false, 
+            message: 'Endpoint and preferences required' 
+          }, { status: 400 });
+        }
+        
+        const db = await getDatabase();
+        
+        const result = await db.collection('push_subscriptions').updateOne(
+          { 'subscription.endpoint': endpoint, active: true },
+          { $set: { preferences, updatedAt: new Date() } }
+        );
+        
+        if (result.matchedCount === 0) {
+          return NextResponse.json({ 
+            success: false, 
+            message: 'Subscription not found' 
+          }, { status: 404 });
+        }
+        
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Preferences updated',
+          preferences
+        });
+        
+      } catch (error) {
+        console.error('Push preferences error:', error);
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Failed to update preferences' 
+        }, { status: 500 });
+      }
+    }
+
+    // Trigger notification check (called by cron or manually)
+    if (path === 'push/trigger') {
+      try {
+        const results = await checkAndSendNotifications();
+        return NextResponse.json({ 
+          success: true, 
+          results 
+        });
+      } catch (error) {
+        console.error('Push trigger error:', error);
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Failed to trigger notifications' 
+        }, { status: 500 });
+      }
+    }
+
+    // Send test notification (for debugging)
+    if (path === 'push/test') {
+      try {
+        const body = await request.json();
+        const { subscription } = body;
+        
+        if (!subscription) {
+          return NextResponse.json({ 
+            success: false, 
+            message: 'Subscription required' 
+          }, { status: 400 });
+        }
+        
+        const payload = {
+          title: '🎮 Test Notification',
+          body: 'Les notifications push fonctionnent correctement!',
+          icon: '/favicon.ico',
+          tag: 'test-notification',
+          type: 'test',
+          url: '/lounge'
+        };
+        
+        const result = await sendPushNotification(subscription, payload);
+        
+        return NextResponse.json({ 
+          success: result.success, 
+          message: result.success ? 'Test notification sent' : 'Failed to send',
+          result
+        });
+        
+      } catch (error) {
+        console.error('Push test error:', error);
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Failed to send test notification' 
+        }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({ error: 'POST endpoint not found' }, { status: 404 });
   } catch (error) {
     console.error('POST API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
