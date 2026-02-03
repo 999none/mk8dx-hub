@@ -202,10 +202,10 @@ export default function PlayerProfilePage() {
         <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-6 mb-4">
           <div className="flex flex-col sm:flex-row items-center gap-6">
             {/* Avatar MKCentral ou initiale */}
-            {(player.mkcId || player.registryId) ? (
+            {registryData?.avatarUrl ? (
               <div className="w-20 h-20 rounded-full overflow-hidden bg-white/[0.04] flex-shrink-0">
                 <img 
-                  src={`https://mkcentral.com/img/avatars/${player.mkcId || player.registryId}.png`}
+                  src={registryData.avatarUrl}
                   alt={`${player.name} avatar`}
                   className="w-full h-full object-cover"
                   onError={(e) => {
