@@ -1105,6 +1105,94 @@ export async function GET(request, context) {
       }
     }
 
+    // Squad Queue Schedule - Fetch from GitHub or local file
+    if (path === 'sq-schedule') {
+      try {
+        const { searchParams } = new URL(request.url);
+        const forceRefresh = searchParams.get('refresh') === 'true';
+        
+        const db = await getDatabase();
+        
+        // Check cache (5 minutes for fresh data)
+        const cacheKey = 'sq_schedule';
+        const cache = await db.collection('sq_schedule_cache').findOne({ key: cacheKey });
+        
+        const cacheAge = cache ? Date.now() - new Date(cache.lastUpdate).getTime() : Infinity;
+        const cacheValid = cacheAge < 5 * 60 * 1000; // 5 minutes cache
+        
+        if (cache && cacheValid && !forceRefresh) {
+          return NextResponse.json({
+            schedule: cache.data || [],
+            lastUpdate: cache.lastUpdate,
+            source: 'cache',
+            cached: true
+          });
+        }
+        
+        // Try to fetch from GitHub first
+        let schedule = [];
+        let source = 'local';
+        
+        try {
+          const githubUrl = 'https://raw.githubusercontent.com/999none/mk8dx-hub/emergent/data/sq-schedule.json';
+          const response = await fetch(githubUrl, {
+            headers: { 'Cache-Control': 'no-cache' },
+            next: { revalidate: 0 }
+          });
+          
+          if (response.ok) {
+            schedule = await response.json();
+            source = 'github';
+          }
+        } catch (githubError) {
+          console.warn('Failed to fetch from GitHub:', githubError.message);
+        }
+        
+        // Fallback to local file if GitHub fails
+        if (schedule.length === 0) {
+          try {
+            const fs = require('fs');
+            const path = require('path');
+            const localPath = path.join(process.cwd(), 'data', 'sq-schedule.json');
+            const localData = fs.readFileSync(localPath, 'utf-8');
+            schedule = JSON.parse(localData);
+            source = 'local';
+          } catch (localError) {
+            console.warn('Failed to read local file:', localError.message);
+          }
+        }
+        
+        // Cache the result
+        await db.collection('sq_schedule_cache').updateOne(
+          { key: cacheKey },
+          { 
+            $set: { 
+              key: cacheKey,
+              data: schedule, 
+              source,
+              lastUpdate: new Date()
+            } 
+          },
+          { upsert: true }
+        );
+        
+        return NextResponse.json({
+          schedule,
+          lastUpdate: new Date().toISOString(),
+          source,
+          cached: false
+        });
+        
+      } catch (error) {
+        console.error('SQ Schedule API error:', error);
+        return NextResponse.json({ 
+          error: 'Failed to fetch schedule',
+          schedule: [],
+          message: error.message 
+        }, { status: 500 });
+      }
+    }
+
     return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
 
   } catch (error) {
