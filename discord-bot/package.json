@@ -1,0 +1,21 @@
+{
+  "name": "mk8dx-sq-schedule-bot",
+  "version": "1.0.0",
+  "description": "Discord bot to sync Squad Queue schedule from MK8DX Lounge to GitHub",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5",
+    "@octokit/rest": "^20.1.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["discord", "bot", "mk8dx", "squad-queue", "schedule"],
+  "author": "",
+  "license": "MIT"
+}
