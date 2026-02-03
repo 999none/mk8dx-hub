@@ -201,9 +201,25 @@ export default function PlayerProfilePage() {
         {/* Player Header */}
         <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-6 mb-4">
           <div className="flex flex-col sm:flex-row items-center gap-6">
-            <div className="w-20 h-20 bg-white/[0.04] rounded-full flex items-center justify-center text-3xl font-bold text-gray-500">
-              {player.name?.charAt(0).toUpperCase()}
-            </div>
+            {/* Avatar MKCentral ou initiale */}
+            {(player.mkcId || player.registryId) ? (
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-white/[0.04] flex-shrink-0">
+                <img 
+                  src={`https://mkcentral.com/img/avatars/${player.mkcId || player.registryId}.png`}
+                  alt={`${player.name} avatar`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to initial if image fails to load
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-500">${player.name?.charAt(0).toUpperCase() || '?'}</div>`;
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="w-20 h-20 bg-white/[0.04] rounded-full flex items-center justify-center text-3xl font-bold text-gray-500 flex-shrink-0">
+                {player.name?.charAt(0).toUpperCase()}
+              </div>
+            )}
             
             <div className="flex-1 text-center sm:text-left">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
