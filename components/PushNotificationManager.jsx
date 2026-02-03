@@ -59,28 +59,51 @@ export default function PushNotificationManager() {
   // Register service worker
   const registerServiceWorker = async () => {
     try {
+      // Unregister old service workers first to ensure clean state
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        if (registration.scope !== window.location.origin + '/') {
+          console.log('[Push] Unregistering old SW:', registration.scope);
+          await registration.unregister();
+        }
+      }
+      
       const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
+        scope: '/',
+        updateViaCache: 'none'
       });
       
       console.log('[Push] Service Worker registered:', registration.scope);
       
-      // Wait for SW to be ready
-      await navigator.serviceWorker.ready;
+      // Wait for SW to be ready with timeout
+      const swReady = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('SW ready timeout')), 10000)
+        )
+      ]);
+      
+      console.log('[Push] Service Worker is ready');
       
       // Check existing subscription
       const existingSubscription = await registration.pushManager.getSubscription();
       
       if (existingSubscription) {
+        console.log('[Push] Found existing subscription');
         setSubscription(existingSubscription);
         
         // Verify with server
-        const statusRes = await fetch(`/api/push/status?endpoint=${encodeURIComponent(existingSubscription.endpoint)}`);
-        const statusData = await statusRes.json();
-        
-        setIsSubscribed(statusData.subscribed);
-        if (statusData.preferences) {
-          setPreferences(statusData.preferences);
+        try {
+          const statusRes = await fetch(`/api/push/status?endpoint=${encodeURIComponent(existingSubscription.endpoint)}`);
+          const statusData = await statusRes.json();
+          
+          setIsSubscribed(statusData.subscribed);
+          if (statusData.preferences) {
+            setPreferences(statusData.preferences);
+          }
+        } catch (statusErr) {
+          console.warn('[Push] Failed to check status:', statusErr);
+          setIsSubscribed(true); // Assume subscribed if we have a subscription
         }
       }
       
