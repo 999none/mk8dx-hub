@@ -412,6 +412,8 @@ function PushNotificationSettings({ push, schedule = [] }) {
       await push.updatePreferences(newPreferences);
       setHasChanges(false);
       toast.success(`✅ ${selectedSQs.size} SQ(s) sélectionnée(s) pour les notifications`);
+      // Close the dialog after successful save
+      setShowCalendar(false);
     } catch (error) {
       toast.error('Erreur lors de la sauvegarde');
     } finally {
