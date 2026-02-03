@@ -395,16 +395,16 @@ export default function DashboardPage() {
               </Card>
 
               {/* Teams Section */}
-              {registryData?.teams && registryData.teams.length > 0 && (
-                <Card className="bg-white/[0.02] border-white/[0.04] lg:col-span-2">
-                  <CardHeader className="border-b border-white/[0.04] pb-4">
-                    <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-                      <Shield className="w-4 h-4" />
-                      Teams ({registryData.teams.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    {registryData.teams.map((team, index) => (
+              <Card className="bg-white/[0.02] border-white/[0.04] lg:col-span-2">
+                <CardHeader className="border-b border-white/[0.04] pb-4">
+                  <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Teams {registryData?.teams?.length > 0 ? `(${registryData.teams.length})` : ''}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  {registryData?.teams && registryData.teams.length > 0 ? (
+                    registryData.teams.map((team, index) => (
                       <div key={index} className="p-3 mb-2 last:mb-0 bg-white/[0.02] border border-white/[0.04] rounded-lg hover:border-white/[0.08] transition-colors">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -437,10 +437,33 @@ export default function DashboardPage() {
                           )}
                         </div>
                       </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
+                    ))
+                  ) : (
+                    <div className="text-center py-6">
+                      <Shield className="w-8 h-8 mx-auto mb-2 text-gray-700" />
+                      <p className="text-gray-500 text-sm mb-2">Aucune équipe trouvée</p>
+                      <p className="text-gray-600 text-xs">
+                        {!playerDetails?.mkcId ? (
+                          <>Votre compte MKCentral Registry n'est pas lié.</>
+                        ) : (
+                          <>Vous n'êtes pas membre d'une équipe sur MKCentral.</>
+                        )}
+                      </p>
+                      {playerDetails?.mkcId && (
+                        <a 
+                          href={`https://mkcentral.com/fr/registry/players/profile?id=${playerDetails.mkcId}`}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 mt-3 text-xs text-blue-500 hover:text-blue-400"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Voir mon profil MKCentral
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
               {/* Tournament History Section */}
               {registryData?.tournamentHistory && registryData.tournamentHistory.length > 0 && (
