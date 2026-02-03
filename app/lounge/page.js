@@ -370,9 +370,18 @@ export default function LoungePage() {
   }, []);
 
   const now = Date.now();
-  const upcomingSQ = schedule.filter(sq => sq.time > now).sort((a, b) => a.time - b.time);
-  const pastSQ = schedule.filter(sq => sq.time <= now).sort((a, b) => b.time - a.time);
+  
+  // Apply format filter
+  const filteredSchedule = formatFilter === 'all' 
+    ? schedule 
+    : schedule.filter(sq => sq.format === formatFilter);
+  
+  const upcomingSQ = filteredSchedule.filter(sq => sq.time > now).sort((a, b) => a.time - b.time);
+  const pastSQ = filteredSchedule.filter(sq => sq.time <= now).sort((a, b) => b.time - a.time);
   const nextSQ = upcomingSQ[0];
+  
+  // Available formats for filter
+  const availableFormats = ['all', '2v2', '3v3', '4v4', '6v6'];
 
   return (
     <div className="min-h-screen bg-black text-white">
