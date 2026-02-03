@@ -407,11 +407,15 @@ export default function DashboardPage() {
                 <CardContent className="p-4">
                   {registryData?.teams && registryData.teams.length > 0 ? (
                     registryData.teams.map((team, index) => (
-                      <div key={index} className="p-3 mb-2 last:mb-0 bg-white/[0.02] border border-white/[0.04] rounded-lg hover:border-white/[0.08] transition-colors">
+                      <div 
+                        key={index} 
+                        className="p-3 mb-2 last:mb-0 bg-white/[0.02] border border-white/[0.04] rounded-lg hover:border-white/[0.08] transition-colors cursor-pointer"
+                        onClick={() => team.id && setSelectedTeamId(team.id)}
+                      >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-white">{team.name}</h4>
+                              <h4 className="font-semibold text-white hover:text-blue-400 transition-colors">{team.name}</h4>
                               {team.isCurrent && (
                                 <Badge className="bg-green-500/10 text-green-500 border border-green-500/20 text-xs">
                                   Actuelle
@@ -427,16 +431,9 @@ export default function DashboardPage() {
                               </Badge>
                             </div>
                           </div>
-                          {team.url && (
-                            <a 
-                              href={`https://mkcentral.com${team.url}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-gray-500 hover:text-white transition-colors"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-600">Voir roster →</span>
+                          </div>
                         </div>
                       </div>
                     ))
