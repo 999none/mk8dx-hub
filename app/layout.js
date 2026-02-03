@@ -2,6 +2,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import AuthSessionProvider from '@/components/session-provider';
+import ServiceWorkerProvider from '@/components/ServiceWorkerProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -15,7 +16,9 @@ export default function RootLayout({ children }) {
     <html lang="fr" className="dark" suppressHydrationWarning>
       <body className={inter.className} suppressHydrationWarning>
         <AuthSessionProvider>
-          {children}
+          <ServiceWorkerProvider>
+            {children}
+          </ServiceWorkerProvider>
           <Toaster />
         </AuthSessionProvider>
       </body>
