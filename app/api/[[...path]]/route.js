@@ -492,6 +492,64 @@ export async function GET(request, context) {
       }
     }
 
+    // MKCentral Registry Team Details (roster with players)
+    if (path.startsWith('registry/team/')) {
+      const teamId = parseInt(path.replace('registry/team/', ''), 10);
+      
+      if (isNaN(teamId)) {
+        return NextResponse.json({ error: 'Invalid team ID' }, { status: 400 });
+      }
+      
+      try {
+        const db = await getDatabase();
+        
+        // Check cache (6 hours for team data)
+        const cacheKey = `registry_team_${teamId}`;
+        const cache = await db.collection('registry_cache').findOne({ key: cacheKey });
+        
+        const cacheAge = cache ? Date.now() - new Date(cache.lastUpdate).getTime() : Infinity;
+        const cacheValid = cacheAge < 6 * 60 * 60 * 1000; // 6 hours
+        
+        if (cache && cacheValid) {
+          return NextResponse.json({
+            ...cache.data,
+            cached: true,
+            lastUpdate: cache.lastUpdate
+          });
+        }
+        
+        // Fetch from MKCentral Registry API
+        const registryApi = new MkCentralRegistryApi();
+        const teamDetails = await registryApi.getTeamDetails(teamId);
+        
+        // Cache results
+        await db.collection('registry_cache').updateOne(
+          { key: cacheKey },
+          { 
+            $set: { 
+              key: cacheKey,
+              data: teamDetails, 
+              lastUpdate: new Date()
+            } 
+          },
+          { upsert: true }
+        );
+        
+        return NextResponse.json({
+          ...teamDetails,
+          cached: false,
+          lastUpdate: new Date().toISOString()
+        });
+        
+      } catch (error) {
+        console.error('Registry Team API error:', error);
+        return NextResponse.json({ 
+          error: 'Failed to fetch team details',
+          message: error.message 
+        }, { status: 500 });
+      }
+    }
+
     // MKCentral Registry profile (teams + tournament history)
     if (path.startsWith('registry/player/')) {
       const registryId = parseInt(path.replace('registry/player/', ''), 10);
