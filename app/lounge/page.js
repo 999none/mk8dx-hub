@@ -244,13 +244,14 @@ function LoungeQueue({ session }) {
                 </Button>
               </a>
             ) : (
-              <Button 
-                onClick={() => signIn('discord')}
-                className="w-full md:w-auto bg-[#5865F2] hover:bg-[#4752C4] text-white"
-              >
-                <LogIn className="w-4 h-4 mr-2" />
-                Se connecter avec Discord
-              </Button>
+              <a href="/login">
+                <Button 
+                  className="w-full md:w-auto bg-[#5865F2] hover:bg-[#4752C4] text-white"
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Se connecter avec Discord
+                </Button>
+              </a>
             )}
           </div>
         </div>
