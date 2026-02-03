@@ -578,6 +578,10 @@ export default function DashboardPage() {
         {selectedMatchId && (
           <MatchDetailModal matchId={selectedMatchId} onClose={() => setSelectedMatchId(null)} />
         )}
+
+        {selectedTeamId && (
+          <TeamDetailModal teamId={selectedTeamId} onClose={() => setSelectedTeamId(null)} />
+        )}
       </div>
     </RequireAuth>
   );
