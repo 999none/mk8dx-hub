@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { 
   Trophy, Menu, X, LogOut, User, 
-  BookOpen, Calendar, BarChart3
+  BookOpen, Calendar, BarChart3, Gamepad2
 } from 'lucide-react';
 
 export default function Navbar() {
