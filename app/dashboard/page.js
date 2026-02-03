@@ -466,15 +466,15 @@ export default function DashboardPage() {
               </Card>
 
               {/* Tournament History Section */}
-              {registryData?.tournamentHistory && registryData.tournamentHistory.length > 0 && (
-                <Card className="bg-white/[0.02] border-white/[0.04] lg:col-span-2">
-                  <CardHeader className="border-b border-white/[0.04] pb-4">
-                    <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-                      <Trophy className="w-4 h-4" />
-                      Tournament History ({registryData.tournamentHistory.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
+              <Card className="bg-white/[0.02] border-white/[0.04] lg:col-span-2">
+                <CardHeader className="border-b border-white/[0.04] pb-4">
+                  <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                    <Trophy className="w-4 h-4" />
+                    Tournament History {registryData?.tournamentHistory?.length > 0 ? `(${registryData.tournamentHistory.length})` : ''}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {registryData?.tournamentHistory && registryData.tournamentHistory.length > 0 ? (
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
@@ -527,9 +527,17 @@ export default function DashboardPage() {
                         </tbody>
                       </table>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  ) : (
+                    <div className="text-center py-8 px-4">
+                      <Trophy className="w-8 h-8 mx-auto mb-2 text-gray-700" />
+                      <p className="text-gray-500 text-sm mb-2">Aucun tournoi trouvé</p>
+                      <p className="text-gray-600 text-xs">
+                        L'historique des tournois n'est pas encore disponible via l'API MKCentral.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
               {/* Quick Links */}
               <Card className="bg-white/[0.02] border-white/[0.04] lg:col-span-4">
