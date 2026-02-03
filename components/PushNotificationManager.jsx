@@ -399,6 +399,21 @@ export default function PushNotificationManager() {
           </div>
         )}
         
+        {/* Error Status */}
+        {lastError && !isSubscribed && (
+          <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+            <p className="text-orange-400 text-sm">
+              <strong>Erreur d'activation:</strong> {lastError}
+            </p>
+            <button 
+              onClick={() => setLastError(null)} 
+              className="text-orange-300 text-xs mt-2 underline hover:text-orange-200"
+            >
+              Fermer ce message
+            </button>
+          </div>
+        )}
+        
         {/* Subscribe/Unsubscribe Button */}
         <div className="flex flex-col sm:flex-row gap-3">
           {isSubscribed ? (
