@@ -253,13 +253,23 @@ export default function TeamDetailModal({ teamId, onClose }) {
                                       {player.countryCode && (
                                         <span className="text-sm flex-shrink-0">{getCountryFlag(player.countryCode)}</span>
                                       )}
-                                      <Link 
-                                        href={`/player/${encodeURIComponent(player.name)}`}
-                                        className="text-sm text-gray-300 hover:text-white hover:underline truncate transition-colors"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        {player.name}
-                                      </Link>
+                                      {/* Use loungeName if available, otherwise show MKCentral name without link */}
+                                      {player.loungeName ? (
+                                        <Link 
+                                          href={`/player/${encodeURIComponent(player.loungeName)}`}
+                                          className="text-sm text-gray-300 hover:text-white hover:underline truncate transition-colors"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {player.loungeName}
+                                          {player.loungeName !== player.name && (
+                                            <span className="text-gray-600 text-xs ml-1">({player.name})</span>
+                                          )}
+                                        </Link>
+                                      ) : (
+                                        <span className="text-sm text-gray-500 truncate" title="Pas de compte Lounge">
+                                          {player.name}
+                                        </span>
+                                      )}
                                       {player.isLeader && (
                                         <Crown className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" title="Leader" />
                                       )}
@@ -276,6 +286,13 @@ export default function TeamDetailModal({ teamId, onClose }) {
                                 </div>
                                 
                                 <div className="flex items-center gap-2 flex-shrink-0">
+                                  {/* Lounge MMR if available */}
+                                  {player.loungeMmr && (
+                                    <span className="text-xs text-gray-400 font-medium">
+                                      {player.loungeMmr.toLocaleString('fr-FR')} MMR
+                                    </span>
+                                  )}
+                                  
                                   {/* Primary Friend Code */}
                                   {player.friendCodes?.find(fc => fc.isPrimary)?.code && (
                                     <span className="text-[10px] text-gray-500 font-mono bg-white/[0.03] px-2 py-1 rounded">
