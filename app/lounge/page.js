@@ -334,6 +334,7 @@ export default function LoungePage() {
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [formatFilter, setFormatFilter] = useState('all'); // Filter state
 
   const fetchSchedule = async () => {
     setLoading(true);
