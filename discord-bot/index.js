@@ -66,23 +66,43 @@ const UPDATE_DELAY = 5000; // Wait 5 seconds after last message before pushing t
 
 /**
  * Parse a schedule message line and extract SQ data
- * Format: #ID 12p FORMAT : <t:TIMESTAMP:f> - <t:TIMESTAMP:R>
+ * Supports multiple formats:
+ * - Original: #ID 12p FORMAT : <t:TIMESTAMP:f>
+ * - New format: `#ID` **12p FORMAT:** <t:TIMESTAMP:F>
  * 
  * @param {string} line - A single line from the schedule message
  * @returns {object|null} - Parsed SQ entry or null if not matching
  */
 function parseScheduleLine(line) {
-  // Regex to capture: #ID, format (2v2, 3v3, 4v4, 6v6), and timestamp
-  // Example: #4243 12p 2v2 : <t:1769941200:f>
-  const regex = /#(\d+)\s+\d+p\s+(\dv\d)\s*:\s*<t:(\d+):f>/i;
-  const match = line.match(regex);
+  // Try multiple regex patterns
+  
+  // Pattern 1: New format with backticks and bold
+  // `#4255` **12p 4v4:** <t:1770386400:F>
+  const newFormatRegex = /`#(\d+)`\s*\*\*\d+p\s+(\dv\d):\*\*\s*<t:(\d+):[fF]>/i;
+  let match = line.match(newFormatRegex);
   
   if (match) {
     const [, id, format, timestamp] = match;
+    console.log(`      🎯 Matched new format: #${id} ${format}`);
     return {
       id: id,
       format: format.toLowerCase(),
-      time: parseInt(timestamp, 10) * 1000, // Convert to JS timestamp (milliseconds)
+      time: parseInt(timestamp, 10) * 1000,
+    };
+  }
+  
+  // Pattern 2: Original format
+  // #4243 12p 2v2 : <t:1769941200:f>
+  const originalRegex = /#(\d+)\s+\d+p\s+(\dv\d)\s*:\s*<t:(\d+):[fF]>/i;
+  match = line.match(originalRegex);
+  
+  if (match) {
+    const [, id, format, timestamp] = match;
+    console.log(`      🎯 Matched original format: #${id} ${format}`);
+    return {
+      id: id,
+      format: format.toLowerCase(),
+      time: parseInt(timestamp, 10) * 1000,
     };
   }
   
@@ -251,23 +271,125 @@ client.once('ready', () => {
   console.log('========================================\n');
 });
 
+/**
+ * Extract all text content from a message (including cross-posted/forwarded messages)
+ * @param {Message} message - Discord message object
+ * @returns {string} - Combined text content
+ */
+function extractMessageContent(message) {
+  let allContent = [];
+  
+  // 1. Regular message content
+  if (message.content && message.content.length > 0) {
+    allContent.push(message.content);
+  }
+  
+  // 2. Embeds (used by cross-posted/forwarded messages)
+  if (message.embeds && message.embeds.length > 0) {
+    for (const embed of message.embeds) {
+      if (embed.title) allContent.push(embed.title);
+      if (embed.description) allContent.push(embed.description);
+      if (embed.fields && embed.fields.length > 0) {
+        for (const field of embed.fields) {
+          if (field.name) allContent.push(field.name);
+          if (field.value) allContent.push(field.value);
+        }
+      }
+      if (embed.footer && embed.footer.text) allContent.push(embed.footer.text);
+    }
+  }
+  
+  // 3. Message Snapshots (Discord Forward feature) - Access via raw API data
+  if (message.messageSnapshots && message.messageSnapshots.size > 0) {
+    console.log(`   📸 Found ${message.messageSnapshots.size} message snapshot(s)`);
+    for (const [key, snapshot] of message.messageSnapshots) {
+      console.log(`   📸 Snapshot key: ${key}`);
+      console.log(`   📸 Snapshot type: ${typeof snapshot}`);
+      console.log(`   📸 Snapshot keys: ${Object.keys(snapshot || {}).join(', ')}`);
+      
+      // Try to access the message content from snapshot
+      if (snapshot) {
+        // Check if snapshot has message property
+        if (snapshot.message) {
+          console.log(`   📸 snapshot.message keys: ${Object.keys(snapshot.message).join(', ')}`);
+          if (snapshot.message.content) {
+            console.log(`   📸 Found content in snapshot.message: ${snapshot.message.content.substring(0, 100)}`);
+            allContent.push(snapshot.message.content);
+          }
+        }
+        // Direct content on snapshot
+        if (snapshot.content) {
+          console.log(`   📸 Found direct content: ${snapshot.content.substring(0, 100)}`);
+          allContent.push(snapshot.content);
+        }
+      }
+    }
+  }
+  
+  // 4. Access raw API data for message_snapshots (workaround for Discord.js)
+  // The raw data might have the content that Discord.js doesn't expose
+  try {
+    // Access internal raw data if available
+    if (message._edits || message.rawData) {
+      console.log(`   📸 Checking _edits or rawData...`);
+    }
+  } catch (e) {}
+  
+  return allContent.join('\n');
+}
+
 client.on('messageCreate', async (message) => {
   // Only process messages from the schedule channel
   if (message.channel.id !== CONFIG.discord.scheduleChannelId) {
     return;
   }
   
-  // Ignore bot messages (optional, but recommended)
-  if (message.author.bot && message.author.id === client.user.id) {
+  // Ignore our own bot messages
+  if (message.author.id === client.user.id) {
     return;
   }
   
+  // Check if this is a cross-posted message (from followed channel)
+  const isCrossPost = message.flags.has('Crossposted') || 
+                      message.flags.has('IsCrosspost') ||
+                      message.reference?.guildId !== message.guildId;
+  
   console.log(`\n📨 New message in schedule channel`);
   console.log(`   From: ${message.author.tag || 'Unknown'} (${message.author.id})`);
-  console.log(`   Content preview: ${message.content.substring(0, 100)}...`);
+  console.log(`   Is CrossPost/Forwarded: ${isCrossPost}`);
+  console.log(`   Has Embeds: ${message.embeds?.length || 0}`);
+  console.log(`   Content length: ${message.content?.length || 0} chars`);
+  console.log(`   Message type: ${message.type}`);
+  console.log(`   Flags: ${message.flags.toArray().join(', ') || 'none'}`);
+  
+  // Debug: Log all message properties to understand structure
+  console.log(`   📋 Message keys: ${Object.keys(message).join(', ')}`);
+  if (message.reference) {
+    console.log(`   📋 Reference: ${JSON.stringify(message.reference)}`);
+  }
+  
+  // Log raw message data for debugging forwarded messages
+  try {
+    const rawMsg = message.toJSON();
+    console.log(`   📋 Raw message keys: ${Object.keys(rawMsg).join(', ')}`);
+    if (rawMsg.message_snapshots) {
+      console.log(`   📋 message_snapshots found in raw: ${JSON.stringify(rawMsg.message_snapshots).substring(0, 500)}`);
+    }
+    if (rawMsg.message_reference) {
+      console.log(`   📋 message_reference: ${JSON.stringify(rawMsg.message_reference)}`);
+    }
+  } catch (e) {
+    console.log(`   ⚠️ Could not serialize message: ${e.message}`);
+  }
+  
+  // Extract all content (including from embeds for cross-posted messages)
+  const fullContent = extractMessageContent(message);
+  
+  console.log(`   Extracted content length: ${fullContent.length} chars`);
+  console.log(`   Full content:\n${fullContent.substring(0, 500)}${fullContent.length > 500 ? '...' : ''}`);
   
   // Parse the message
-  const entries = parseScheduleMessage(message.content);
+  const entries = parseScheduleMessage(fullContent);
   
   if (entries.length > 0) {
     console.log(`   ✅ Parsed ${entries.length} schedule entries:`);
