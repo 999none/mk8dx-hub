@@ -326,8 +326,9 @@ function PushNotificationSettings({ push, schedule = [] }) {
   
   // Sync selectedSQs with preferences from server (only after mount)
   useEffect(() => {
-    if (mounted && push.preferences?.selectedSQs) {
-      setSelectedSQs(new Set(push.preferences.selectedSQs));
+    if (mounted) {
+      // Sync with server preferences, or reset to empty if no selectedSQs
+      setSelectedSQs(new Set(push.preferences?.selectedSQs || []));
     }
   }, [mounted, push.preferences?.selectedSQs]);
   
