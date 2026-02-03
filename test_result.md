@@ -214,11 +214,14 @@ backend:
     file: "app/api/[[...path]]/route.js, lib/mkcentralRegistry.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Endpoint GET /api/registry/player/{registryId} créé. Récupère teams (équipes actuelles), teamHistory (historique équipes) et tournamentHistory (tournois participés) depuis MKCentral Registry. Cache de 6 heures. Parsing complet avec Cheerio."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: MKCentral Registry API integration working correctly. All 5 registry tests passed (100% success rate). Key findings: GET /api/registry/player/{registryId} returns proper registry data with teams array, GET /api/lounge/player-details/{playerName} provides mkcId field, integration flow works (Jazzy -> mkcId 1 -> Registry data with 1 team), proper error handling for invalid/non-existent IDs. Registry data includes registryId, name, countryCode, friendCode, and teams with proper structure (id, name, game, gameHuman, mode, isCurrent)."
 
 frontend:
   - task: "Login Page with Server Check"
