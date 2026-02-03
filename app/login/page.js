@@ -8,7 +8,7 @@ import UserProfile from '@/components/UserProfile';
 import Navbar from '@/components/Navbar';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, XCircle, Trophy } from 'lucide-react';
+import { RefreshCw, XCircle, Trophy, CheckCircle2, Users, Gamepad2, Shield } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LoginPage() {
