@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration from .env
-BASE_URL = "https://hydration-fix-3.preview.emergentagent.com"
+BASE_URL = "https://hydra-repair.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class BackendTester:
