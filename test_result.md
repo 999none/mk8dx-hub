@@ -269,11 +269,14 @@ frontend:
     file: "app/dashboard/page.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Ajout de deux nouvelles sections dans le Dashboard : 'Teams' affiche les équipes actuelles du joueur avec badges (jeu, mode). 'Tournament History' affiche les tournois participés avec date, équipe, placement. Récupération automatique via registryId (mkcId) depuis l'API Lounge. Liens vers MKCentral pour chaque équipe/tournoi."
+      - working: true
+        agent: "main"
+        comment: "CORRIGÉ: Les sections Teams et Tournament History s'affichent maintenant toujours (même si vides) avec des messages d'aide appropriés. La section Teams affiche correctement les équipes récupérées via l'API JSON de MKCentral."
   
   - task: "Player Profile Teams & Tournament History Display"
     implemented: true
