@@ -1112,20 +1112,24 @@ export async function GET(request, context) {
         const forceRefresh = searchParams.get('refresh') === 'true';
         
         const db = await getDatabase();
+        const now = Date.now();
         
         // Check cache (5 minutes for fresh data)
         const cacheKey = 'sq_schedule';
         const cache = await db.collection('sq_schedule_cache').findOne({ key: cacheKey });
         
-        const cacheAge = cache ? Date.now() - new Date(cache.lastUpdate).getTime() : Infinity;
+        const cacheAge = cache ? now - new Date(cache.lastUpdate).getTime() : Infinity;
         const cacheValid = cacheAge < 5 * 60 * 1000; // 5 minutes cache
         
         if (cache && cacheValid && !forceRefresh) {
+          // Filter out past events from cache
+          const filteredSchedule = (cache.data || []).filter(event => event.time > now);
           return NextResponse.json({
-            schedule: cache.data || [],
+            schedule: filteredSchedule,
             lastUpdate: cache.lastUpdate,
             source: 'cache',
-            cached: true
+            cached: true,
+            totalEvents: filteredSchedule.length
           });
         }
         
@@ -1162,13 +1166,16 @@ export async function GET(request, context) {
           }
         }
         
-        // Cache the result
+        // Filter out past events automatically
+        const filteredSchedule = schedule.filter(event => event.time > now);
+        
+        // Cache the filtered result
         await db.collection('sq_schedule_cache').updateOne(
           { key: cacheKey },
           { 
             $set: { 
               key: cacheKey,
-              data: schedule, 
+              data: filteredSchedule, 
               source,
               lastUpdate: new Date()
             } 
@@ -1177,10 +1184,11 @@ export async function GET(request, context) {
         );
         
         return NextResponse.json({
-          schedule,
+          schedule: filteredSchedule,
           lastUpdate: new Date().toISOString(),
           source,
-          cached: false
+          cached: false,
+          totalEvents: filteredSchedule.length
         });
         
       } catch (error) {
