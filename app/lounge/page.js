@@ -295,6 +295,22 @@ function usePushNotifications() {
 // Push Notification Settings Component
 function PushNotificationSettings({ push }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
+  // Avoid hydration mismatch by only rendering dynamic content after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
+  // During SSR and initial hydration, show a consistent placeholder
+  if (!mounted) {
+    return (
+      <Button variant="outline" size="sm" className="border-white/10 text-white">
+        <Bell className="w-4 h-4 mr-2" />
+        Push Notifications
+      </Button>
+    );
+  }
   
   if (!push.isSupported) {
     return (
