@@ -215,11 +215,11 @@ export default function LeaderboardPage() {
                   <Globe className="w-4 h-4 mr-2 text-gray-600" />
                   <SelectValue placeholder="Pays" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0a0a0a] border-white/[0.06]">
+                <SelectContent className="bg-[#0a0a0a] border-white/[0.06] max-h-80">
                   <SelectItem value="all">Tous pays</SelectItem>
-                  {availableCountries.map(code => (
-                    <SelectItem key={code} value={code}>
-                      {getCountryFlag(code)} {COUNTRY_NAMES[code] || code}
+                  {availableCountries.map(c => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {getCountryFlag(c.code)} {c.name || COUNTRY_NAMES[c.code] || c.code}
                     </SelectItem>
                   ))}
                 </SelectContent>
