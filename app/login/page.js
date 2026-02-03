@@ -140,7 +140,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-black pt-20">
       <Navbar />
-      <Card className="w-full max-w-sm bg-white/[0.02] border-white/[0.04]">
+      <Card className="w-full max-w-md bg-white/[0.02] border-white/[0.04]">
         <CardHeader className="text-center">
           <div className="w-12 h-12 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center mx-auto mb-4">
             <Trophy className="w-6 h-6 text-yellow-500" />
@@ -150,12 +150,57 @@ export default function LoginPage() {
             Connectez Discord pour accéder au hub
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
+          {/* Eligibility Conditions */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-gray-300 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-purple-400" />
+              Conditions d'éligibilité
+            </h3>
+            <div className="space-y-2">
+              <div className="flex items-start gap-3 p-3 bg-white/[0.02] border border-white/[0.04] rounded-lg">
+                <Users className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-white font-medium">Membre du serveur Discord Lounge</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Vous devez être membre du serveur MK8DX Lounge et avoir un <span className="text-yellow-400">pseudo sur le serveur</span> (nickname) pour être éligible.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3 p-3 bg-white/[0.02] border border-white/[0.04] rounded-lg">
+                <Gamepad2 className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-white font-medium">Activité récente sur le Lounge</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Vous devez avoir joué au moins <span className="text-green-400">2 matchs</span> au cours des 30 derniers jours.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Login Button */}
           {session ? (
             <UserProfile />
           ) : (
             <DiscordLoginButton className="w-full" buttonText="Se connecter avec Discord" />
           )}
+          
+          {/* Server Link */}
+          <div className="text-center">
+            <p className="text-xs text-gray-600 mb-2">
+              Pas encore membre du serveur ?
+            </p>
+            <a 
+              href="https://discord.gg/revmGkE" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs text-[#5865F2] hover:underline"
+            >
+              Rejoindre le serveur Discord MK8DX Lounge →
+            </a>
+          </div>
           
           <p className="text-xs text-gray-600 text-center">
             En vous connectant, vous acceptez nos conditions
