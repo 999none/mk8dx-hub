@@ -446,6 +446,9 @@ export default function LoungePage() {
           <ScheduleStats schedule={schedule} />
         )}
 
+        {/* Lounge Queue Section */}
+        <LoungeQueue session={session} />
+
         {/* Next SQ Highlight */}
         {nextSQ && (
           <Card className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/30 mb-8">
