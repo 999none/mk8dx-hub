@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Calendar, Clock, Users, RefreshCw, ExternalLink, 
-  ChevronRight, Trophy, Gamepad2, Timer, Zap, DoorOpen, LogIn, Filter
+  ChevronRight, Trophy, Gamepad2, Timer, Zap, DoorOpen, LogIn, Filter,
+  Bell, BellOff, BellRing, Settings, Check, X
 } from 'lucide-react';
 import {
   Select,
