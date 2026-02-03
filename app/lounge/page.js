@@ -809,6 +809,9 @@ export default function LoungePage() {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [activeTab, setActiveTab] = useState('upcoming');
   const [formatFilter, setFormatFilter] = useState('all'); // Filter state
+  
+  // Notification system
+  const notifications = useNotifications();
 
   const fetchSchedule = async () => {
     setLoading(true);
