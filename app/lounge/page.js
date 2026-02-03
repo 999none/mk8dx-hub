@@ -617,16 +617,30 @@ export default function LoungePage() {
           </TabsContent>
 
           <TabsContent value="all">
-            {schedule.length === 0 ? (
+            {filteredSchedule.length === 0 ? (
               <Card className="bg-white/[0.02] border-white/[0.06]">
                 <CardContent className="p-8 text-center">
                   <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-400">Aucune donnée de planning</p>
+                  <p className="text-gray-400">
+                    {formatFilter !== 'all' 
+                      ? `Aucune Squad Queue en format ${formatFilter.toUpperCase()}`
+                      : 'Aucune donnée de planning'
+                    }
+                  </p>
+                  {formatFilter !== 'all' && (
+                    <Button 
+                      variant="link" 
+                      onClick={() => setFormatFilter('all')} 
+                      className="text-purple-400 mt-2"
+                    >
+                      Voir tous les formats
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ) : (
               <div className="space-y-3">
-                {[...schedule].sort((a, b) => a.time - b.time).map((sq) => (
+                {[...filteredSchedule].sort((a, b) => a.time - b.time).map((sq) => (
                   <SQCard key={sq.id} sq={sq} isNext={sq.id === nextSQ?.id} />
                 ))}
               </div>
