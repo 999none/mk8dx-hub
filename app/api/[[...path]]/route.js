@@ -1210,6 +1210,61 @@ export async function GET(request, context) {
       }
     }
 
+    // =====================================================
+    // PUSH NOTIFICATION ENDPOINTS
+    // =====================================================
+
+    // Get VAPID public key for push subscription
+    if (path === 'push/vapid-public-key') {
+      const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      
+      if (!vapidPublicKey) {
+        return NextResponse.json({ error: 'VAPID keys not configured' }, { status: 500 });
+      }
+      
+      return NextResponse.json({ 
+        publicKey: vapidPublicKey 
+      });
+    }
+
+    // Get user's push subscription status
+    if (path === 'push/status') {
+      try {
+        const { searchParams } = new URL(request.url);
+        const endpoint = searchParams.get('endpoint');
+        
+        if (!endpoint) {
+          return NextResponse.json({ subscribed: false });
+        }
+        
+        const db = await getDatabase();
+        const subscription = await db.collection('push_subscriptions').findOne({ 
+          'subscription.endpoint': endpoint,
+          active: true 
+        });
+        
+        return NextResponse.json({
+          subscribed: !!subscription,
+          preferences: subscription?.preferences || null
+        });
+        
+      } catch (error) {
+        console.error('Push status error:', error);
+        return NextResponse.json({ subscribed: false });
+      }
+    }
+
+    // Get push notification statistics (admin)
+    if (path === 'push/stats') {
+      try {
+        const stats = await getNotificationStats();
+        return NextResponse.json(stats);
+      } catch (error) {
+        console.error('Push stats error:', error);
+        return NextResponse.json({ error: 'Failed to get stats' }, { status: 500 });
+      }
+    }
+
     return NextResponse.json({ error: 'Endpoint not found' }, { status: 404 });
 
   } catch (error) {
