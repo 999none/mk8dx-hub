@@ -290,6 +290,18 @@ frontend:
         agent: "main"
         comment: "Ajout des mêmes sections Teams et Tournament History dans le profil joueur accessible depuis le Leaderboard. Affichage en grille 2 colonnes. Récupération automatique des données Registry via mkcId. Style cohérent avec le Dashboard."
 
+  - task: "Push Notification Settings Page"
+    implemented: true
+    working: true
+    file: "app/settings/page.js, components/PushNotificationManager.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Nouvelle page /settings pour gérer les notifications push. Composant PushNotificationManager avec: activation/désactivation, préférences (Lounge Queue, SQ Queue), notification test. Service Worker enregistré automatiquement via ServiceWorkerProvider dans layout.js. Icône Bell ajoutée dans la Navbar pour accéder aux paramètres."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
