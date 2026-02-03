@@ -301,6 +301,9 @@ frontend:
       - working: true
         agent: "main"
         comment: "Nouvelle page /settings pour gérer les notifications push. Composant PushNotificationManager avec: activation/désactivation, préférences (Lounge Queue, SQ Queue), notification test. Service Worker enregistré automatiquement via ServiceWorkerProvider dans layout.js. Icône Bell ajoutée dans la Navbar pour accéder aux paramètres."
+      - working: true
+        agent: "main"
+        comment: "FIX: Amélioration de la gestion des erreurs AbortError pour la souscription push. Ajout d'une logique de retry (3 tentatives avec délai progressif), meilleure gestion des erreurs avec messages explicites, nettoyage des anciens service workers, et affichage des erreurs dans l'UI. L'AbortError est une erreur transitoire liée au service push du navigateur."
 
 metadata:
   created_by: "main_agent"
