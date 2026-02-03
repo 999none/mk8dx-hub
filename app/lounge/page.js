@@ -305,14 +305,117 @@ function usePushNotifications() {
 }
 
 // Push Notification Settings Component
-function PushNotificationSettings({ push }) {
+function PushNotificationSettings({ push, schedule = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedSQs, setSelectedSQs] = useState(new Set(push.preferences?.selectedSQs || []));
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Avoid hydration mismatch by only rendering dynamic content after mount
   useEffect(() => {
     setMounted(true);
   }, []);
+  
+  // Sync selectedSQs with preferences from server
+  useEffect(() => {
+    if (push.preferences?.selectedSQs) {
+      setSelectedSQs(new Set(push.preferences.selectedSQs));
+    }
+  }, [push.preferences?.selectedSQs]);
+  
+  // Get upcoming SQs only
+  const now = Date.now();
+  const upcomingSQs = schedule.filter(sq => sq.time > now).sort((a, b) => a.time - b.time);
+  
+  // Group SQs by date for calendar view
+  const groupedByDate = upcomingSQs.reduce((acc, sq) => {
+    const dateKey = new Date(sq.time).toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      timeZone: 'Europe/Paris'
+    });
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(sq);
+    return acc;
+  }, {});
+  
+  // Toggle SQ selection
+  const toggleSQ = (sqId) => {
+    const newSelected = new Set(selectedSQs);
+    if (newSelected.has(sqId)) {
+      newSelected.delete(sqId);
+    } else {
+      newSelected.add(sqId);
+    }
+    setSelectedSQs(newSelected);
+    setHasChanges(true);
+  };
+  
+  // Select all SQs
+  const selectAll = () => {
+    setSelectedSQs(new Set(upcomingSQs.map(sq => sq.id)));
+    setHasChanges(true);
+  };
+  
+  // Deselect all SQs
+  const deselectAll = () => {
+    setSelectedSQs(new Set());
+    setHasChanges(true);
+  };
+  
+  // Select by format
+  const selectByFormat = (format) => {
+    const formatSQs = upcomingSQs.filter(sq => sq.format === format).map(sq => sq.id);
+    const newSelected = new Set(selectedSQs);
+    formatSQs.forEach(id => newSelected.add(id));
+    setSelectedSQs(newSelected);
+    setHasChanges(true);
+  };
+  
+  // Select by day of week (0 = Sunday, 6 = Saturday)
+  const selectByDay = (dayNames) => {
+    const newSelected = new Set(selectedSQs);
+    upcomingSQs.forEach(sq => {
+      const date = new Date(sq.time);
+      const dayName = date.toLocaleDateString('fr-FR', { weekday: 'long', timeZone: 'Europe/Paris' });
+      if (dayNames.includes(dayName)) {
+        newSelected.add(sq.id);
+      }
+    });
+    setSelectedSQs(newSelected);
+    setHasChanges(true);
+  };
+  
+  // Apply changes
+  const applyChanges = async () => {
+    setIsSaving(true);
+    try {
+      const newPreferences = {
+        ...push.preferences,
+        selectedSQs: Array.from(selectedSQs),
+        sqQueue: selectedSQs.size > 0 // Auto-enable sqQueue if any SQs selected
+      };
+      await push.updatePreferences(newPreferences);
+      setHasChanges(false);
+      toast.success(`✅ ${selectedSQs.size} SQ(s) sélectionnée(s) pour les notifications`);
+    } catch (error) {
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  // Format time helper
+  const formatTimeOnly = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString('fr-FR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Europe/Paris'
+    });
+  };
   
   // During SSR and initial hydration, show a consistent placeholder
   if (!mounted) {
@@ -343,85 +446,83 @@ function PushNotificationSettings({ push }) {
   }
   
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className={`border-white/10 hover:bg-white/[0.05] ${
-            push.isSubscribed ? 'text-green-400' : 'text-white'
-          }`}
-        >
-          {push.isLoading ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : push.isSubscribed ? (
-            <BellRing className="w-4 h-4 mr-2" />
-          ) : (
-            <Bell className="w-4 h-4 mr-2" />
-          )}
-          Push Notifications
-          {push.isSubscribed && (
-            <Badge className="ml-2 bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-              Actif
-            </Badge>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-96 bg-zinc-900 border-white/10" align="end">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h4 className="font-medium text-white flex items-center gap-2">
-              <Bell className="w-4 h-4 text-purple-400" />
-              Notifications Push
-            </h4>
-            {push.isSubscribed && (
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                <Check className="w-3 h-3 mr-1" />
-                Activé
+    <>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className={`border-white/10 hover:bg-white/[0.05] ${
+              push.isSubscribed ? 'text-green-400' : 'text-white'
+            }`}
+          >
+            {push.isLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : push.isSubscribed ? (
+              <BellRing className="w-4 h-4 mr-2" />
+            ) : (
+              <Bell className="w-4 h-4 mr-2" />
+            )}
+            Push Notifications
+            {push.isSubscribed && selectedSQs.size > 0 && (
+              <Badge className="ml-2 bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                {selectedSQs.size} SQ
               </Badge>
             )}
-          </div>
-          
-          {push.permission === 'denied' && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <p className="text-red-400 text-sm">
-                Les notifications sont bloquées par votre navigateur. Veuillez les autoriser dans les paramètres.
-              </p>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-96 bg-zinc-900 border-white/10" align="end">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium text-white flex items-center gap-2">
+                <Bell className="w-4 h-4 text-purple-400" />
+                Notifications Push
+              </h4>
+              {push.isSubscribed && (
+                <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                  <Check className="w-3 h-3 mr-1" />
+                  Activé
+                </Badge>
+              )}
             </div>
-          )}
-          
-          {!push.isSubscribed ? (
-            <div className="space-y-4">
-              <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-                <h5 className="font-medium text-purple-400 mb-2">🔔 Recevez des alertes automatiques</h5>
-                <ul className="text-sm text-gray-400 space-y-1">
-                  <li>• <strong>Lounge Queue</strong> : Notification à chaque heure (XX:00)</li>
-                  <li>• <strong>Squad Queue</strong> : Notification 45 min avant le début</li>
-                </ul>
-                <p className="text-xs text-gray-500 mt-2">
-                  Fonctionne même quand le navigateur est fermé!
+            
+            {push.permission === 'denied' && (
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                <p className="text-red-400 text-sm">
+                  Les notifications sont bloquées par votre navigateur. Veuillez les autoriser dans les paramètres.
                 </p>
               </div>
-              
-              <Button 
-                onClick={push.subscribe}
-                disabled={push.isLoading}
-                className="w-full bg-purple-600 hover:bg-purple-700"
-              >
-                {push.isLoading ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Bell className="w-4 h-4 mr-2" />
-                )}
-                Activer les notifications push
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Preference toggles */}
-              <div className="space-y-3">
-                <h5 className="text-sm font-medium text-gray-300">Préférences</h5>
+            )}
+            
+            {!push.isSubscribed ? (
+              <div className="space-y-4">
+                <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                  <h5 className="font-medium text-purple-400 mb-2">🔔 Recevez des alertes automatiques</h5>
+                  <ul className="text-sm text-gray-400 space-y-1">
+                    <li>• <strong>Lounge Queue</strong> : Notification à chaque heure (XX:00)</li>
+                    <li>• <strong>Squad Queue</strong> : Choisissez vos SQs préférées</li>
+                  </ul>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Fonctionne même quand le navigateur est fermé!
+                  </p>
+                </div>
                 
+                <Button 
+                  onClick={push.subscribe}
+                  disabled={push.isLoading}
+                  className="w-full bg-purple-600 hover:bg-purple-700"
+                >
+                  {push.isLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Bell className="w-4 h-4 mr-2" />
+                  )}
+                  Activer les notifications push
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Lounge Queue Toggle */}
                 <div className="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg">
                   <div>
                     <p className="text-white text-sm font-medium">🏠 Lounge Queue</p>
@@ -435,55 +536,312 @@ function PushNotificationSettings({ push }) {
                   />
                 </div>
                 
-                <div className="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg">
-                  <div>
-                    <p className="text-white text-sm font-medium">🏁 Squad Queue</p>
-                    <p className="text-xs text-gray-500">Notification 45 min avant le début</p>
+                {/* SQ Calendar Button */}
+                <div className="p-3 bg-white/[0.02] rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="text-white text-sm font-medium">🏁 Squad Queues</p>
+                      <p className="text-xs text-gray-500">
+                        {selectedSQs.size > 0 
+                          ? `${selectedSQs.size} SQ sélectionnée${selectedSQs.size > 1 ? 's' : ''}`
+                          : 'Aucune SQ sélectionnée'
+                        }
+                      </p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowCalendar(true)}
+                      className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+                    >
+                      <CalendarDays className="w-4 h-4 mr-2" />
+                      Planifier
+                    </Button>
                   </div>
-                  <Switch 
-                    checked={push.preferences.sqQueue}
-                    onCheckedChange={(checked) => {
-                      push.updatePreferences({ ...push.preferences, sqQueue: checked });
-                    }}
-                  />
+                  
+                  {/* Quick preview of selected SQs */}
+                  {selectedSQs.size > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {upcomingSQs.filter(sq => selectedSQs.has(sq.id)).slice(0, 4).map(sq => (
+                        <Badge 
+                          key={sq.id}
+                          variant="outline" 
+                          className={`${formatColors[sq.format] || 'bg-gray-500/20 text-gray-400'} text-xs`}
+                        >
+                          {sq.format} {formatTimeOnly(sq.time)}
+                        </Badge>
+                      ))}
+                      {selectedSQs.size > 4 && (
+                        <Badge variant="outline" className="bg-white/5 text-gray-400 text-xs">
+                          +{selectedSQs.size - 4}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="pt-3 border-t border-white/10 space-y-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={push.sendTestNotification}
+                    className="w-full border-white/10 text-gray-300 hover:text-white"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Envoyer une notification test
+                  </Button>
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={push.unsubscribe}
+                    disabled={push.isLoading}
+                    className="w-full text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                  >
+                    {push.isLoading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <BellOff className="w-4 h-4 mr-2" />
+                    )}
+                    Désactiver les notifications
+                  </Button>
                 </div>
               </div>
-              
-              <div className="pt-3 border-t border-white/10 space-y-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={push.sendTestNotification}
-                  className="w-full border-white/10 text-gray-300 hover:text-white"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  Envoyer une notification test
-                </Button>
-                
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={push.unsubscribe}
-                  disabled={push.isLoading}
-                  className="w-full text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                >
-                  {push.isLoading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <BellOff className="w-4 h-4 mr-2" />
-                  )}
-                  Désactiver les notifications
-                </Button>
-              </div>
-              
-              <div className="text-xs text-gray-600 text-center">
-                💡 Les notifications fonctionnent même avec le navigateur fermé
-              </div>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+      
+      {/* SQ Calendar Dialog */}
+      <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
+        <DialogContent className="max-w-2xl bg-zinc-900 border-white/10 text-white max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <CalendarDays className="w-5 h-5 text-purple-400" />
+              Planning des notifications SQ
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Sélectionnez les Squad Queues pour lesquelles vous souhaitez recevoir des notifications
+            </DialogDescription>
+          </DialogHeader>
+          
+          {/* Quick Actions */}
+          <div className="flex flex-wrap gap-2 py-3 border-b border-white/10">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={selectAll}
+              className="border-white/10 text-gray-300 hover:text-white"
+            >
+              <CheckCircle2 className="w-3 h-3 mr-1" />
+              Tout
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={deselectAll}
+              className="border-white/10 text-gray-300 hover:text-white"
+            >
+              <Circle className="w-3 h-3 mr-1" />
+              Aucun
+            </Button>
+            <div className="w-px h-6 bg-white/10" />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => selectByFormat('2v2')}
+              className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+            >
+              2v2
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => selectByFormat('3v3')}
+              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+            >
+              3v3
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => selectByFormat('4v4')}
+              className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
+            >
+              4v4
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => selectByFormat('6v6')}
+              className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
+            >
+              6v6
+            </Button>
+            <div className="w-px h-6 bg-white/10" />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => selectByDay(['samedi', 'dimanche'])}
+              className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
+            >
+              Weekend
+            </Button>
+          </div>
+          
+          {/* SQ Calendar List */}
+          <ScrollArea className="h-[400px] pr-4">
+            <div className="space-y-4 py-2">
+              {Object.entries(groupedByDate).length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>Aucune Squad Queue à venir</p>
+                </div>
+              ) : (
+                Object.entries(groupedByDate).map(([date, sqs]) => (
+                  <div key={date} className="space-y-2">
+                    <div className="flex items-center justify-between sticky top-0 bg-zinc-900 py-1 z-10">
+                      <h3 className="text-sm font-medium text-gray-300 capitalize flex items-center gap-2">
+                        <CalendarDays className="w-4 h-4 text-purple-400" />
+                        {date}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">
+                          {sqs.filter(sq => selectedSQs.has(sq.id)).length}/{sqs.length}
+                        </span>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            const newSelected = new Set(selectedSQs);
+                            const allSelected = sqs.every(sq => selectedSQs.has(sq.id));
+                            sqs.forEach(sq => {
+                              if (allSelected) {
+                                newSelected.delete(sq.id);
+                              } else {
+                                newSelected.add(sq.id);
+                              }
+                            });
+                            setSelectedSQs(newSelected);
+                            setHasChanges(true);
+                          }}
+                          className="h-6 px-2 text-xs text-gray-400 hover:text-white"
+                        >
+                          {sqs.every(sq => selectedSQs.has(sq.id)) ? 'Désélectionner' : 'Sélectionner'}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="grid gap-2">
+                      {sqs.map(sq => {
+                        const isSelected = selectedSQs.has(sq.id);
+                        return (
+                          <div 
+                            key={sq.id}
+                            onClick={() => toggleSQ(sq.id)}
+                            className={`
+                              flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all
+                              ${isSelected 
+                                ? 'bg-purple-500/20 border border-purple-500/50' 
+                                : 'bg-white/[0.02] border border-transparent hover:bg-white/[0.04]'
+                              }
+                            `}
+                          >
+                            <Checkbox 
+                              checked={isSelected}
+                              onCheckedChange={() => toggleSQ(sq.id)}
+                              className="border-white/30 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
+                            />
+                            
+                            <Badge 
+                              variant="outline" 
+                              className={`${formatColors[sq.format] || 'bg-gray-500/20 text-gray-400'} min-w-[50px] justify-center`}
+                            >
+                              <Users className="w-3 h-3 mr-1" />
+                              {sq.format}
+                            </Badge>
+                            
+                            <div className="flex-1">
+                              <div className="text-white font-medium">
+                                {formatTimeOnly(sq.time)}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                SQ #{sq.id}
+                              </div>
+                            </div>
+                            
+                            {isSelected && (
+                              <Badge className="bg-purple-500/30 text-purple-300 border-purple-500/50 text-xs">
+                                <Bell className="w-3 h-3 mr-1" />
+                                Notifié
+                              </Badge>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-          )}
-        </div>
-      </PopoverContent>
-    </Popover>
+          </ScrollArea>
+          
+          {/* Footer with summary and apply button */}
+          <div className="pt-4 border-t border-white/10 space-y-3">
+            {/* Summary */}
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2 text-gray-400">
+                <ListChecks className="w-4 h-4" />
+                <span>
+                  <strong className="text-white">{selectedSQs.size}</strong> SQ{selectedSQs.size > 1 ? 's' : ''} sélectionnée{selectedSQs.size > 1 ? 's' : ''}
+                </span>
+              </div>
+              
+              {selectedSQs.size > 0 && (
+                <div className="flex flex-wrap gap-1 justify-end max-w-[300px]">
+                  {['2v2', '3v3', '4v4', '6v6'].map(format => {
+                    const count = upcomingSQs.filter(sq => selectedSQs.has(sq.id) && sq.format === format).length;
+                    if (count === 0) return null;
+                    return (
+                      <Badge 
+                        key={format}
+                        variant="outline" 
+                        className={`${formatColors[format]} text-xs`}
+                      >
+                        {count}x {format}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            
+            {/* Actions */}
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => setShowCalendar(false)}
+                className="flex-1 border-white/10 text-gray-300 hover:text-white"
+              >
+                Annuler
+              </Button>
+              <Button 
+                onClick={applyChanges}
+                disabled={!hasChanges || isSaving}
+                className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+              >
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Check className="w-4 h-4 mr-2" />
+                )}
+                Appliquer ({selectedSQs.size} SQ)
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
