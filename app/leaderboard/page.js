@@ -79,6 +79,22 @@ export default function LeaderboardPage() {
   
   const [availableCountries, setAvailableCountries] = useState([]);
 
+  // Fetch available countries on mount
+  useEffect(() => {
+    async function fetchCountries() {
+      try {
+        const res = await fetch('/api/leaderboard/countries');
+        const data = await res.json();
+        if (data.countries && Array.isArray(data.countries)) {
+          setAvailableCountries(data.countries);
+        }
+      } catch (err) {
+        console.error('Error loading countries:', err);
+      }
+    }
+    fetchCountries();
+  }, []);
+
   const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
     try {
