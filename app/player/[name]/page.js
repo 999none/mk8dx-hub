@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, Trophy, RefreshCw, ExternalLink, 
-  BarChart3, ChevronDown, ChevronUp, Swords, Shield
+  BarChart3, ChevronDown, ChevronUp, Swords, Shield, Users
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import MatchDetailModal from '@/components/MatchDetailModal';
+import TeamDetailModal from '@/components/TeamDetailModal';
 import { getCurrentRank } from '@/lib/mockData';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
