@@ -326,10 +326,10 @@ function PushNotificationSettings({ push, schedule = [] }) {
   }, [mounted, push.preferences?.selectedSQs]);
   
   // During SSR and initial hydration, always show static placeholder
-  // This prevents hydration mismatch
+  // This prevents hydration mismatch - must render EXACTLY the same on server and client
   if (!mounted) {
     return (
-      <Button variant="outline" size="sm" className="border-white/10 text-white">
+      <Button variant="outline" size="sm" className="border-white/10 text-white" disabled>
         <Bell className="w-4 h-4 mr-2" />
         Push Notifications
       </Button>
