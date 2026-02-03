@@ -301,8 +301,8 @@ export async function GET(request, context) {
         
         const db = await getDatabase();
         
-        // Create a cache key based on filters
-        const cacheKey = `leaderboard_${country || 'all'}_${minMmr || 0}_${maxMmr || 99999}_${minEvents || 0}_${maxEvents || 99999}_${sortBy}`;
+        // Create a cache key based on filters (without search - search is always applied on cached data)
+        const cacheKey = `leaderboard_all`;
         
         // Check cache (1 hour)
         const cache = await db.collection('leaderboard_cache').findOne({ key: cacheKey });
@@ -323,14 +323,17 @@ export async function GET(request, context) {
           
           if (response && response.players) {
             season = response.season || 15;
-            allPlayers = response.players.map((p, index) => ({
+            // Sort by MMR and assign global ranks BEFORE any filtering
+            const sortedPlayers = [...response.players].sort((a, b) => (b.mmr || 0) - (a.mmr || 0));
+            allPlayers = sortedPlayers.map((p, index) => ({
               id: p.id,
               mkcId: p.mkcId,
               name: p.name,
               mmr: p.mmr || 0,
               eventsPlayed: p.eventsPlayed || 0,
               discordId: p.discordId,
-              countryCode: p.countryCode || null
+              countryCode: p.countryCode || null,
+              globalRank: index + 1 // This is the true global rank by MMR
             }));
             
             // Cache full results
@@ -354,7 +357,9 @@ export async function GET(request, context) {
         let filteredPlayers = [...allPlayers];
         
         if (country) {
-          filteredPlayers = filteredPlayers.filter(p => p.countryCode === country);
+          // Case-insensitive country filter
+          const countryUpper = country.toUpperCase();
+          filteredPlayers = filteredPlayers.filter(p => p.countryCode && p.countryCode.toUpperCase() === countryUpper);
         }
         if (minMmr !== null) {
           filteredPlayers = filteredPlayers.filter(p => p.mmr >= minMmr);
@@ -373,7 +378,7 @@ export async function GET(request, context) {
           filteredPlayers = filteredPlayers.filter(p => p.name.toLowerCase().includes(searchLower));
         }
         
-        // Sort
+        // Sort (but preserve globalRank for display)
         switch (sortBy) {
           case 'name':
             filteredPlayers.sort((a, b) => a.name.localeCompare(b.name));
@@ -386,8 +391,11 @@ export async function GET(request, context) {
             filteredPlayers.sort((a, b) => b.mmr - a.mmr);
         }
         
-        // Add rank after sorting
-        filteredPlayers = filteredPlayers.map((p, index) => ({ ...p, rank: index + 1 }));
+        // Add filtered rank (position in current filtered list) but keep globalRank
+        filteredPlayers = filteredPlayers.map((p, index) => ({ 
+          ...p, 
+          rank: p.globalRank // Always show global rank, not filtered position
+        }));
         
         // Pagination
         const total = filteredPlayers.length;
