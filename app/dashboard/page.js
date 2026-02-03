@@ -168,6 +168,9 @@ export default function DashboardPage() {
             </select>
           </div>
 
+          {/* SQ Planning Card - Show user's selected SQs */}
+          <SQPlanningCard showManageButton={true} maxItems={4} />
+
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <RefreshCw className="w-6 h-6 animate-spin mr-3 text-gray-600" />
