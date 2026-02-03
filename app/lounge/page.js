@@ -428,16 +428,6 @@ function PushNotificationSettings({ push, schedule = [] }) {
     });
   };
   
-  // During SSR and initial hydration, show a consistent placeholder
-  if (!mounted) {
-    return (
-      <Button variant="outline" size="sm" className="border-white/10 text-white">
-        <Bell className="w-4 h-4 mr-2" />
-        Push Notifications
-      </Button>
-    );
-  }
-  
   if (!push.isSupported) {
     return (
       <TooltipProvider>
