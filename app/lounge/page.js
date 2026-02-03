@@ -1177,6 +1177,101 @@ function ScheduleStats({ schedule }) {
   );
 }
 
+// My SQ Planning Section - Shows user's selected SQs
+function MySQPlanningSection({ schedule, selectedSQIds }) {
+  const now = Date.now();
+  
+  // Filter and sort selected upcoming SQs
+  const selectedSQs = schedule
+    .filter(sq => selectedSQIds.includes(sq.id) && sq.time > now)
+    .sort((a, b) => a.time - b.time);
+  
+  if (selectedSQs.length === 0) return null;
+  
+  // Count by format
+  const formatCounts = selectedSQs.reduce((acc, sq) => {
+    acc[sq.format] = (acc[sq.format] || 0) + 1;
+    return acc;
+  }, {});
+  
+  return (
+    <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/30 mb-8">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-purple-400 flex items-center gap-2">
+          <Bell className="w-5 h-5" />
+          Mon Planning SQ
+          <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 ml-2">
+            {selectedSQs.length} notifications programmées
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Format summary */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          {Object.entries(formatCounts).map(([format, count]) => (
+            <Badge 
+              key={format}
+              variant="outline" 
+              className={`${formatColors[format]} text-sm`}
+            >
+              <Users className="w-3 h-3 mr-1" />
+              {count}x {format}
+            </Badge>
+          ))}
+        </div>
+        
+        {/* Selected SQs grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {selectedSQs.slice(0, 6).map((sq, idx) => {
+            const isNext = idx === 0;
+            const isSoon = sq.time - now < 2 * 60 * 60 * 1000;
+            
+            return (
+              <div 
+                key={sq.id}
+                className={`
+                  flex items-center justify-between p-3 rounded-lg transition-all
+                  ${isNext ? 'bg-purple-500/20 border border-purple-500/40' : 'bg-white/[0.03] border border-white/[0.05]'}
+                `}
+              >
+                <div className="flex items-center gap-3">
+                  <Badge 
+                    variant="outline" 
+                    className={`${formatColors[sq.format]} min-w-[50px] justify-center`}
+                  >
+                    {sq.format}
+                  </Badge>
+                  <div>
+                    <div className="text-white font-medium text-sm">
+                      {formatShortDate(sq.time)} - {formatTime(sq.time)}
+                    </div>
+                    <div className={`text-xs ${isSoon ? 'text-green-400 font-medium' : 'text-gray-500'}`}>
+                      <Clock className="w-3 h-3 inline mr-1" />
+                      {formatRelativeTime(sq.time)}
+                    </div>
+                  </div>
+                </div>
+                {isNext && (
+                  <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+                    <Zap className="w-3 h-3 mr-1" />
+                    Next
+                  </Badge>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        
+        {selectedSQs.length > 6 && (
+          <div className="mt-3 text-center text-sm text-gray-500">
+            +{selectedSQs.length - 6} autres SQ programmées
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function LoungePage() {
   const { data: session } = useSession();
   const [schedule, setSchedule] = useState([]);
