@@ -509,28 +509,75 @@ export default function LoungePage() {
 
         {/* Tabs for Upcoming/Past */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-white/[0.02] border border-white/[0.06] mb-6">
-            <TabsTrigger 
-              value="upcoming" 
-              className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
-            >
-              <Calendar className="w-4 h-4 mr-2" />
-              À venir ({upcomingSQ.length})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="past" 
-              className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
-            >
-              <Clock className="w-4 h-4 mr-2" />
-              Passées ({pastSQ.length})
-            </TabsTrigger>
-            <TabsTrigger 
-              value="all" 
-              className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
-            >
-              Tout ({schedule.length})
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <TabsList className="bg-white/[0.02] border border-white/[0.06]">
+              <TabsTrigger 
+                value="upcoming" 
+                className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
+              >
+                <Calendar className="w-4 h-4 mr-2" />
+                À venir ({upcomingSQ.length})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="past" 
+                className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
+              >
+                <Clock className="w-4 h-4 mr-2" />
+                Passées ({pastSQ.length})
+              </TabsTrigger>
+              <TabsTrigger 
+                value="all" 
+                className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
+              >
+                Tout ({filteredSchedule.length})
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Format Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <Select value={formatFilter} onValueChange={setFormatFilter}>
+                <SelectTrigger className="w-[140px] bg-white/[0.02] border-white/[0.06] text-white">
+                  <SelectValue placeholder="Format" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 border-white/[0.1]">
+                  <SelectItem value="all" className="text-white hover:bg-white/[0.1]">
+                    Tous les formats
+                  </SelectItem>
+                  <SelectItem value="2v2" className="text-green-400 hover:bg-white/[0.1]">
+                    <span className="flex items-center gap-2">
+                      <Users className="w-3 h-3" /> 2v2 - Duo
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="3v3" className="text-blue-400 hover:bg-white/[0.1]">
+                    <span className="flex items-center gap-2">
+                      <Users className="w-3 h-3" /> 3v3 - Trio
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="4v4" className="text-purple-400 hover:bg-white/[0.1]">
+                    <span className="flex items-center gap-2">
+                      <Users className="w-3 h-3" /> 4v4 - Squad
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="6v6" className="text-orange-400 hover:bg-white/[0.1]">
+                    <span className="flex items-center gap-2">
+                      <Users className="w-3 h-3" /> 6v6 - War
+                    </span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {formatFilter !== 'all' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFormatFilter('all')}
+                  className="text-gray-400 hover:text-white px-2"
+                >
+                  ✕
+                </Button>
+              )}
+            </div>
+          </div>
 
           <TabsContent value="upcoming">
             {upcomingSQ.length === 0 ? (
