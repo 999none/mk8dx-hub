@@ -441,15 +441,19 @@ export default function DashboardPage() {
                   ) : (
                     <div className="text-center py-6">
                       <Shield className="w-8 h-8 mx-auto mb-2 text-gray-700" />
-                      <p className="text-gray-500 text-sm mb-2">Aucune équipe trouvée</p>
+                      <p className="text-gray-500 text-sm mb-2">
+                        {!verificationData?.verified ? 'Compte non vérifié' : 'Aucune équipe trouvée'}
+                      </p>
                       <p className="text-gray-600 text-xs">
-                        {!playerDetails?.mkcId ? (
-                          <>Votre compte MKCentral Registry n'est pas lié.</>
+                        {!verificationData?.verified ? (
+                          <>Votre compte doit être vérifié pour afficher vos équipes MKCentral.</>
+                        ) : !playerDetails?.mkcId ? (
+                          <>Votre compte Lounge n'est pas lié à un profil MKCentral Registry.</>
                         ) : (
                           <>Vous n'êtes pas membre d'une équipe sur MKCentral.</>
                         )}
                       </p>
-                      {playerDetails?.mkcId && (
+                      {playerDetails?.mkcId && verificationData?.verified && (
                         <a 
                           href={`https://mkcentral.com/fr/registry/players/profile?id=${playerDetails.mkcId}`}
                           target="_blank" 
