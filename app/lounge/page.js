@@ -309,7 +309,7 @@ function PushNotificationSettings({ push, schedule = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedSQs, setSelectedSQs] = useState(new Set(push.preferences?.selectedSQs || []));
+  const [selectedSQs, setSelectedSQs] = useState(new Set());
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -318,14 +318,25 @@ function PushNotificationSettings({ push, schedule = [] }) {
     setMounted(true);
   }, []);
   
-  // Sync selectedSQs with preferences from server
+  // Sync selectedSQs with preferences from server (only after mount)
   useEffect(() => {
-    if (push.preferences?.selectedSQs) {
+    if (mounted && push.preferences?.selectedSQs) {
       setSelectedSQs(new Set(push.preferences.selectedSQs));
     }
-  }, [push.preferences?.selectedSQs]);
+  }, [mounted, push.preferences?.selectedSQs]);
   
-  // Get upcoming SQs only
+  // During SSR and initial hydration, always show static placeholder
+  // This prevents hydration mismatch
+  if (!mounted) {
+    return (
+      <Button variant="outline" size="sm" className="border-white/10 text-white">
+        <Bell className="w-4 h-4 mr-2" />
+        Push Notifications
+      </Button>
+    );
+  }
+  
+  // All code below only runs client-side after mount
   const now = Date.now();
   const upcomingSQs = schedule.filter(sq => sq.time > now).sort((a, b) => a.time - b.time);
   
