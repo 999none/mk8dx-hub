@@ -80,7 +80,8 @@ function usePushNotifications() {
   const [isLoading, setIsLoading] = useState(true);
   const [preferences, setPreferences] = useState({
     loungeQueue: true,
-    sqQueue: true
+    sqQueue: true,
+    selectedSQs: [] // Array of SQ IDs to notify
   });
   const [swRegistration, setSwRegistration] = useState(null);
   
