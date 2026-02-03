@@ -1286,6 +1286,14 @@ export default function LoungePage() {
           )}
         </div>
 
+        {/* My SQ Planning - Show selected SQs at the top */}
+        {push.isSubscribed && push.preferences?.selectedSQs?.length > 0 && !loading && schedule.length > 0 && (
+          <MySQPlanningSection 
+            schedule={schedule} 
+            selectedSQIds={push.preferences.selectedSQs} 
+          />
+        )}
+
         {/* Error State */}
         {error && (
           <Card className="bg-red-500/10 border-red-500/30 mb-8">
