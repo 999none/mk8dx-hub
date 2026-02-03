@@ -19,6 +19,461 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
+// =====================================================
+// NOTIFICATION SYSTEM
+// =====================================================
+
+// Notification delay options (in minutes)
+const NOTIFICATION_DELAYS = [
+  { value: 5, label: '5 min avant' },
+  { value: 15, label: '15 min avant' },
+  { value: 30, label: '30 min avant' },
+  { value: 60, label: '1h avant' },
+];
+
+// Check if notifications are supported
+function isNotificationSupported() {
+  return typeof window !== 'undefined' && 'Notification' in window;
+}
+
+// Get notification permission status
+function getNotificationPermission() {
+  if (!isNotificationSupported()) return 'unsupported';
+  return Notification.permission;
+}
+
+// Request notification permission
+async function requestNotificationPermission() {
+  if (!isNotificationSupported()) return 'unsupported';
+  
+  try {
+    const permission = await Notification.requestPermission();
+    return permission;
+  } catch (error) {
+    console.error('Error requesting notification permission:', error);
+    return 'denied';
+  }
+}
+
+// Send a notification
+function sendNotification(title, options = {}) {
+  if (!isNotificationSupported() || Notification.permission !== 'granted') {
+    return null;
+  }
+  
+  try {
+    const notification = new Notification(title, {
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      tag: options.tag || 'sq-notification',
+      renotify: true,
+      ...options,
+    });
+    
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+    
+    return notification;
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    return null;
+  }
+}
+
+// Custom hook for notification management
+function useNotifications() {
+  const [permission, setPermission] = useState('default');
+  const [scheduledNotifications, setScheduledNotifications] = useState({});
+  const [notificationDelay, setNotificationDelay] = useState(15); // Default 15 min
+  const [timeouts, setTimeouts] = useState({});
+  
+  // Load saved settings from localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    setPermission(getNotificationPermission());
+    
+    const savedDelay = localStorage.getItem('sq_notification_delay');
+    if (savedDelay) setNotificationDelay(parseInt(savedDelay, 10));
+    
+    const savedNotifications = localStorage.getItem('sq_scheduled_notifications');
+    if (savedNotifications) {
+      try {
+        setScheduledNotifications(JSON.parse(savedNotifications));
+      } catch (e) {
+        console.error('Error parsing saved notifications:', e);
+      }
+    }
+  }, []);
+  
+  // Save notification delay to localStorage
+  const updateNotificationDelay = (delay) => {
+    setNotificationDelay(delay);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sq_notification_delay', delay.toString());
+    }
+  };
+  
+  // Save scheduled notifications to localStorage
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('sq_scheduled_notifications', JSON.stringify(scheduledNotifications));
+  }, [scheduledNotifications]);
+  
+  // Request permission
+  const requestPermission = async () => {
+    const result = await requestNotificationPermission();
+    setPermission(result);
+    return result;
+  };
+  
+  // Schedule notification for a SQ
+  const scheduleNotification = (sq) => {
+    const sqId = sq.id.toString();
+    const now = Date.now();
+    const notifyTime = sq.time - (notificationDelay * 60 * 1000);
+    
+    // Don't schedule if already past
+    if (notifyTime <= now) {
+      // If SQ is very soon, notify immediately
+      if (sq.time > now && sq.time - now < 5 * 60 * 1000) {
+        sendNotification(`🎮 SQ ${sq.format.toUpperCase()} commence bientôt!`, {
+          body: `La Squad Queue #${sq.id} commence dans moins de 5 minutes!`,
+          tag: `sq-${sqId}`,
+        });
+      }
+      return;
+    }
+    
+    // Clear existing timeout if any
+    if (timeouts[sqId]) {
+      clearTimeout(timeouts[sqId]);
+    }
+    
+    // Schedule new notification
+    const delay = notifyTime - now;
+    const timeoutId = setTimeout(() => {
+      sendNotification(`🎮 SQ ${sq.format.toUpperCase()} dans ${notificationDelay} min!`, {
+        body: `La Squad Queue #${sq.id} (${sq.format.toUpperCase()}) commence à ${formatTime(sq.time)}`,
+        tag: `sq-${sqId}`,
+      });
+    }, delay);
+    
+    setTimeouts(prev => ({ ...prev, [sqId]: timeoutId }));
+    setScheduledNotifications(prev => ({ 
+      ...prev, 
+      [sqId]: { 
+        sqId, 
+        sqTime: sq.time, 
+        format: sq.format,
+        notifyTime,
+        delay: notificationDelay 
+      } 
+    }));
+  };
+  
+  // Cancel notification for a SQ
+  const cancelNotification = (sqId) => {
+    const id = sqId.toString();
+    
+    if (timeouts[id]) {
+      clearTimeout(timeouts[id]);
+      setTimeouts(prev => {
+        const newTimeouts = { ...prev };
+        delete newTimeouts[id];
+        return newTimeouts;
+      });
+    }
+    
+    setScheduledNotifications(prev => {
+      const newScheduled = { ...prev };
+      delete newScheduled[id];
+      return newScheduled;
+    });
+  };
+  
+  // Check if notification is scheduled for a SQ
+  const isScheduled = (sqId) => {
+    return !!scheduledNotifications[sqId.toString()];
+  };
+  
+  // Toggle notification for a SQ
+  const toggleNotification = async (sq) => {
+    // Check permission first
+    if (permission !== 'granted') {
+      const result = await requestPermission();
+      if (result !== 'granted') return false;
+    }
+    
+    const sqId = sq.id.toString();
+    if (isScheduled(sqId)) {
+      cancelNotification(sqId);
+      return false;
+    } else {
+      scheduleNotification(sq);
+      return true;
+    }
+  };
+  
+  // Reschedule all notifications when delay changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Reschedule existing notifications with new delay
+    Object.values(scheduledNotifications).forEach(notification => {
+      if (notification.sqTime > Date.now()) {
+        // Clear old timeout
+        if (timeouts[notification.sqId]) {
+          clearTimeout(timeouts[notification.sqId]);
+        }
+        
+        // Schedule with new delay
+        const notifyTime = notification.sqTime - (notificationDelay * 60 * 1000);
+        if (notifyTime > Date.now()) {
+          const delay = notifyTime - Date.now();
+          const timeoutId = setTimeout(() => {
+            sendNotification(`🎮 SQ ${notification.format.toUpperCase()} dans ${notificationDelay} min!`, {
+              body: `La Squad Queue #${notification.sqId} (${notification.format.toUpperCase()}) commence bientôt!`,
+              tag: `sq-${notification.sqId}`,
+            });
+          }, delay);
+          
+          setTimeouts(prev => ({ ...prev, [notification.sqId]: timeoutId }));
+        }
+      }
+    });
+  }, [notificationDelay]);
+  
+  // Clean up old notifications on mount
+  useEffect(() => {
+    const now = Date.now();
+    const validNotifications = {};
+    
+    Object.entries(scheduledNotifications).forEach(([sqId, notification]) => {
+      if (notification.sqTime > now) {
+        validNotifications[sqId] = notification;
+      }
+    });
+    
+    if (Object.keys(validNotifications).length !== Object.keys(scheduledNotifications).length) {
+      setScheduledNotifications(validNotifications);
+    }
+  }, []);
+  
+  return {
+    permission,
+    requestPermission,
+    notificationDelay,
+    updateNotificationDelay,
+    scheduleNotification,
+    cancelNotification,
+    isScheduled,
+    toggleNotification,
+    scheduledCount: Object.keys(scheduledNotifications).length,
+  };
+}
+
+// Notification Button Component
+function NotificationButton({ sq, notifications, size = 'sm' }) {
+  const isScheduled = notifications.isScheduled(sq.id);
+  const isPast = sq.time <= Date.now();
+  const [isAnimating, setIsAnimating] = useState(false);
+  
+  if (isPast) return null;
+  
+  const handleClick = async (e) => {
+    e.stopPropagation();
+    setIsAnimating(true);
+    await notifications.toggleNotification(sq);
+    setTimeout(() => setIsAnimating(false), 300);
+  };
+  
+  const buttonClasses = size === 'sm' 
+    ? 'p-1.5 h-7 w-7' 
+    : 'p-2 h-9 w-9';
+  
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleClick}
+            className={`
+              ${buttonClasses} rounded-full transition-all duration-200
+              ${isScheduled 
+                ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' 
+                : 'text-gray-500 hover:text-white hover:bg-white/10'
+              }
+              ${isAnimating ? 'scale-110' : ''}
+            `}
+          >
+            {isScheduled ? (
+              <BellRing className={`${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'} ${isAnimating ? 'animate-bounce' : ''}`} />
+            ) : (
+              <Bell className={`${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`} />
+            )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="left" className="bg-zinc-900 border-white/10">
+          <p>
+            {isScheduled 
+              ? `Notification activée (${notifications.notificationDelay} min avant)` 
+              : 'Activer la notification'
+            }
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+// Notification Settings Component
+function NotificationSettings({ notifications }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const handlePermissionRequest = async () => {
+    await notifications.requestPermission();
+  };
+  
+  const permissionStatus = notifications.permission;
+  const isSupported = isNotificationSupported();
+  
+  if (!isSupported) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" disabled className="border-white/10 text-gray-500">
+              <BellOff className="w-4 h-4 mr-2" />
+              Non supporté
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent className="bg-zinc-900 border-white/10">
+            <p>Les notifications ne sont pas supportées par votre navigateur</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+  
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className={`border-white/10 hover:bg-white/[0.05] ${
+            notifications.scheduledCount > 0 ? 'text-yellow-400' : 'text-white'
+          }`}
+        >
+          {notifications.scheduledCount > 0 ? (
+            <BellRing className="w-4 h-4 mr-2" />
+          ) : (
+            <Bell className="w-4 h-4 mr-2" />
+          )}
+          Notifications
+          {notifications.scheduledCount > 0 && (
+            <Badge className="ml-2 bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+              {notifications.scheduledCount}
+            </Badge>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 bg-zinc-900 border-white/10" align="end">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium text-white">Paramètres notifications</h4>
+            {permissionStatus === 'granted' && (
+              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                <Check className="w-3 h-3 mr-1" />
+                Activé
+              </Badge>
+            )}
+          </div>
+          
+          {permissionStatus === 'denied' && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-red-400 text-sm">
+                Les notifications sont bloquées. Veuillez les autoriser dans les paramètres de votre navigateur.
+              </p>
+            </div>
+          )}
+          
+          {permissionStatus === 'default' && (
+            <div className="space-y-3">
+              <p className="text-gray-400 text-sm">
+                Autorisez les notifications pour être alerté avant les Squad Queues.
+              </p>
+              <Button 
+                onClick={handlePermissionRequest}
+                className="w-full bg-purple-600 hover:bg-purple-700"
+              >
+                <Bell className="w-4 h-4 mr-2" />
+                Autoriser les notifications
+              </Button>
+            </div>
+          )}
+          
+          {permissionStatus === 'granted' && (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400">Me notifier</label>
+                <Select 
+                  value={notifications.notificationDelay.toString()} 
+                  onValueChange={(v) => notifications.updateNotificationDelay(parseInt(v, 10))}
+                >
+                  <SelectTrigger className="w-full bg-white/[0.02] border-white/[0.06] text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-white/[0.1]">
+                    {NOTIFICATION_DELAYS.map(option => (
+                      <SelectItem 
+                        key={option.value} 
+                        value={option.value.toString()}
+                        className="text-white hover:bg-white/[0.1]"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="pt-2 border-t border-white/10">
+                <p className="text-sm text-gray-500">
+                  {notifications.scheduledCount > 0 
+                    ? `${notifications.scheduledCount} notification(s) programmée(s)`
+                    : 'Cliquez sur 🔔 pour activer une notification'
+                  }
+                </p>
+              </div>
+              
+              <div className="text-xs text-gray-600">
+                💡 Astuce: Gardez cette page ouverte pour recevoir les notifications
+              </div>
+            </>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 // Format badge colors based on format type
 const formatColors = {
