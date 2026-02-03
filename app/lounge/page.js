@@ -11,7 +11,8 @@ import { Switch } from '@/components/ui/switch';
 import { 
   Calendar, Clock, Users, RefreshCw, ExternalLink, 
   ChevronRight, Trophy, Gamepad2, Timer, Zap, DoorOpen, LogIn, Filter,
-  Bell, BellOff, BellRing, Settings, Check, X, Loader2, Send
+  Bell, BellOff, BellRing, Settings, Check, X, Loader2, Send,
+  CalendarDays, CheckCircle2, Circle, ListChecks, ChevronLeft, ChevronDown
 } from 'lucide-react';
 import {
   Select,
