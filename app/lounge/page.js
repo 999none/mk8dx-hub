@@ -221,6 +221,12 @@ function usePushNotifications() {
       
       setSubscription(null);
       setIsSubscribed(false);
+      // Reset preferences to default (clear planning)
+      setPreferences({
+        loungeQueue: true,
+        sqQueue: true,
+        selectedSQs: []
+      });
       toast.success('Notifications push désactivées');
       return true;
       
