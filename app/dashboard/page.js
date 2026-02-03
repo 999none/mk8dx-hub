@@ -17,6 +17,7 @@ import RequireAuth from '@/components/RequireAuth';
 import Navbar from '@/components/Navbar';
 import MatchDetailModal from '@/components/MatchDetailModal';
 import TeamDetailModal from '@/components/TeamDetailModal';
+import SQPlanningCard from '@/components/SQPlanningCard';
 import { getCurrentRank } from '@/lib/mockData';
 import { 
   XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart
