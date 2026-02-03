@@ -1399,6 +1399,14 @@ class BackendTester:
         # Additional endpoints tests
         self.test_additional_endpoints()
         
+        # MKCentral Registry API tests
+        print("\n🏛️ Testing MKCentral Registry API Integration:")
+        self.test_registry_player_valid_id()
+        self.test_registry_player_invalid_id()
+        self.test_registry_player_nonexistent_id()
+        self.test_lounge_player_details_for_mkc_id()
+        self.test_registry_integration_flow()
+        
         # Error handling tests
         self.test_error_handling()
         
