@@ -129,12 +129,60 @@ export default function PushNotificationManager() {
       
       // Get service worker registration
       const registration = await navigator.serviceWorker.ready;
+      console.log('[Push] Service worker ready:', registration.scope);
       
-      // Subscribe to push
-      const pushSubscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
-      });
+      // Check if already subscribed
+      let existingSubscription = await registration.pushManager.getSubscription();
+      
+      // If there's an existing subscription, unsubscribe first to avoid conflicts
+      if (existingSubscription) {
+        console.log('[Push] Unsubscribing from existing subscription');
+        try {
+          await existingSubscription.unsubscribe();
+        } catch (unsubErr) {
+          console.warn('[Push] Failed to unsubscribe existing:', unsubErr);
+        }
+      }
+      
+      // Prepare application server key
+      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+      console.log('[Push] Application server key length:', applicationServerKey.length);
+      
+      // Subscribe to push with retry logic
+      let pushSubscription = null;
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (!pushSubscription && retryCount < maxRetries) {
+        try {
+          pushSubscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey
+          });
+          console.log('[Push] Subscription successful:', pushSubscription.endpoint?.substring(0, 50) + '...');
+        } catch (subscribeErr) {
+          retryCount++;
+          console.error(`[Push] Subscribe attempt ${retryCount} failed:`, subscribeErr.name, subscribeErr.message);
+          
+          // If it's an AbortError, wait and retry
+          if (subscribeErr.name === 'AbortError' && retryCount < maxRetries) {
+            console.log('[Push] Waiting before retry...');
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          } else if (retryCount >= maxRetries) {
+            // After max retries, show a helpful error
+            if (subscribeErr.name === 'AbortError') {
+              toast.error('Le service push est temporairement indisponible. Réessayez dans quelques instants.');
+            } else {
+              toast.error(`Erreur: ${subscribeErr.message}`);
+            }
+            throw subscribeErr;
+          }
+        }
+      }
+      
+      if (!pushSubscription) {
+        throw new Error('Failed to create subscription after retries');
+      }
       
       // Send to server
       const res = await fetch('/api/push/subscribe', {
@@ -160,8 +208,10 @@ export default function PushNotificationManager() {
       }
       
     } catch (err) {
-      console.error('[Push] Subscribe error:', err);
-      toast.error('Erreur lors de l\'activation');
+      console.error('[Push] Subscribe error:', err.name, err.message);
+      if (!err.message?.includes('indisponible') && !err.message?.includes('Erreur:')) {
+        toast.error('Erreur lors de l\'activation des notifications');
+      }
     } finally {
       setSubscribing(false);
     }
