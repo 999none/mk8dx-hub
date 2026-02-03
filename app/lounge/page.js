@@ -327,6 +327,7 @@ function ScheduleStats({ schedule }) {
 }
 
 export default function LoungePage() {
+  const { data: session } = useSession();
   const [schedule, setSchedule] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
