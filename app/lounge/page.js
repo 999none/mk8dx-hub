@@ -1789,14 +1789,35 @@ export default function LoungePage() {
 
   const now = Date.now();
   
-  // Apply format filter
-  const filteredSchedule = formatFilter === 'all' 
-    ? schedule 
-    : schedule.filter(sq => sq.format === formatFilter);
+  // Apply all filters (format, day, time slot)
+  const filteredSchedule = schedule.filter(sq => {
+    // Format filter
+    if (formatFilter !== 'all' && sq.format !== formatFilter) return false;
+    // Day filter
+    if (!matchesDayFilter(sq.time, dayFilter)) return false;
+    // Time slot filter
+    if (!matchesTimeSlotFilter(sq.time, timeSlotFilter)) return false;
+    return true;
+  });
   
   const upcomingSQ = filteredSchedule.filter(sq => sq.time > now).sort((a, b) => a.time - b.time);
   const pastSQ = filteredSchedule.filter(sq => sq.time <= now).sort((a, b) => b.time - a.time);
   const nextSQ = upcomingSQ[0];
+  
+  // Group by day for display
+  const upcomingSQByDay = groupByDay(upcomingSQ);
+  const pastSQByDay = groupByDay(pastSQ);
+  const allSQByDay = groupByDay([...filteredSchedule].sort((a, b) => a.time - b.time));
+  
+  // Check if any filters are active
+  const hasActiveFilters = formatFilter !== 'all' || dayFilter !== 'all' || timeSlotFilter !== 'all';
+  
+  // Clear all filters
+  const clearAllFilters = () => {
+    setFormatFilter('all');
+    setDayFilter('all');
+    setTimeSlotFilter('all');
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
