@@ -1629,6 +1629,9 @@ export default function LoungePage() {
           </TabsContent>
         </Tabs>
 
+        {/* FAQ Section */}
+        <FAQSection />
+        
         {/* Info Footer */}
         <Card className="bg-white/[0.02] border-white/[0.06] mt-8">
           <CardContent className="p-6">
@@ -1647,7 +1650,7 @@ export default function LoungePage() {
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-gray-500">
                   <li><strong className="text-purple-400">Lounge Queue:</strong> XX:00 à XX:55</li>
-                  <li><strong className="text-yellow-400">Squad Queue:</strong> 45 min avant → XX:55</li>
+                  <li><strong className="text-yellow-400">Squad Queue:</strong> XX:45 → XX:55</li>
                 </ul>
               </div>
               <div>
@@ -1656,7 +1659,7 @@ export default function LoungePage() {
                   <Badge variant="outline" className={formatColors['2v2']}>2v2 - Duo</Badge>
                   <Badge variant="outline" className={formatColors['3v3']}>3v3 - Trio</Badge>
                   <Badge variant="outline" className={formatColors['4v4']}>4v4 - Squad</Badge>
-                  <Badge variant="outline" className={formatColors['6v6']}>6v6 - War</Badge>
+                  <Badge variant="outline" className={formatColors['6v6']}>6v6</Badge>
                 </div>
                 <p className="mt-3 text-xs text-gray-600">
                   💡 Activez les notifications push pour être alerté automatiquement!
