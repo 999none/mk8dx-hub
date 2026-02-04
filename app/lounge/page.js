@@ -2173,22 +2173,43 @@ export default function LoungePage() {
                 <CardContent className="p-8 text-center">
                   <Clock className="w-12 h-12 mx-auto mb-4 text-gray-600" />
                   <p className="text-gray-400">
-                    {formatFilter !== 'all' 
-                      ? `Aucune Squad Queue ${formatFilter.toUpperCase()} passée`
+                    {hasActiveFilters
+                      ? 'Aucune Squad Queue passée correspondant aux filtres'
                       : 'Aucune Squad Queue passée'
                     }
                   </p>
-                  {formatFilter !== 'all' && (
+                  {hasActiveFilters && (
                     <Button 
                       variant="link" 
-                      onClick={() => setFormatFilter('all')} 
+                      onClick={clearAllFilters} 
                       className="text-purple-400 mt-2"
                     >
-                      Voir tous les formats
+                      Effacer les filtres
                     </Button>
                   )}
                 </CardContent>
               </Card>
+            ) : groupByDayEnabled ? (
+              <div className="space-y-6">
+                {Object.entries(pastSQByDay).map(([date, sqs]) => (
+                  <div key={date} className="space-y-3">
+                    <div className="sticky top-0 bg-black/80 backdrop-blur-sm py-2 z-10 border-b border-white/[0.06]">
+                      <h3 className="text-lg font-semibold text-white capitalize flex items-center gap-2">
+                        <CalendarDays className="w-5 h-5 text-gray-500" />
+                        {date}
+                        <Badge variant="outline" className="ml-2 bg-white/[0.05] text-gray-400 border-white/[0.1]">
+                          {sqs.length} SQ
+                        </Badge>
+                      </h3>
+                    </div>
+                    <div className="space-y-3 pl-2 border-l-2 border-gray-600/30">
+                      {sqs.map((sq) => (
+                        <SQCard key={sq.id} sq={sq} isNext={false} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="space-y-3">
                 {pastSQ.map((sq) => (
