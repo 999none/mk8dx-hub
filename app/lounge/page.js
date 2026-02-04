@@ -1952,35 +1952,93 @@ export default function LoungePage() {
 
         {/* Tabs for Upcoming/Past */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <TabsList className="bg-white/[0.02] border border-white/[0.06]">
-              <TabsTrigger 
-                value="upcoming" 
-                className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
-              >
-                <Calendar className="w-4 h-4 mr-2" />
-                À venir ({upcomingSQ.length})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="past" 
-                className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
-              >
-                <Clock className="w-4 h-4 mr-2" />
-                Passées ({pastSQ.length})
-              </TabsTrigger>
-              <TabsTrigger 
-                value="all" 
-                className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
-              >
-                Tout ({filteredSchedule.length})
-              </TabsTrigger>
-            </TabsList>
+          <div className="flex flex-col gap-4 mb-6">
+            {/* First row: Tabs */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <TabsList className="bg-white/[0.02] border border-white/[0.06]">
+                <TabsTrigger 
+                  value="upcoming" 
+                  className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  À venir ({upcomingSQ.length})
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="past" 
+                  className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  Passées ({pastSQ.length})
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="all" 
+                  className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
+                >
+                  Tout ({filteredSchedule.length})
+                </TabsTrigger>
+              </TabsList>
 
-            {/* Format Filter */}
-            <div className="flex items-center gap-2">
+              {/* Group by day toggle */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-400">Grouper par jour</span>
+                <Switch 
+                  checked={groupByDayEnabled}
+                  onCheckedChange={setGroupByDayEnabled}
+                />
+              </div>
+            </div>
+
+            {/* Second row: Filters */}
+            <div className="flex flex-wrap items-center gap-2 p-3 bg-white/[0.02] border border-white/[0.06] rounded-lg">
               <Filter className="w-4 h-4 text-gray-500" />
+              <span className="text-sm text-gray-400 mr-2">Filtres:</span>
+              
+              {/* Day Filter */}
+              <Select value={dayFilter} onValueChange={setDayFilter}>
+                <SelectTrigger className="w-[160px] bg-white/[0.02] border-white/[0.06] text-white h-9">
+                  <CalendarDays className="w-3 h-3 mr-2 text-purple-400" />
+                  <SelectValue placeholder="Jour" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 border-white/[0.1]">
+                  {dayFilterOptions.map(option => (
+                    <SelectItem 
+                      key={option.value} 
+                      value={option.value} 
+                      className={`text-white hover:bg-white/[0.1] ${
+                        option.value === 'today' ? 'text-green-400' :
+                        option.value === 'tomorrow' ? 'text-blue-400' :
+                        option.value === 'weekend' ? 'text-yellow-400' : ''
+                      }`}
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Time Slot Filter */}
+              <Select value={timeSlotFilter} onValueChange={setTimeSlotFilter}>
+                <SelectTrigger className="w-[180px] bg-white/[0.02] border-white/[0.06] text-white h-9">
+                  <Clock className="w-3 h-3 mr-2 text-blue-400" />
+                  <SelectValue placeholder="Horaire" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 border-white/[0.1]">
+                  {timeSlotOptions.map(option => (
+                    <SelectItem 
+                      key={option.value} 
+                      value={option.value} 
+                      className="text-white hover:bg-white/[0.1]"
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Format Filter */}
               <Select value={formatFilter} onValueChange={setFormatFilter}>
-                <SelectTrigger className="w-[140px] bg-white/[0.02] border-white/[0.06] text-white">
+                <SelectTrigger className="w-[150px] bg-white/[0.02] border-white/[0.06] text-white h-9">
+                  <Users className="w-3 h-3 mr-2 text-orange-400" />
                   <SelectValue placeholder="Format" />
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-900 border-white/[0.1]">
@@ -2009,17 +2067,48 @@ export default function LoungePage() {
                   </SelectItem>
                 </SelectContent>
               </Select>
-              {formatFilter !== 'all' && (
+
+              {/* Clear filters button */}
+              {hasActiveFilters && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setFormatFilter('all')}
-                  className="text-gray-400 hover:text-white px-2"
+                  onClick={clearAllFilters}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-9"
                 >
-                  ✕
+                  <X className="w-3 h-3 mr-1" />
+                  Effacer filtres
                 </Button>
               )}
             </div>
+
+            {/* Active filters summary */}
+            {hasActiveFilters && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-gray-500">Filtres actifs:</span>
+                {dayFilter !== 'all' && (
+                  <Badge variant="outline" className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">
+                    <CalendarDays className="w-3 h-3 mr-1" />
+                    {dayFilterOptions.find(d => d.value === dayFilter)?.label}
+                  </Badge>
+                )}
+                {timeSlotFilter !== 'all' && (
+                  <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {timeSlotOptions.find(t => t.value === timeSlotFilter)?.label}
+                  </Badge>
+                )}
+                {formatFilter !== 'all' && (
+                  <Badge variant="outline" className={`${formatColors[formatFilter]} text-xs`}>
+                    <Users className="w-3 h-3 mr-1" />
+                    {formatFilter.toUpperCase()}
+                  </Badge>
+                )}
+                <span className="text-xs text-gray-500 ml-2">
+                  ({filteredSchedule.length} résultat{filteredSchedule.length > 1 ? 's' : ''})
+                </span>
+              </div>
+            )}
           </div>
 
           <TabsContent value="upcoming">
