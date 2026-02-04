@@ -1380,10 +1380,10 @@ Accumuler des pénalités mène à des strikes qui peuvent résulter en suspensi
   formats: {
     title: "Formats de Jeu",
     icon: Users,
-    content: `**Lounge Queue (FFA):**
-• 12 joueurs, chacun pour soi
-• Équipes de 2 formées aléatoirement
+    content: `**Lounge Queue:**
+• 12 joueurs, équipes de 2 formées aléatoirement
 • Points basés sur votre placement individuel
+• Système de points: 1er: 15pts, 2e: 12pts, 3e: 10pts, 4e: 9pts...
 
 **Squad Queue:**
 • 2v2: Duo - équipes de 2
@@ -1391,12 +1391,10 @@ Accumuler des pénalités mène à des strikes qui peuvent résulter en suspensi
 • 4v4: Squad - équipes de 4
 • 6v6: équipes de 6
 
-⚠️ **Note importante:** Les matchs 6v6 en Squad Queue ne sont PAS des Wars ! Les Wars sont un format de compétition différent entre équipes/clans établis.
-
 **À chaque format:**
 • 12 courses au total
-• Score total: 984 points (12 joueurs × 82 points moyens)
-• Tous les circuits DLC inclus`
+• Tous les circuits DLC inclus
+• MMR ajusté selon vos performances`
   },
   queue: {
     title: "Système de Queue",
