@@ -2117,18 +2117,18 @@ export default function LoungePage() {
                 <CardContent className="p-8 text-center">
                   <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-600" />
                   <p className="text-gray-400">
-                    {formatFilter !== 'all' 
-                      ? `Aucune Squad Queue ${formatFilter.toUpperCase()} à venir`
+                    {hasActiveFilters
+                      ? 'Aucune Squad Queue correspondant aux filtres'
                       : 'Aucune Squad Queue à venir'
                     }
                   </p>
-                  {formatFilter !== 'all' ? (
+                  {hasActiveFilters ? (
                     <Button 
                       variant="link" 
-                      onClick={() => setFormatFilter('all')} 
+                      onClick={clearAllFilters} 
                       className="text-purple-400 mt-2"
                     >
-                      Voir tous les formats
+                      Effacer les filtres
                     </Button>
                   ) : (
                     <p className="text-gray-600 text-sm mt-2">
@@ -2137,6 +2137,27 @@ export default function LoungePage() {
                   )}
                 </CardContent>
               </Card>
+            ) : groupByDayEnabled ? (
+              <div className="space-y-6">
+                {Object.entries(upcomingSQByDay).map(([date, sqs]) => (
+                  <div key={date} className="space-y-3">
+                    <div className="sticky top-0 bg-black/80 backdrop-blur-sm py-2 z-10 border-b border-white/[0.06]">
+                      <h3 className="text-lg font-semibold text-white capitalize flex items-center gap-2">
+                        <CalendarDays className="w-5 h-5 text-purple-400" />
+                        {date}
+                        <Badge variant="outline" className="ml-2 bg-white/[0.05] text-gray-400 border-white/[0.1]">
+                          {sqs.length} SQ
+                        </Badge>
+                      </h3>
+                    </div>
+                    <div className="space-y-3 pl-2 border-l-2 border-purple-500/30">
+                      {sqs.map((sq, idx) => (
+                        <SQCard key={sq.id} sq={sq} isNext={upcomingSQ[0]?.id === sq.id} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="space-y-3">
                 {upcomingSQ.map((sq, idx) => (
