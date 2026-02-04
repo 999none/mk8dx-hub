@@ -2225,22 +2225,51 @@ export default function LoungePage() {
                 <CardContent className="p-8 text-center">
                   <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-600" />
                   <p className="text-gray-400">
-                    {formatFilter !== 'all' 
-                      ? `Aucune Squad Queue en format ${formatFilter.toUpperCase()}`
+                    {hasActiveFilters
+                      ? 'Aucune Squad Queue correspondant aux filtres'
                       : 'Aucune donnée de planning'
                     }
                   </p>
-                  {formatFilter !== 'all' && (
+                  {hasActiveFilters && (
                     <Button 
                       variant="link" 
-                      onClick={() => setFormatFilter('all')} 
+                      onClick={clearAllFilters} 
                       className="text-purple-400 mt-2"
                     >
-                      Voir tous les formats
+                      Effacer les filtres
                     </Button>
                   )}
                 </CardContent>
               </Card>
+            ) : groupByDayEnabled ? (
+              <div className="space-y-6">
+                {Object.entries(allSQByDay).map(([date, sqs]) => {
+                  const isUpcoming = sqs.some(sq => sq.time > now);
+                  return (
+                    <div key={date} className="space-y-3">
+                      <div className="sticky top-0 bg-black/80 backdrop-blur-sm py-2 z-10 border-b border-white/[0.06]">
+                        <h3 className="text-lg font-semibold text-white capitalize flex items-center gap-2">
+                          <CalendarDays className={`w-5 h-5 ${isUpcoming ? 'text-purple-400' : 'text-gray-500'}`} />
+                          {date}
+                          <Badge variant="outline" className="ml-2 bg-white/[0.05] text-gray-400 border-white/[0.1]">
+                            {sqs.length} SQ
+                          </Badge>
+                          {isUpcoming && (
+                            <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">
+                              À venir
+                            </Badge>
+                          )}
+                        </h3>
+                      </div>
+                      <div className={`space-y-3 pl-2 border-l-2 ${isUpcoming ? 'border-purple-500/30' : 'border-gray-600/30'}`}>
+                        {sqs.map((sq) => (
+                          <SQCard key={sq.id} sq={sq} isNext={sq.id === nextSQ?.id} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
               <div className="space-y-3">
                 {[...filteredSchedule].sort((a, b) => a.time - b.time).map((sq) => (
