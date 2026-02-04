@@ -1648,6 +1648,97 @@ function FAQSection() {
   );
 }
 
+// Day filter options
+const dayFilterOptions = [
+  { value: 'all', label: 'Tous les jours' },
+  { value: 'today', label: "Aujourd'hui" },
+  { value: 'tomorrow', label: 'Demain' },
+  { value: 'weekend', label: 'Weekend' },
+  { value: 'lundi', label: 'Lundi' },
+  { value: 'mardi', label: 'Mardi' },
+  { value: 'mercredi', label: 'Mercredi' },
+  { value: 'jeudi', label: 'Jeudi' },
+  { value: 'vendredi', label: 'Vendredi' },
+  { value: 'samedi', label: 'Samedi' },
+  { value: 'dimanche', label: 'Dimanche' },
+];
+
+// Time slot filter options
+const timeSlotOptions = [
+  { value: 'all', label: 'Tous les horaires' },
+  { value: 'morning', label: 'Matin (6h-12h)', start: 6, end: 12 },
+  { value: 'afternoon', label: 'Après-midi (12h-18h)', start: 12, end: 18 },
+  { value: 'evening', label: 'Soir (18h-00h)', start: 18, end: 24 },
+  { value: 'night', label: 'Nuit (00h-6h)', start: 0, end: 6 },
+];
+
+// Helper function to check if a timestamp matches a day filter
+function matchesDayFilter(timestamp, dayFilter) {
+  const date = new Date(timestamp);
+  const parisDate = new Date(date.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+  const dayName = parisDate.toLocaleDateString('fr-FR', { weekday: 'long', timeZone: 'Europe/Paris' }).toLowerCase();
+  
+  const today = new Date();
+  const todayParis = new Date(today.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+  const todayStr = todayParis.toDateString();
+  
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowParis = new Date(tomorrow.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+  const tomorrowStr = tomorrowParis.toDateString();
+  
+  switch (dayFilter) {
+    case 'all':
+      return true;
+    case 'today':
+      return new Date(parisDate.toLocaleString('en-US', { timeZone: 'Europe/Paris' })).toDateString() === todayStr;
+    case 'tomorrow':
+      return new Date(parisDate.toLocaleString('en-US', { timeZone: 'Europe/Paris' })).toDateString() === tomorrowStr;
+    case 'weekend':
+      return dayName === 'samedi' || dayName === 'dimanche';
+    default:
+      return dayName === dayFilter;
+  }
+}
+
+// Helper function to check if a timestamp matches a time slot filter
+function matchesTimeSlotFilter(timestamp, timeSlotFilter) {
+  if (timeSlotFilter === 'all') return true;
+  
+  const date = new Date(timestamp);
+  const hour = parseInt(date.toLocaleTimeString('fr-FR', { hour: '2-digit', hour12: false, timeZone: 'Europe/Paris' }));
+  
+  const slot = timeSlotOptions.find(s => s.value === timeSlotFilter);
+  if (!slot) return true;
+  
+  // Handle night slot (0-6h) 
+  if (slot.value === 'night') {
+    return hour >= 0 && hour < 6;
+  }
+  // Handle evening slot (18h-24h)
+  if (slot.value === 'evening') {
+    return hour >= 18 && hour < 24;
+  }
+  
+  return hour >= slot.start && hour < slot.end;
+}
+
+// Group SQs by day for display
+function groupByDay(sqs) {
+  return sqs.reduce((acc, sq) => {
+    const date = new Date(sq.time);
+    const dateKey = date.toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      timeZone: 'Europe/Paris'
+    });
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(sq);
+    return acc;
+  }, {});
+}
+
 export default function LoungePage() {
   const { data: session } = useSession();
   const [schedule, setSchedule] = useState([]);
@@ -1656,6 +1747,9 @@ export default function LoungePage() {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [activeTab, setActiveTab] = useState('upcoming');
   const [formatFilter, setFormatFilter] = useState('all');
+  const [dayFilter, setDayFilter] = useState('all');
+  const [timeSlotFilter, setTimeSlotFilter] = useState('all');
+  const [groupByDayEnabled, setGroupByDayEnabled] = useState(true);
   
   // Push notification system
   const push = usePushNotifications();
