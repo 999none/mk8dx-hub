@@ -1273,6 +1273,379 @@ function MySQPlanningSection({ schedule, selectedSQIds }) {
   );
 }
 
+// FAQ Data with comprehensive lounge information
+const faqData = [
+  {
+    question: "Qu'est-ce que le Lounge ?",
+    answer: `Le MK8DX Lounge est un système de matchmaking compétitif pour Mario Kart 8 Deluxe géré par MKCentral. 
+    
+Depuis sa création en 2018, plus de 53 000 joueurs ont participé au Lounge avec plus de 964 000 événements vérifiés ! 
+
+Le Lounge utilise un système de classement basé sur le MMR (Matchmaking Rating) qui vous permet de jouer contre des adversaires de niveau similaire. Chaque match vous fait gagner ou perdre des points en fonction de vos performances.
+
+C'est l'endroit idéal pour progresser dans un environnement compétitif structuré.`
+  },
+  {
+    question: "Comment fonctionne le Lounge ?",
+    answer: `Le Lounge fonctionne avec un système de queue horaire :
+
+🏠 **Lounge Queue (Solo):**
+• La queue s'ouvre à XX:00 et ferme à XX:55
+• Vous êtes matché automatiquement avec d'autres joueurs
+• Format FFA (Free For All) de 12 joueurs
+• Les équipes sont formées aléatoirement par le bot
+
+🏁 **Squad Queue (Équipe):**
+• La queue s'ouvre à XX:45 et ferme à XX:55
+• Vous formez votre équipe avant de rejoindre
+• Formats: 2v2, 3v3, 4v4 ou 6v6 selon le planning
+• Chaque format a son propre classement
+
+⚡ **Déroulement d'un match:**
+1. Rejoignez la queue avant XX:55
+2. Le bot vous assigne un room et une équipe
+3. Le host ouvre la room avec l'ID fourni
+4. Jouez 12 courses
+5. Le résultat est enregistré automatiquement`
+  },
+  {
+    question: "Comment se préparer pour un Lounge ?",
+    answer: `Voici les étapes essentielles pour bien vous préparer :
+
+📋 **Prérequis:**
+• Compte Discord lié à MKCentral
+• Nintendo Switch Online actif
+• Code ami à jour sur MKCentral
+
+🎮 **Avant le match:**
+• Vérifiez votre pseudo in-game (doit correspondre à votre nom Lounge)
+• Assurez-vous d'une connexion internet stable
+• Prévoyez 45-60 minutes pour un match complet
+
+📸 **Pendant le match:**
+• Prenez des screenshots à chaque fin de course (tous les joueurs!)
+• Signalez immédiatement tout problème de connexion
+• Respectez le host et les règles du Lounge
+
+⚠️ **Important:**
+• Ne quittez jamais un match en cours (pénalités sévères)
+• Les problèmes personnels prévisibles ne sont pas excusés
+• La tag/nom incorrect = -50 MMR + Strike à partir de la 2ème course`
+  }
+];
+
+// Detailed Lounge Information Modal Content
+const loungeGuideContent = {
+  ranking: {
+    title: "Système de Classement",
+    icon: Award,
+    content: `Le Lounge utilise un système de MMR (Matchmaking Rating) pour classer les joueurs :
+
+**Rangs disponibles (du plus bas au plus haut):**
+• Iron, Bronze, Silver, Gold
+• Platinum, Sapphire, Diamond
+• Master, Grandmaster
+
+Chaque victoire/défaite modifie votre MMR. Plus l'écart de MMR avec vos adversaires est grand, plus le changement est important.
+
+Nouveau joueur = placement automatique après quelques matchs.`
+  },
+  rules: {
+    title: "Règles Essentielles",
+    icon: Shield,
+    content: `**Système de Strikes:**
+Accumuler des pénalités mène à des strikes qui peuvent résulter en suspensions.
+
+**Pénalités courantes:**
+• Late (arrivée tardive): -50 MMR + Strike
+• Drop (abandon): -100 MMR + Strike  
+• Tag incorrect: -50 MMR + Strike
+• Changer d'équipe: -100 MMR + Strike
+
+**Host:**
+• Le host est désigné automatiquement
+• Doit poster le Room ID après la formation des équipes
+• Les joueurs media-restricted ne peuvent pas host
+
+**Règles de conduite:**
+• Pas de targeting intentionnel
+• Pas de throwing/trolling
+• Pas de teaming en FFA
+• Respect des autres joueurs`
+  },
+  formats: {
+    title: "Formats de Jeu",
+    icon: Users,
+    content: `**Lounge Queue (FFA):**
+• 12 joueurs, chacun pour soi
+• Équipes de 2 formées aléatoirement
+• Points basés sur votre placement individuel
+
+**Squad Queue:**
+• 2v2: Duo - équipes de 2
+• 3v3: Trio - équipes de 3
+• 4v4: Squad - équipes de 4
+• 6v6: équipes de 6
+
+⚠️ **Note importante:** Les matchs 6v6 en Squad Queue ne sont PAS des Wars ! Les Wars sont un format de compétition différent entre équipes/clans établis.
+
+**À chaque format:**
+• 12 courses au total
+• Score total: 984 points (12 joueurs × 82 points moyens)
+• Tous les circuits DLC inclus`
+  },
+  queue: {
+    title: "Système de Queue",
+    icon: Clock,
+    content: `**Horaires (Heure de Paris):**
+
+🏠 **Lounge Queue:**
+• Ouverture: XX:00
+• Fermeture: XX:55
+• Match: commence à l'heure suivante
+
+🏁 **Squad Queue:**
+• Ouverture: XX:45
+• Fermeture: XX:55
+• Match: commence à l'heure suivante
+
+**Exemple:**
+Queue ouverte à 14h45, ferme à 14h55, match à 15h00.
+
+**Conseils:**
+• Rejoignez tôt pour être sûr d'avoir une place
+• La queue peut se remplir vite aux heures de pointe
+• Activez les notifications pour ne pas rater l'ouverture`
+  },
+  disconnections: {
+    title: "Déconnexions & Lag",
+    icon: AlertTriangle,
+    content: `**En cas de déconnexion:**
+• Signalez immédiatement dans le chat
+• Fournissez une preuve (screenshot code erreur Switch)
+• Tentez de vous reconnecter rapidement
+
+**Règles de réouverture:**
+• Chaque joueur peut demander 1 réouverture par match
+• Si < 10 joueurs et 2+ équipes touchées: réouverture obligatoire
+
+**Course invalidée si:**
+• 11-12 joueurs: 3 déconnexions de 2 équipes différentes
+• 10 joueurs: 2 déconnexions de 2 équipes différentes
+
+**Réduction de perte MMR:**
+Si votre coéquipier manque 3+ courses:
+• 3 courses: -16.7% de perte
+• 4 courses: -33.3% de perte
+• 5 courses: -50% de perte
+• 8+ courses: 0 perte`
+  },
+  tips: {
+    title: "Conseils Pro",
+    icon: Star,
+    content: `**Pour bien débuter:**
+• Commencez par des Lounge Queue (FFA) pour vous habituer
+• Observez les meilleurs joueurs sur le leaderboard
+• Rejoignez le Discord pour poser vos questions
+
+**Pour progresser:**
+• Entraînez-vous sur les circuits difficiles
+• Apprenez les shortcuts et les strats optimales
+• Regardez des replays de vos matchs
+
+**Mindset compétitif:**
+• Un mauvais match arrive à tout le monde
+• Le MMR se rattrape toujours avec de la régularité
+• Le respect des adversaires est primordial
+
+**Ressources utiles:**
+• #player-guides sur Discord
+• Le site lounge.mkcentral.com
+• Cette app pour suivre vos stats!`
+  }
+};
+
+// FAQ Section Component
+function FAQSection() {
+  const [openFAQ, setOpenFAQ] = useState(null);
+  const [showGuide, setShowGuide] = useState(false);
+  const [activeGuideTab, setActiveGuideTab] = useState('ranking');
+  
+  const toggleFAQ = (index) => {
+    setOpenFAQ(openFAQ === index ? null : index);
+  };
+  
+  return (
+    <Card className="bg-white/[0.02] border-white/[0.06] mt-8">
+      <CardHeader>
+        <CardTitle className="text-purple-400 flex items-center gap-2">
+          <HelpCircle className="w-5 h-5" />
+          Questions Fréquentes
+        </CardTitle>
+        <CardDescription className="text-gray-400">
+          Tout ce que vous devez savoir pour commencer
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {/* FAQ Accordion */}
+        <div className="space-y-3 mb-6">
+          {faqData.map((faq, index) => (
+            <div 
+              key={index}
+              className={`rounded-lg border transition-all duration-200 ${
+                openFAQ === index 
+                  ? 'bg-purple-500/10 border-purple-500/30' 
+                  : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.1]'
+              }`}
+            >
+              <button
+                onClick={() => toggleFAQ(index)}
+                className="w-full flex items-center justify-between p-4 text-left"
+              >
+                <span className="font-medium text-white flex items-center gap-2">
+                  <span className="text-purple-400 text-lg">
+                    {index === 0 ? '❓' : index === 1 ? '⚙️' : '📋'}
+                  </span>
+                  {faq.question}
+                </span>
+                <ChevronDown 
+                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                    openFAQ === index ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+              
+              {openFAQ === index && (
+                <div className="px-4 pb-4 pt-0">
+                  <div className="border-t border-white/[0.06] pt-4">
+                    <div className="text-gray-300 text-sm whitespace-pre-line leading-relaxed">
+                      {faq.answer.split('**').map((part, i) => 
+                        i % 2 === 1 
+                          ? <strong key={i} className="text-white">{part}</strong>
+                          : part
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        
+        {/* En Savoir Plus Button */}
+        <div className="flex justify-center">
+          <Dialog open={showGuide} onOpenChange={setShowGuide}>
+            <DialogTrigger asChild>
+              <Button 
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                En savoir plus sur le Lounge
+                <ChevronRight className="w-4 h-4 ml-2" />
+              </Button>
+            </DialogTrigger>
+            
+            <DialogContent className="max-w-4xl max-h-[90vh] bg-zinc-900 border-white/10 text-white overflow-hidden">
+              <DialogHeader>
+                <DialogTitle className="text-2xl flex items-center gap-2">
+                  <Trophy className="w-6 h-6 text-yellow-500" />
+                  Guide Complet du MK8DX Lounge
+                </DialogTitle>
+                <DialogDescription className="text-gray-400">
+                  Tout ce qu'il faut savoir pour maîtriser le Lounge
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="flex flex-col md:flex-row gap-4 mt-4">
+                {/* Sidebar Navigation */}
+                <div className="md:w-48 flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0">
+                  {Object.entries(loungeGuideContent).map(([key, section]) => {
+                    const Icon = section.icon;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setActiveGuideTab(key)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all whitespace-nowrap ${
+                          activeGuideTab === key
+                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                            : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 flex-shrink-0" />
+                        <span className="hidden md:inline">{section.title}</span>
+                        <span className="md:hidden">{section.title.split(' ')[0]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                {/* Content Area */}
+                <ScrollArea className="flex-1 h-[400px] md:h-[500px] pr-4">
+                  <div className="space-y-4">
+                    {(() => {
+                      const section = loungeGuideContent[activeGuideTab];
+                      const Icon = section.icon;
+                      return (
+                        <div>
+                          <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/[0.1]">
+                            <div className="p-2 bg-purple-500/20 rounded-lg">
+                              <Icon className="w-6 h-6 text-purple-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white">{section.title}</h3>
+                          </div>
+                          
+                          <div className="text-gray-300 text-sm whitespace-pre-line leading-relaxed">
+                            {section.content.split('**').map((part, i) => 
+                              i % 2 === 1 
+                                ? <strong key={i} className="text-white">{part}</strong>
+                                : part
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </ScrollArea>
+              </div>
+              
+              {/* Footer */}
+              <div className="pt-4 border-t border-white/10 mt-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <p className="text-xs text-gray-500">
+                    📖 Basé sur le ruleset officiel MKCentral - Mise à jour 2025
+                  </p>
+                  <div className="flex gap-2">
+                    <a
+                      href="https://discord.gg/revmGkE"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button variant="outline" size="sm" className="border-white/10 text-gray-300 hover:text-white">
+                        <ExternalLink className="w-3 h-3 mr-2" />
+                        Discord Lounge
+                      </Button>
+                    </a>
+                    <a
+                      href="https://lounge.mkcentral.com/mk8dx/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button variant="outline" size="sm" className="border-white/10 text-gray-300 hover:text-white">
+                        <ExternalLink className="w-3 h-3 mr-2" />
+                        MKCentral
+                      </Button>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function LoungePage() {
   const { data: session } = useSession();
   const [schedule, setSchedule] = useState([]);
