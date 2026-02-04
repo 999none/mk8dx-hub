@@ -1821,7 +1821,7 @@ export default function LoungePage() {
                     {formatRelativeTime(nextSQ.time)}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
-                    Queue ouverte: {formatTime(nextSQ.time - 45 * 60 * 1000)} - {formatTime(nextSQ.time).replace(':', 'h').slice(0, -2)}55
+                    Queue ouverte: {formatTime(nextSQ.time - 15 * 60 * 1000)} - {new Date(nextSQ.time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }).slice(0, -2)}55
                   </div>
                 </div>
                 <div className="text-right">
