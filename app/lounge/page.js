@@ -990,7 +990,7 @@ function SQCard({ sq, isNext }) {
             
             {!isPast && (
               <div className="text-xs text-gray-600 mt-1">
-                Queue: {formatTime(queueOpenTime)} - {formatTime(sq.time).replace(':', 'h').slice(0, -2)}55
+                Queue: {new Date(sq.time - 15 * 60 * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })} - {formatTime(sq.time).replace(':00', ':55').replace(':30', ':55')}
               </div>
             )}
           </div>
