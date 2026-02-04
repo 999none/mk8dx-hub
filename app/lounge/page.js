@@ -931,11 +931,15 @@ function SQCard({ sq, isNext }) {
   const isPast = status === 'past';
   const isSoon = status === 'soon';
   
-  // Check if queue is open (45 min before to 5 min after start)
+  // Check if queue is open (starts at :45 and closes at :55 for the next hour's SQ)
   const now = Date.now();
-  const queueOpenTime = sq.time - (45 * 60 * 1000);
-  const queueCloseTime = sq.time + (55 * 60 * 1000); // After the hour:55
-  const isQueueOpen = now >= queueOpenTime && now < sq.time;
+  // Queue opens 15 minutes before the hour (XX:45) and closes at XX:55
+  const sqHour = new Date(sq.time);
+  const queueOpenTime = new Date(sq.time);
+  queueOpenTime.setMinutes(queueOpenTime.getMinutes() - 15); // XX:45 for XX:00 SQ
+  const queueCloseTime = new Date(sq.time);
+  queueCloseTime.setMinutes(-5); // XX:55 of previous hour
+  const isQueueOpen = now >= queueOpenTime.getTime() && now < sq.time;
   
   return (
     <Card className={`
