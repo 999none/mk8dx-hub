@@ -1408,11 +1408,11 @@ Accumuler des pénalités mène à des strikes qui peuvent résulter en suspensi
 
 🏁 **Squad Queue:**
 • Ouverture: XX:45
-• Fermeture: XX:55
-• Match: commence à l'heure suivante
+• Fermeture: (XX+1):55 (heure d'après)
+• Match: commence à (XX+2):00
 
-**Exemple:**
-Queue ouverte à 14h45, ferme à 14h55, match à 15h00.
+**Exemple concret:**
+Queue SQ ouverte à 13:45, ferme à 14:55, match à 15:00.
 
 **Conseils:**
 • Rejoignez tôt pour être sûr d'avoir une place
