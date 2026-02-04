@@ -1293,20 +1293,20 @@ C'est l'endroit idéal pour progresser dans un environnement compétitif structu
     question: "Comment fonctionne le Lounge ?",
     answer: `Le Lounge fonctionne avec un système de queue horaire :
 
-🏠 **Lounge Queue (Solo):**
+🏠 **Lounge Queue:**
 • La queue s'ouvre à XX:00 et ferme à XX:55
 • Vous êtes matché automatiquement avec d'autres joueurs
-• Format FFA (Free For All) de 12 joueurs
+• Format à 12 joueurs
 • Les équipes sont formées aléatoirement par le bot
 
-🏁 **Squad Queue (Équipe):**
-• La queue s'ouvre à XX:45 et ferme à XX:55
+🏁 **Squad Queue:**
+• La queue s'ouvre à XX:45 et ferme à (XX+1):55
+• Exemple: queue ouverte 13:45 → ferme 14:55 → match 15:00
 • Vous formez votre équipe avant de rejoindre
 • Formats: 2v2, 3v3, 4v4 ou 6v6 selon le planning
-• Chaque format a son propre classement
 
 ⚡ **Déroulement d'un match:**
-1. Rejoignez la queue avant XX:55
+1. Rejoignez la queue avant la fermeture
 2. Le bot vous assigne un room et une équipe
 3. Le host ouvre la room avec l'ID fourni
 4. Jouez 12 courses
