@@ -1513,7 +1513,7 @@ export default function LoungePage() {
                   </SelectItem>
                   <SelectItem value="6v6" className="text-orange-400 hover:bg-white/[0.1]">
                     <span className="flex items-center gap-2">
-                      <Users className="w-3 h-3" /> 6v6 - War
+                      <Users className="w-3 h-3" /> 6v6
                     </span>
                   </SelectItem>
                 </SelectContent>
