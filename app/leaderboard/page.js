@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -10,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   Trophy, RefreshCw, Search, 
   ChevronLeft, ChevronRight, X, Globe,
-  ArrowUpDown, Users
+  ArrowUpDown, Users, Filter, Star, Award, BookOpen,
+  ChevronDown, ChevronUp, TrendingUp, BarChart3
 } from 'lucide-react';
 import Link from 'next/link';
 import { getCurrentRank } from '@/lib/mockData';
@@ -71,6 +73,7 @@ export default function LeaderboardPage() {
   const [currentUserLoungeName, setCurrentUserLoungeName] = useState(null);
   const [trackedPlayers, setTrackedPlayers] = useState([]);
   const [mounted, setMounted] = useState(false);
+  const [showAllPlayers, setShowAllPlayers] = useState(false);
   
   // Animation mount
   useEffect(() => {
@@ -204,297 +207,435 @@ export default function LeaderboardPage() {
 
   const hasActiveFilters = search || country !== 'all' || mmrRange !== 'all' || eventsRange !== 'all' || sortBy !== 'mmr';
 
+  // Calculate stats
+  const countryCounts = leaderboard.reduce((acc, p) => {
+    if (p.countryCode) {
+      acc[p.countryCode] = (acc[p.countryCode] || 0) + 1;
+    }
+    return acc;
+  }, {});
+  const topCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const avgMmr = leaderboard.length > 0 ? Math.round(leaderboard.reduce((a, p) => a + (p.mmr || 0), 0) / leaderboard.length) : 0;
+
+  const displayedPlayers = showAllPlayers ? leaderboard : leaderboard.slice(0, 20);
+
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar />
 
       <div className="container mx-auto px-4 py-8 pt-20">
         {/* Header with animation */}
-        <div className={`mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Leaderboard</h1>
-          <p className="text-gray-500 text-sm">
-            {season && <span>Saison {season} • </span>}
-            <span className="text-green-500 font-medium">{total.toLocaleString('fr-FR')}</span> joueurs enregistrés
-            <span className="text-gray-600 ml-2">— MK8DX Lounge</span>
-          </p>
-        </div>
-
-        {/* Filters with animation */}
-        <div className={`bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 mb-6 transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <div className="flex flex-col gap-3">
-            {/* Search */}
-            <div className="flex gap-2">
-              <div className="relative flex-1 group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-white transition-colors" />
-                <Input
-                  placeholder="Rechercher un joueur..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="pl-10 bg-black border-white/[0.06] text-white placeholder:text-gray-600 h-10 focus:border-white/20 focus:ring-1 focus:ring-white/10 transition-all"
-                />
-              </div>
-              {hasActiveFilters && (
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={clearFilters}
-                  className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-10 w-10 hover:rotate-90 transition-all duration-300"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-
-            {/* Filters Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              <Select value={country} onValueChange={(v) => handleFilterChange(setCountry, v)}>
-                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 h-10 hover:border-white/20 transition-colors">
-                  <Globe className="w-4 h-4 mr-2 text-gray-600" />
-                  <SelectValue placeholder="Pays" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#0a0a0a] border-white/[0.06] max-h-80">
-                  <SelectItem value="all">Tous pays</SelectItem>
-                  {availableCountries.map(c => (
-                    <SelectItem key={c.code} value={c.code}>
-                      {getCountryFlag(c.code)} {c.name || COUNTRY_NAMES[c.code] || c.code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={mmrRange} onValueChange={(v) => handleFilterChange(setMmrRange, v)}>
-                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 h-10 hover:border-white/20 transition-colors">
-                  <Trophy className="w-4 h-4 mr-2 text-gray-600" />
-                  <SelectValue placeholder="MMR" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#0a0a0a] border-white/[0.06]">
-                  {MMR_RANGES.map(range => (
-                    <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={eventsRange} onValueChange={(v) => handleFilterChange(setEventsRange, v)}>
-                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 h-10 hover:border-white/20 transition-colors">
-                  <Users className="w-4 h-4 mr-2 text-gray-600" />
-                  <SelectValue placeholder="Events" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#0a0a0a] border-white/[0.06]">
-                  {EVENTS_RANGES.map(range => (
-                    <SelectItem key={range.value} value={range.value}>{range.label} events</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={sortBy} onValueChange={(v) => handleFilterChange(setSortBy, v)}>
-                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 h-10 hover:border-white/20 transition-colors">
-                  <ArrowUpDown className="w-4 h-4 mr-2 text-gray-600" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-[#0a0a0a] border-white/[0.06]">
-                  {SORT_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>Tri: {opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <div className={`mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <div>
+            <h1 className="text-3xl font-bold mb-1 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">Leaderboard</h1>
+            <p className="text-gray-500">
+              {season && <span>Saison {season} • </span>}
+              <span className="text-green-500 font-medium">{total.toLocaleString('fr-FR')}</span> joueurs — MK8DX Lounge
+            </p>
           </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchLeaderboard}
+            disabled={loading}
+            className="border-white/[0.06] hover:bg-white/[0.04] text-gray-300 hover:text-white"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Actualiser
+          </Button>
         </div>
 
-        {/* Leaderboard Table with animation */}
-        <div className={`bg-white/[0.02] border border-white/[0.04] rounded-xl overflow-hidden transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          {loading ? (
-            <div className="text-center py-20">
-              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-3 text-gray-600" />
-              <p className="text-gray-500 text-sm">Chargement...</p>
-            </div>
-          ) : leaderboard.length === 0 ? (
-            <div className="text-center py-20">
-              <Trophy className="w-10 h-10 mx-auto mb-3 text-gray-700 animate-bounce-subtle" />
-              <p className="text-gray-500">Aucun joueur trouvé</p>
-              <Button variant="ghost" className="mt-4 text-gray-400 hover:text-white" onClick={clearFilters}>
-                Effacer les filtres
-              </Button>
-            </div>
-          ) : (
-            <>
-              {/* Table Header */}
-              <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-3 bg-white/[0.02] text-xs text-gray-500 font-medium uppercase tracking-wider border-b border-white/[0.04]">
-                <div className="col-span-1">#</div>
-                <div className="col-span-5">Joueur</div>
-                <div className="col-span-2 text-center">Tier</div>
-                <div className="col-span-2 text-center">Events</div>
-                <div className="col-span-2 text-right">MMR</div>
-              </div>
+        {loading && leaderboard.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="spinner-trail mb-4" />
+            <span className="text-gray-500">Chargement du classement...</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            {/* Stats Cards Row */}
+            <Card className={`card-premium transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '100ms' }}>
+              <CardContent className="p-6 text-center">
+                <div className="text-4xl font-black text-white mb-1 transition-all duration-500 hover:scale-105">
+                  {total.toLocaleString('fr-FR')}
+                </div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Joueurs Total</p>
+              </CardContent>
+            </Card>
 
-              {/* Players List with staggered animation */}
-              <div className="divide-y divide-white/[0.03]">
-                {leaderboard.map((player, index) => {
-                  const rank = getCurrentRank(player.mmr || 0);
-                  const globalRank = player.rank || ((page - 1) * limit + index + 1);
-                  const isTop3 = globalRank <= 3;
-                  const isCurrentUser = currentUserLoungeName && player.name?.toLowerCase() === currentUserLoungeName?.toLowerCase();
-                  const isTracked = trackedPlayers.includes(player.name?.toLowerCase());
-                  
-                  let rankStyle = 'bg-white/[0.04] text-gray-400';
-                  let rowHighlight = '';
-                  
-                  if (globalRank === 1) {
-                    rankStyle = 'bg-gradient-to-r from-yellow-500 to-amber-400 text-black shadow-lg shadow-yellow-500/20';
-                    rowHighlight = 'bg-yellow-500/[0.03]';
-                  } else if (globalRank === 2) {
-                    rankStyle = 'bg-gradient-to-r from-gray-400 to-gray-300 text-black';
-                    rowHighlight = 'bg-gray-400/[0.03]';
-                  } else if (globalRank === 3) {
-                    rankStyle = 'bg-gradient-to-r from-orange-600 to-amber-600 text-white';
-                    rowHighlight = 'bg-orange-600/[0.03]';
-                  }
-                  
-                  // Override highlight for tracked players and current user
-                  if (isCurrentUser) {
-                    rowHighlight = 'bg-green-500/[0.08] border-l-2 border-green-500';
-                  } else if (isTracked) {
-                    rowHighlight = 'bg-green-500/[0.04] border-l-2 border-green-500/50';
-                  }
-                  
-                  // Determine link destination
-                  const linkHref = isCurrentUser ? '/dashboard' : `/player/${encodeURIComponent(player.name)}`;
-                  
-                  return (
-                    <Link key={player.id || index} href={linkHref}>
-                      <div 
-                        className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group ${rowHighlight}`}
-                        style={{ animationDelay: `${index * 30}ms` }}
+            <Card className={`card-premium transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '150ms' }}>
+              <CardContent className="p-6 text-center">
+                <div className="text-4xl font-black text-yellow-500 mb-1 transition-all duration-500 hover:scale-105">
+                  {avgMmr.toLocaleString('fr-FR')}
+                </div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">MMR Moyen</p>
+              </CardContent>
+            </Card>
+
+            <Card className={`card-premium lg:col-span-2 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+              <CardContent className="p-6">
+                <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Top Pays (page actuelle)</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {topCountries.map(([code, count], i) => (
+                    <div key={code} className={`stat-card text-center p-2 rounded-lg ${
+                      i === 0 ? 'bg-yellow-500/10 stat-yellow' :
+                      i === 1 ? 'bg-gray-500/10 stat-gray' :
+                      'bg-orange-500/10 stat-orange'
+                    }`}>
+                      <div className={`text-2xl mb-1`}>{getCountryFlag(code)}</div>
+                      <p className={`text-xs font-semibold ${
+                        i === 0 ? 'text-yellow-500' :
+                        i === 1 ? 'text-gray-400' :
+                        'text-orange-500'
+                      }`}>{count}</p>
+                    </div>
+                  ))}
+                  {topCountries.length === 0 && (
+                    <div className="col-span-3 text-center text-gray-600 text-sm py-2">-</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Filters Card */}
+            <Card className={`card-premium lg:col-span-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '250ms' }}>
+              <CardContent className="p-4">
+                <div className="flex flex-col gap-4">
+                  {/* Search Row */}
+                  <div className="flex gap-2">
+                    <div className="relative flex-1 group">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-white transition-colors" />
+                      <Input
+                        placeholder="Rechercher un joueur..."
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        className="pl-10 bg-black border-white/[0.06] text-white placeholder:text-gray-600 h-10 focus:border-white/20 focus:ring-1 focus:ring-white/10 transition-all"
+                      />
+                    </div>
+                    {hasActiveFilters && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={clearFilters}
+                        className="text-gray-500 hover:text-white h-10"
                       >
-                        {/* Rank */}
-                        <div className="col-span-2 sm:col-span-1">
-                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded text-xs font-bold transition-transform duration-300 group-hover:scale-110 ${rankStyle}`}>
-                            {globalRank}
-                          </span>
-                        </div>
-                        
-                        {/* Player Name */}
-                        <div className="col-span-6 sm:col-span-5 flex items-center gap-2 min-w-0">
-                          {player.countryCode && (
-                            <span className="text-sm flex-shrink-0 transition-transform duration-300 group-hover:scale-110">{getCountryFlag(player.countryCode)}</span>
-                          )}
-                          <span className={`text-sm truncate transition-colors duration-300 ${isCurrentUser ? 'font-semibold text-green-400' : isTracked ? 'text-green-300' : isTop3 ? 'font-semibold text-white' : 'text-gray-300 group-hover:text-white'}`}>
-                            {player.name}
-                          </span>
-                          {isCurrentUser && (
-                            <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 text-[9px] px-1.5 py-0 animate-pulse-subtle">
-                              Moi
-                            </Badge>
-                          )}
-                          {isTracked && !isCurrentUser && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0 animate-pulse" title="Joueur suivi" />
-                          )}
-                        </div>
-                        
-                        {/* Rank Badge */}
-                        <div className="hidden sm:flex sm:col-span-2 justify-center">
-                          <Badge 
-                            style={{ backgroundColor: rank.color }} 
-                            className="text-black text-[10px] px-2 py-0 font-medium transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg"
-                          >
-                            {rank.name}
-                          </Badge>
-                        </div>
-                        
-                        {/* Events */}
-                        <div className="hidden sm:block sm:col-span-2 text-center">
-                          <span className="text-sm text-gray-500 group-hover:text-gray-400 transition-colors">{player.eventsPlayed || 0}</span>
-                        </div>
-                        
-                        {/* MMR */}
-                        <div className="col-span-4 sm:col-span-2 text-right">
-                          <span className="text-sm font-semibold text-white tabular-nums">
-                            {(player.mmr || 0).toLocaleString('fr-FR')}
-                          </span>
-                          <div className="sm:hidden mt-0.5">
-                            <Badge style={{ backgroundColor: rank.color }} className="text-black text-[9px] px-1.5 py-0 font-medium">
-                              {rank.name}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-1 p-4 border-t border-white/[0.04]">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPage(1)}
-                    disabled={page === 1}
-                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 px-3 transition-all"
-                  >
-                    Début
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 w-8 transition-all hover:-translate-x-0.5"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  
-                  <div className="flex gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) pageNum = i + 1;
-                      else if (page <= 3) pageNum = i + 1;
-                      else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
-                      else pageNum = page - 2 + i;
-                      
-                      return (
-                        <Button
-                          key={pageNum}
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setPage(pageNum)}
-                          className={`h-8 w-8 transition-all duration-300 ${page === pageNum ? 'bg-white text-black hover:bg-gray-200 scale-110' : 'text-gray-500 hover:text-white hover:bg-white/[0.04]'}`}
-                        >
-                          {pageNum}
-                        </Button>
-                      );
-                    })}
+                        <X className="w-3 h-3 mr-1" />
+                        Effacer
+                      </Button>
+                    )}
                   </div>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 w-8 transition-all hover:translate-x-0.5"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPage(totalPages)}
-                    disabled={page === totalPages}
-                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 px-3 transition-all"
-                  >
-                    Fin
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+                  {/* Filters Row */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Filter className="w-4 h-4 text-gray-600" />
+                    
+                    <Select value={country} onValueChange={(v) => handleFilterChange(setCountry, v)}>
+                      <SelectTrigger className="w-[140px] bg-white/[0.02] border-white/[0.06] text-white h-9">
+                        <Globe className="w-3 h-3 mr-2 text-blue-400" />
+                        <SelectValue placeholder="Pays" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-white/[0.1] max-h-80">
+                        <SelectItem value="all" className="text-white hover:bg-white/[0.1]">Tous pays</SelectItem>
+                        {availableCountries.map(c => (
+                          <SelectItem key={c.code} value={c.code} className="text-white hover:bg-white/[0.1]">
+                            {getCountryFlag(c.code)} {c.name || COUNTRY_NAMES[c.code] || c.code}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
 
-        {lastUpdate && (
-          <p className={`text-xs text-gray-600 mt-4 text-center transition-all duration-700 delay-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-            Mis à jour: {new Date(lastUpdate).toLocaleString('fr-FR')}
-          </p>
+                    <Select value={mmrRange} onValueChange={(v) => handleFilterChange(setMmrRange, v)}>
+                      <SelectTrigger className="w-[160px] bg-white/[0.02] border-white/[0.06] text-white h-9">
+                        <Trophy className="w-3 h-3 mr-2 text-yellow-400" />
+                        <SelectValue placeholder="MMR" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-white/[0.1]">
+                        {MMR_RANGES.map(range => (
+                          <SelectItem key={range.value} value={range.value} className="text-white hover:bg-white/[0.1]">{range.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={eventsRange} onValueChange={(v) => handleFilterChange(setEventsRange, v)}>
+                      <SelectTrigger className="w-[130px] bg-white/[0.02] border-white/[0.06] text-white h-9">
+                        <Users className="w-3 h-3 mr-2 text-purple-400" />
+                        <SelectValue placeholder="Events" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-white/[0.1]">
+                        {EVENTS_RANGES.map(range => (
+                          <SelectItem key={range.value} value={range.value} className="text-white hover:bg-white/[0.1]">{range.label} events</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={sortBy} onValueChange={(v) => handleFilterChange(setSortBy, v)}>
+                      <SelectTrigger className="w-[120px] bg-white/[0.02] border-white/[0.06] text-white h-9">
+                        <ArrowUpDown className="w-3 h-3 mr-2 text-green-400" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-white/[0.1]">
+                        {SORT_OPTIONS.map(opt => (
+                          <SelectItem key={opt.value} value={opt.value} className="text-white hover:bg-white/[0.1]">Tri: {opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Active Filters Summary */}
+                  {hasActiveFilters && (
+                    <div className="flex items-center gap-2 pt-2 border-t border-white/[0.04]">
+                      <span className="text-xs text-gray-500">{total} résultat(s)</span>
+                      {country !== 'all' && (
+                        <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
+                          {getCountryFlag(country)} {COUNTRY_NAMES[country] || country}
+                        </Badge>
+                      )}
+                      {mmrRange !== 'all' && (
+                        <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20">
+                          {MMR_RANGES.find(r => r.value === mmrRange)?.label}
+                        </Badge>
+                      )}
+                      {eventsRange !== 'all' && (
+                        <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20">
+                          {eventsRange}+ events
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Leaderboard Table */}
+            <Card className={`card-premium lg:col-span-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+              <CardHeader className="border-b border-white/[0.04] pb-4">
+                <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-yellow-500" />
+                  Classement ({leaderboard.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {leaderboard.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Trophy className="w-10 h-10 mx-auto mb-3 text-gray-700 animate-bounce-subtle" />
+                    <p className="text-gray-500">Aucun joueur trouvé</p>
+                    {hasActiveFilters && (
+                      <Button variant="ghost" className="mt-4 text-gray-400 hover:text-white" onClick={clearFilters}>
+                        Effacer les filtres
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="text-gray-500 text-xs uppercase tracking-wider border-b border-white/[0.04]">
+                            <th className="text-left py-3 px-4 font-medium w-16">#</th>
+                            <th className="text-left py-3 px-4 font-medium">Joueur</th>
+                            <th className="text-center py-3 px-4 font-medium">Tier</th>
+                            <th className="text-center py-3 px-4 font-medium">Events</th>
+                            <th className="text-right py-3 px-4 font-medium">MMR</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/[0.03]">
+                          {displayedPlayers.map((player, index) => {
+                            const rank = getCurrentRank(player.mmr || 0);
+                            const globalRank = player.rank || ((page - 1) * limit + index + 1);
+                            const isTop3 = globalRank <= 3;
+                            const isCurrentUser = currentUserLoungeName && player.name?.toLowerCase() === currentUserLoungeName?.toLowerCase();
+                            const isTracked = trackedPlayers.includes(player.name?.toLowerCase());
+                            
+                            let rankStyle = 'bg-white/[0.04] text-gray-400';
+                            let rowHighlight = '';
+                            
+                            if (globalRank === 1) {
+                              rankStyle = 'bg-gradient-to-r from-yellow-500 to-amber-400 text-black shadow-lg shadow-yellow-500/20';
+                              rowHighlight = 'bg-yellow-500/[0.03]';
+                            } else if (globalRank === 2) {
+                              rankStyle = 'bg-gradient-to-r from-gray-400 to-gray-300 text-black';
+                              rowHighlight = 'bg-gray-400/[0.03]';
+                            } else if (globalRank === 3) {
+                              rankStyle = 'bg-gradient-to-r from-orange-600 to-amber-600 text-white';
+                              rowHighlight = 'bg-orange-600/[0.03]';
+                            }
+                            
+                            // Override highlight for tracked players and current user
+                            if (isCurrentUser) {
+                              rowHighlight = 'bg-green-500/[0.08] border-l-2 border-green-500';
+                            } else if (isTracked) {
+                              rowHighlight = 'bg-green-500/[0.04] border-l-2 border-green-500/50';
+                            }
+                            
+                            // Determine link destination
+                            const linkHref = isCurrentUser ? '/dashboard' : `/player/${encodeURIComponent(player.name)}`;
+                            
+                            return (
+                              <tr 
+                                key={player.id || index}
+                                className={`table-row-hover cursor-pointer group ${rowHighlight}`}
+                                onClick={() => router.push(linkHref)}
+                                style={{ animationDelay: `${index * 30}ms` }}
+                              >
+                                <td className="py-3 px-4">
+                                  <span className={`inline-flex items-center justify-center w-7 h-7 rounded text-xs font-bold transition-transform duration-300 group-hover:scale-110 ${rankStyle}`}>
+                                    {globalRank}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center gap-2">
+                                    {player.countryCode && (
+                                      <span className="text-sm flex-shrink-0 transition-transform duration-300 group-hover:scale-110">{getCountryFlag(player.countryCode)}</span>
+                                    )}
+                                    <span className={`text-sm truncate transition-colors duration-300 ${isCurrentUser ? 'font-semibold text-green-400' : isTracked ? 'text-green-300' : isTop3 ? 'font-semibold text-white' : 'text-gray-300 group-hover:text-white'}`}>
+                                      {player.name}
+                                    </span>
+                                    {isCurrentUser && (
+                                      <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 text-[9px] px-1.5 py-0 badge-pulse">
+                                        Moi
+                                      </Badge>
+                                    )}
+                                    {isTracked && !isCurrentUser && (
+                                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0 animate-pulse" title="Joueur suivi" />
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <Badge 
+                                    style={{ backgroundColor: rank.color }} 
+                                    className="text-black text-[10px] px-2 py-0 font-medium transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg"
+                                  >
+                                    {rank.name}
+                                  </Badge>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <span className="text-sm text-gray-500 group-hover:text-gray-400 transition-colors">{player.eventsPlayed || 0}</span>
+                                </td>
+                                <td className="py-3 px-4 text-right">
+                                  <span className="text-sm font-semibold text-white tabular-nums transition-transform duration-300 group-hover:scale-110 inline-block">
+                                    {(player.mmr || 0).toLocaleString('fr-FR')}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    {/* Show More / Less Button */}
+                    {leaderboard.length > 20 && (
+                      <div className="py-3 text-center border-t border-white/[0.04]">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAllPlayers(!showAllPlayers)}
+                          className="text-gray-500 hover:text-white group"
+                        >
+                          {showAllPlayers ? <ChevronUp className="w-4 h-4 mr-1 group-hover:-translate-y-0.5 transition-transform" /> : <ChevronDown className="w-4 h-4 mr-1 group-hover:translate-y-0.5 transition-transform" />}
+                          {showAllPlayers ? 'Moins' : `Tout afficher (${leaderboard.length})`}
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-center gap-1 p-4 border-t border-white/[0.04]">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPage(1)}
+                          disabled={page === 1}
+                          className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 px-3 transition-all"
+                        >
+                          Début
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setPage(p => Math.max(1, p - 1))}
+                          disabled={page === 1}
+                          className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 w-8 transition-all hover:-translate-x-0.5"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        
+                        <div className="flex gap-1">
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNum;
+                            if (totalPages <= 5) pageNum = i + 1;
+                            else if (page <= 3) pageNum = i + 1;
+                            else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
+                            else pageNum = page - 2 + i;
+                            
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setPage(pageNum)}
+                                className={`h-8 w-8 transition-all duration-300 ${page === pageNum ? 'bg-white text-black hover:bg-gray-200 scale-110' : 'text-gray-500 hover:text-white hover:bg-white/[0.04]'}`}
+                              >
+                                {pageNum}
+                              </Button>
+                            );
+                          })}
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                          disabled={page === totalPages}
+                          className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 w-8 transition-all hover:translate-x-0.5"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPage(totalPages)}
+                          disabled={page === totalPages}
+                          className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 px-3 transition-all"
+                        >
+                          Fin
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Quick Links */}
+            <Card className={`card-premium lg:col-span-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '350ms' }}>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { href: '/lounge', icon: Star, label: 'Lounge', color: 'text-purple-500', bg: 'bg-purple-500/10', hoverBg: 'hover:bg-purple-500/20' },
+                    { href: '/academy', icon: BookOpen, label: 'Academy', color: 'text-blue-500', bg: 'bg-blue-500/10', hoverBg: 'hover:bg-blue-500/20' },
+                    { href: '/tournaments', icon: Award, label: 'Tournois', color: 'text-yellow-500', bg: 'bg-yellow-500/10', hoverBg: 'hover:bg-yellow-500/20' },
+                  ].map((link, i) => (
+                    <Link key={i} href={link.href}>
+                      <div className={`p-4 ${link.bg} ${link.hoverBg} rounded-lg text-center transition-all duration-300 hover:scale-105 hover:shadow-lg group cursor-pointer`}>
+                        <link.icon className={`w-6 h-6 mx-auto mb-2 ${link.color} group-hover:scale-110 transition-transform duration-300`} />
+                        <p className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors duration-300">{link.label}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Last Update */}
+            {lastUpdate && (
+              <div className={`lg:col-span-4 text-center transition-all duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '400ms' }}>
+                <p className="text-xs text-gray-600">
+                  Mis à jour: {new Date(lastUpdate).toLocaleString('fr-FR')}
+                </p>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
