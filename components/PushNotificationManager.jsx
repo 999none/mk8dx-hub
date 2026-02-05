@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Bell, BellOff, BellRing, RefreshCw, Clock, Users, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { Bell, BellOff, BellRing, RefreshCw, Clock, Users, CheckCircle2, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 
 /**
  * PushNotificationManager Component
@@ -14,6 +14,7 @@ import { Bell, BellOff, BellRing, RefreshCw, Clock, Users, CheckCircle2, XCircle
  */
 export default function PushNotificationManager() {
   const [isSupported, setIsSupported] = useState(false);
+  const [pushServiceAvailable, setPushServiceAvailable] = useState(true);
   const [permission, setPermission] = useState('default');
   const [subscription, setSubscription] = useState(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -21,11 +22,13 @@ export default function PushNotificationManager() {
   const [subscribing, setSubscribing] = useState(false);
   const [testingNotification, setTestingNotification] = useState(false);
   const [lastError, setLastError] = useState(null);
+  const [errorDismissed, setErrorDismissed] = useState(false);
   const [preferences, setPreferences] = useState({
     loungeQueue: true,
     sqQueue: true
   });
   const [vapidPublicKey, setVapidPublicKey] = useState(null);
+  const subscribeAttempted = useRef(false);
 
   // Check if push notifications are supported
   useEffect(() => {
