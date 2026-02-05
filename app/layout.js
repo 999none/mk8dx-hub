@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import AuthSessionProvider from '@/components/session-provider';
 import ServiceWorkerProvider from '@/components/ServiceWorkerProvider';
+import PageTransitionProvider from '@/components/PageTransitionProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -17,7 +18,9 @@ export default function RootLayout({ children }) {
       <body className={inter.className} suppressHydrationWarning>
         <AuthSessionProvider>
           <ServiceWorkerProvider>
-            {children}
+            <PageTransitionProvider transitionType="blur">
+              {children}
+            </PageTransitionProvider>
           </ServiceWorkerProvider>
           <Toaster />
         </AuthSessionProvider>
