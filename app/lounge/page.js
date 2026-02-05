@@ -992,7 +992,7 @@ export default function LoungePage() {
 
             {/* Last Update */}
             {lastUpdate && (
-              <div className={`lg:col-span-4 text-center transition-all duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '500ms' }}>
+              <div className={`lg:col-span-2 text-center transition-all duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '500ms' }}>
                 <p className="text-xs text-gray-600">
                   Dernière mise à jour: {new Date(lastUpdate).toLocaleString('fr-FR')}
                 </p>
