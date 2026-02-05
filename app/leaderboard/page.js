@@ -217,16 +217,6 @@ export default function LeaderboardPage() {
 
   const hasActiveFilters = search || country !== 'all' || mmrRange !== 'all' || eventsRange !== 'all' || sortBy !== 'mmr';
 
-  // Calculate stats
-  const countryCounts = leaderboard.reduce((acc, p) => {
-    if (p.countryCode) {
-      acc[p.countryCode] = (acc[p.countryCode] || 0) + 1;
-    }
-    return acc;
-  }, {});
-  const topCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
-  const avgMmr = leaderboard.length > 0 ? Math.round(leaderboard.reduce((a, p) => a + (p.mmr || 0), 0) / leaderboard.length) : 0;
-
   const displayedPlayers = showAllPlayers ? leaderboard : leaderboard.slice(0, 20);
 
   return (
