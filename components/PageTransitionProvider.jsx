@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 // Context for transition control
 const TransitionContext = createContext({
   isTransitioning: false,
-  transitionType: 'blur',
+  transitionType: 'fade',
   setTransitionType: () => {},
 });
 
@@ -15,16 +15,17 @@ export const usePageTransition = () => useContext(TransitionContext);
 /**
  * PageTransitionProvider
  * Provides smooth page transitions with various animation types
+ * IMPORTANT: Using fade-only to prevent click/interaction issues
  * 
  * @param {Object} props
  * @param {React.ReactNode} props.children - Page content to animate
- * @param {string} props.transitionType - Animation type: 'fade' | 'slide-up' | 'slide-left' | 'slide-right' | 'blur' | 'scale' | 'none'
- * @param {number} props.duration - Animation duration in ms (default: 400)
+ * @param {string} props.transitionType - Animation type: 'fade' | 'slide-up' | 'none'
+ * @param {number} props.duration - Animation duration in ms (default: 300)
  */
 export default function PageTransitionProvider({ 
   children, 
-  transitionType: initialType = 'blur',
-  duration = 400,
+  transitionType: initialType = 'fade',
+  duration = 300,
 }) {
   const pathname = usePathname();
   const [isTransitioning, setIsTransitioning] = useState(true);
@@ -35,33 +36,17 @@ export default function PageTransitionProvider({
   // Custom easing (expo out)
   const easing = 'cubic-bezier(0.16, 1, 0.3, 1)';
 
-  // Animation styles based on type
+  // Animation styles based on type - simplified to avoid interaction issues
   const getAnimationStyles = (type, state) => {
     const transforms = {
       initial: {
         'fade': { opacity: 0 },
-        'slide-up': { opacity: 0, transform: 'translateY(24px)' },
-        'slide-down': { opacity: 0, transform: 'translateY(-24px)' },
-        'slide-left': { opacity: 0, transform: 'translateX(24px)' },
-        'slide-right': { opacity: 0, transform: 'translateX(-24px)' },
-        'blur': { opacity: 0, filter: 'blur(12px)', transform: 'translateY(10px)' },
-        'scale': { opacity: 0, transform: 'scale(0.96)' },
-        'scale-blur': { opacity: 0, filter: 'blur(8px)', transform: 'scale(0.97)' },
-        'zoom-in': { opacity: 0, transform: 'scale(1.05)' },
-        'zoom-out': { opacity: 0, transform: 'scale(0.9)' },
+        'slide-up': { opacity: 0, transform: 'translateY(16px)' },
         'none': {},
       },
       final: {
         'fade': { opacity: 1 },
         'slide-up': { opacity: 1, transform: 'translateY(0)' },
-        'slide-down': { opacity: 1, transform: 'translateY(0)' },
-        'slide-left': { opacity: 1, transform: 'translateX(0)' },
-        'slide-right': { opacity: 1, transform: 'translateX(0)' },
-        'blur': { opacity: 1, filter: 'blur(0px)', transform: 'translateY(0)' },
-        'scale': { opacity: 1, transform: 'scale(1)' },
-        'scale-blur': { opacity: 1, filter: 'blur(0px)', transform: 'scale(1)' },
-        'zoom-in': { opacity: 1, transform: 'scale(1)' },
-        'zoom-out': { opacity: 1, transform: 'scale(1)' },
         'none': {},
       },
     };
@@ -100,8 +85,7 @@ export default function PageTransitionProvider({
   }, []);
 
   const containerStyle = {
-    transition: `opacity ${duration}ms ${easing}, transform ${duration}ms ${easing}, filter ${duration}ms ${easing}`,
-    willChange: 'opacity, transform, filter',
+    transition: `opacity ${duration}ms ${easing}, transform ${duration}ms ${easing}`,
     ...getAnimationStyles(transitionType, isTransitioning ? 'initial' : 'final'),
   };
 
