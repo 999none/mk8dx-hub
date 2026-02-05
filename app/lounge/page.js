@@ -1803,7 +1803,7 @@ export default function LoungePage() {
     
     try {
       const playerName = session.user.serverNickname || session.user.name;
-      const res = await fetch(`/api/lounge/player/${encodeURIComponent(playerName)}`);
+      const res = await fetch(`/api/lounge/player-details/${encodeURIComponent(playerName)}`);
       const data = await res.json();
       
       if (data.matchHistory && Array.isArray(data.matchHistory)) {
@@ -1818,13 +1818,13 @@ export default function LoungePage() {
   useEffect(() => {
     if (userMatchHistory.length === 0 || schedule.length === 0) return;
     
-    const participated = new Set();
+    const participated = new Map();
     const now = Date.now();
     const pastSQs = schedule.filter(sq => sq.time <= now);
     
     pastSQs.forEach(sq => {
       // Check if any match in user history matches this SQ
-      // Match criteria: same hour (within 30 min tolerance) and compatible format
+      // Match criteria: same hour (within 60 min tolerance) and compatible format
       const sqTime = sq.time;
       const sqFormat = sq.format; // e.g., '2v2', '3v3', '4v4', '6v6'
       
@@ -1832,7 +1832,7 @@ export default function LoungePage() {
       const formatToTeams = { '2v2': 6, '3v3': 4, '4v4': 3, '6v6': 2 };
       const expectedTeams = formatToTeams[sqFormat];
       
-      const matchFound = userMatchHistory.some(match => {
+      const matchFound = userMatchHistory.find(match => {
         const matchTime = new Date(match.time).getTime();
         const timeDiff = Math.abs(matchTime - sqTime);
         const withinTimeWindow = timeDiff < 60 * 60 * 1000; // Within 1 hour
@@ -1844,7 +1844,7 @@ export default function LoungePage() {
       });
       
       if (matchFound) {
-        participated.add(sq.id);
+        participated.set(sq.id, matchFound.id);
       }
     });
     
