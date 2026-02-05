@@ -62,10 +62,14 @@ const SORT_OPTIONS = [
 ];
 
 export default function LeaderboardPage() {
+  const { data: session } = useSession();
+  const router = useRouter();
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [season, setSeason] = useState(null);
+  const [currentUserLoungeName, setCurrentUserLoungeName] = useState(null);
+  const [trackedPlayers, setTrackedPlayers] = useState([]);
   
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -80,6 +84,30 @@ export default function LeaderboardPage() {
   const [limit] = useState(50);
   
   const [availableCountries, setAvailableCountries] = useState([]);
+
+  // Fetch current user's lounge name and tracked players
+  useEffect(() => {
+    async function fetchUserData() {
+      if (session?.user) {
+        try {
+          const verifyRes = await fetch('/api/verification/status');
+          const verifyData = await verifyRes.json();
+          if (verifyData.verified && verifyData.user?.loungeName) {
+            setCurrentUserLoungeName(verifyData.user.loungeName);
+          }
+          // Fetch tracked players
+          const trackedRes = await fetch('/api/tracked-players');
+          const trackedData = await trackedRes.json();
+          if (trackedData.players) {
+            setTrackedPlayers(trackedData.players.map(p => p.loungeName?.toLowerCase()));
+          }
+        } catch (err) {
+          console.error('Error fetching user data:', err);
+        }
+      }
+    }
+    fetchUserData();
+  }, [session]);
 
   // Fetch available countries on mount
   useEffect(() => {
