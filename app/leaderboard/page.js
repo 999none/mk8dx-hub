@@ -63,6 +63,14 @@ const SORT_OPTIONS = [
   { label: 'Events', value: 'eventsPlayed' },
 ];
 
+const AVAILABLE_SEASONS = [
+  { value: '', label: 'Saison 15 (Actuelle)' },
+  { value: '14', label: 'Saison 14' },
+  { value: '13', label: 'Saison 13' },
+  { value: '12', label: 'Saison 12' },
+  { value: '11', label: 'Saison 11' },
+];
+
 export default function LeaderboardPage() {
   const { data: session } = useSession();
   const router = useRouter();
