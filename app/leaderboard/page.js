@@ -209,9 +209,9 @@ export default function LeaderboardPage() {
       <Navbar />
 
       <div className="container mx-auto px-4 py-8 pt-20">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Leaderboard</h1>
+        {/* Header with animation */}
+        <div className={`mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Leaderboard</h1>
           <p className="text-gray-500 text-sm">
             {season && <span>Saison {season} • </span>}
             <span className="text-green-500 font-medium">{total.toLocaleString('fr-FR')}</span> joueurs enregistrés
@@ -219,18 +219,18 @@ export default function LeaderboardPage() {
           </p>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 mb-6">
+        {/* Filters with animation */}
+        <div className={`bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 mb-6 transition-all duration-700 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <div className="flex flex-col gap-3">
             {/* Search */}
             <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+              <div className="relative flex-1 group">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-white transition-colors" />
                 <Input
                   placeholder="Rechercher un joueur..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  className="pl-10 bg-black border-white/[0.06] text-white placeholder:text-gray-600 h-10"
+                  className="pl-10 bg-black border-white/[0.06] text-white placeholder:text-gray-600 h-10 focus:border-white/20 focus:ring-1 focus:ring-white/10 transition-all"
                 />
               </div>
               {hasActiveFilters && (
@@ -238,7 +238,7 @@ export default function LeaderboardPage() {
                   variant="ghost" 
                   size="icon"
                   onClick={clearFilters}
-                  className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-10 w-10"
+                  className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-10 w-10 hover:rotate-90 transition-all duration-300"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -248,7 +248,7 @@ export default function LeaderboardPage() {
             {/* Filters Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <Select value={country} onValueChange={(v) => handleFilterChange(setCountry, v)}>
-                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 h-10">
+                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 h-10 hover:border-white/20 transition-colors">
                   <Globe className="w-4 h-4 mr-2 text-gray-600" />
                   <SelectValue placeholder="Pays" />
                 </SelectTrigger>
@@ -263,7 +263,7 @@ export default function LeaderboardPage() {
               </Select>
 
               <Select value={mmrRange} onValueChange={(v) => handleFilterChange(setMmrRange, v)}>
-                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 h-10">
+                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 h-10 hover:border-white/20 transition-colors">
                   <Trophy className="w-4 h-4 mr-2 text-gray-600" />
                   <SelectValue placeholder="MMR" />
                 </SelectTrigger>
@@ -275,7 +275,7 @@ export default function LeaderboardPage() {
               </Select>
 
               <Select value={eventsRange} onValueChange={(v) => handleFilterChange(setEventsRange, v)}>
-                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 h-10">
+                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 h-10 hover:border-white/20 transition-colors">
                   <Users className="w-4 h-4 mr-2 text-gray-600" />
                   <SelectValue placeholder="Events" />
                 </SelectTrigger>
@@ -287,7 +287,7 @@ export default function LeaderboardPage() {
               </Select>
 
               <Select value={sortBy} onValueChange={(v) => handleFilterChange(setSortBy, v)}>
-                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 h-10">
+                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 h-10 hover:border-white/20 transition-colors">
                   <ArrowUpDown className="w-4 h-4 mr-2 text-gray-600" />
                   <SelectValue />
                 </SelectTrigger>
@@ -301,8 +301,8 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
-        {/* Leaderboard Table */}
-        <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl overflow-hidden">
+        {/* Leaderboard Table with animation */}
+        <div className={`bg-white/[0.02] border border-white/[0.04] rounded-xl overflow-hidden transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           {loading ? (
             <div className="text-center py-20">
               <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-3 text-gray-600" />
@@ -310,7 +310,7 @@ export default function LeaderboardPage() {
             </div>
           ) : leaderboard.length === 0 ? (
             <div className="text-center py-20">
-              <Trophy className="w-10 h-10 mx-auto mb-3 text-gray-700" />
+              <Trophy className="w-10 h-10 mx-auto mb-3 text-gray-700 animate-bounce-subtle" />
               <p className="text-gray-500">Aucun joueur trouvé</p>
               <Button variant="ghost" className="mt-4 text-gray-400 hover:text-white" onClick={clearFilters}>
                 Effacer les filtres
@@ -327,7 +327,7 @@ export default function LeaderboardPage() {
                 <div className="col-span-2 text-right">MMR</div>
               </div>
 
-              {/* Players List */}
+              {/* Players List with staggered animation */}
               <div className="divide-y divide-white/[0.03]">
                 {leaderboard.map((player, index) => {
                   const rank = getCurrentRank(player.mmr || 0);
@@ -340,13 +340,13 @@ export default function LeaderboardPage() {
                   let rowHighlight = '';
                   
                   if (globalRank === 1) {
-                    rankStyle = 'bg-yellow-500 text-black';
+                    rankStyle = 'bg-gradient-to-r from-yellow-500 to-amber-400 text-black shadow-lg shadow-yellow-500/20';
                     rowHighlight = 'bg-yellow-500/[0.03]';
                   } else if (globalRank === 2) {
-                    rankStyle = 'bg-gray-400 text-black';
+                    rankStyle = 'bg-gradient-to-r from-gray-400 to-gray-300 text-black';
                     rowHighlight = 'bg-gray-400/[0.03]';
                   } else if (globalRank === 3) {
-                    rankStyle = 'bg-orange-600 text-white';
+                    rankStyle = 'bg-gradient-to-r from-orange-600 to-amber-600 text-white';
                     rowHighlight = 'bg-orange-600/[0.03]';
                   }
                   
@@ -362,10 +362,13 @@ export default function LeaderboardPage() {
                   
                   return (
                     <Link key={player.id || index} href={linkHref}>
-                      <div className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-white/[0.04] transition-colors cursor-pointer ${rowHighlight}`}>
+                      <div 
+                        className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-white/[0.04] transition-all duration-300 cursor-pointer group ${rowHighlight}`}
+                        style={{ animationDelay: `${index * 30}ms` }}
+                      >
                         {/* Rank */}
                         <div className="col-span-2 sm:col-span-1">
-                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded text-xs font-bold ${rankStyle}`}>
+                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded text-xs font-bold transition-transform duration-300 group-hover:scale-110 ${rankStyle}`}>
                             {globalRank}
                           </span>
                         </div>
@@ -373,36 +376,39 @@ export default function LeaderboardPage() {
                         {/* Player Name */}
                         <div className="col-span-6 sm:col-span-5 flex items-center gap-2 min-w-0">
                           {player.countryCode && (
-                            <span className="text-sm flex-shrink-0">{getCountryFlag(player.countryCode)}</span>
+                            <span className="text-sm flex-shrink-0 transition-transform duration-300 group-hover:scale-110">{getCountryFlag(player.countryCode)}</span>
                           )}
-                          <span className={`text-sm truncate ${isCurrentUser ? 'font-semibold text-green-400' : isTracked ? 'text-green-300' : isTop3 ? 'font-semibold text-white' : 'text-gray-300'}`}>
+                          <span className={`text-sm truncate transition-colors duration-300 ${isCurrentUser ? 'font-semibold text-green-400' : isTracked ? 'text-green-300' : isTop3 ? 'font-semibold text-white' : 'text-gray-300 group-hover:text-white'}`}>
                             {player.name}
                           </span>
                           {isCurrentUser && (
-                            <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 text-[9px] px-1.5 py-0">
+                            <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 text-[9px] px-1.5 py-0 animate-pulse-subtle">
                               Moi
                             </Badge>
                           )}
                           {isTracked && !isCurrentUser && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" title="Joueur suivi" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0 animate-pulse" title="Joueur suivi" />
                           )}
                         </div>
                         
                         {/* Rank Badge */}
                         <div className="hidden sm:flex sm:col-span-2 justify-center">
-                          <Badge style={{ backgroundColor: rank.color }} className="text-black text-[10px] px-2 py-0 font-medium">
+                          <Badge 
+                            style={{ backgroundColor: rank.color }} 
+                            className="text-black text-[10px] px-2 py-0 font-medium transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg"
+                          >
                             {rank.name}
                           </Badge>
                         </div>
                         
                         {/* Events */}
                         <div className="hidden sm:block sm:col-span-2 text-center">
-                          <span className="text-sm text-gray-500">{player.eventsPlayed || 0}</span>
+                          <span className="text-sm text-gray-500 group-hover:text-gray-400 transition-colors">{player.eventsPlayed || 0}</span>
                         </div>
                         
                         {/* MMR */}
                         <div className="col-span-4 sm:col-span-2 text-right">
-                          <span className="text-sm font-semibold text-white">
+                          <span className="text-sm font-semibold text-white tabular-nums">
                             {(player.mmr || 0).toLocaleString('fr-FR')}
                           </span>
                           <div className="sm:hidden mt-0.5">
@@ -425,7 +431,7 @@ export default function LeaderboardPage() {
                     size="sm"
                     onClick={() => setPage(1)}
                     disabled={page === 1}
-                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 px-3"
+                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 px-3 transition-all"
                   >
                     Début
                   </Button>
@@ -434,7 +440,7 @@ export default function LeaderboardPage() {
                     size="icon"
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 w-8"
+                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 w-8 transition-all hover:-translate-x-0.5"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
@@ -453,7 +459,7 @@ export default function LeaderboardPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setPage(pageNum)}
-                          className={`h-8 w-8 ${page === pageNum ? 'bg-white text-black hover:bg-gray-200' : 'text-gray-500 hover:text-white hover:bg-white/[0.04]'}`}
+                          className={`h-8 w-8 transition-all duration-300 ${page === pageNum ? 'bg-white text-black hover:bg-gray-200 scale-110' : 'text-gray-500 hover:text-white hover:bg-white/[0.04]'}`}
                         >
                           {pageNum}
                         </Button>
@@ -466,7 +472,7 @@ export default function LeaderboardPage() {
                     size="icon"
                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 w-8"
+                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 w-8 transition-all hover:translate-x-0.5"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </Button>
@@ -475,7 +481,7 @@ export default function LeaderboardPage() {
                     size="sm"
                     onClick={() => setPage(totalPages)}
                     disabled={page === totalPages}
-                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 px-3"
+                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 px-3 transition-all"
                   >
                     Fin
                   </Button>
@@ -486,7 +492,7 @@ export default function LeaderboardPage() {
         </div>
 
         {lastUpdate && (
-          <p className="text-xs text-gray-600 mt-4 text-center">
+          <p className={`text-xs text-gray-600 mt-4 text-center transition-all duration-700 delay-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
             Mis à jour: {new Date(lastUpdate).toLocaleString('fr-FR')}
           </p>
         )}
