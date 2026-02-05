@@ -9,11 +9,23 @@ import Navbar from '@/components/Navbar';
 
 export default function LandingPage() {
   const [stats, setStats] = useState(null);
+  const [trackedPlayers, setTrackedPlayers] = useState(null);
 
   useEffect(() => {
+    // Fetch general stats
     fetch('/api/stats')
       .then(res => res.json())
       .then(data => setStats(data))
+      .catch(err => console.error(err));
+    
+    // Fetch tracked players count from Lounge
+    fetch('/api/lounge/player-count')
+      .then(res => res.json())
+      .then(data => {
+        if (data.count) {
+          setTrackedPlayers(data.count);
+        }
+      })
       .catch(err => console.error(err));
   }, []);
 
