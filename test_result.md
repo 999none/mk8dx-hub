@@ -320,6 +320,18 @@ frontend:
         agent: "main"
         comment: "Amélioration de la page Lounge avec: 1) Filtre par jour (Tous les jours, Aujourd'hui, Demain, Weekend, Lundi-Dimanche), 2) Filtre par créneau horaire (Matin 6h-12h, Après-midi 12h-18h, Soir 18h-00h, Nuit 00h-6h), 3) Affichage groupé par jour avec toggle on/off, 4) Résumé des filtres actifs avec badges et compteur de résultats, 5) Bouton 'Effacer filtres' pour réinitialiser. Screenshots de test montrent toutes les fonctionnalités fonctionnelles."
 
+  - task: "Header Tracked Players Counter"
+    implemented: true
+    working: true
+    file: "components/Navbar.jsx, app/api/[[...path]]/route.js, lib/loungeApi.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Nouvel endpoint GET /api/lounge/player-count qui récupère le nombre total de joueurs depuis l'API MKCentral Lounge (totalPlayers). Cache de 5 minutes. Affichage dans la Navbar avec badge vert (icône Users + nombre formaté en français). La page d'accueil affiche aussi ce nombre dans la section Stats. API testée OK: retourne 54869 joueurs."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
