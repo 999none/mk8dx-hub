@@ -304,6 +304,9 @@ frontend:
       - working: true
         agent: "main"
         comment: "FIX: Amélioration de la gestion des erreurs AbortError pour la souscription push. Ajout d'une logique de retry (3 tentatives avec délai progressif), meilleure gestion des erreurs avec messages explicites, nettoyage des anciens service workers, et affichage des erreurs dans l'UI. L'AbortError est une erreur transitoire liée au service push du navigateur."
+      - working: true
+        agent: "main"
+        comment: "FIX v2: Amélioration majeure de la gestion des erreurs AbortError. Changements: 1) Réduction des retries de 3 à 2 pour feedback plus rapide, 2) Ajout de sessionStorage pour mémoriser quand le push service est indisponible et éviter les retries inutiles, 3) Nouvel état 'pushServiceAvailable' avec UI dédiée quand le service est bloqué, 4) Erreurs maintenant dismissibles, 5) Bouton 'Réessayer' pour les utilisateurs qui corrigent leur config, 6) Messages d'erreur plus concis et moins intrusifs. L'AbortError est typiquement causé par des bloqueurs de pubs ou le mode navigation privée."
 
   - task: "Lounge Page Enhanced Filters"
     implemented: true
