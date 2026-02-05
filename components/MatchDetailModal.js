@@ -127,16 +127,16 @@ export default function MatchDetailModal({ matchId, onClose }) {
             <div className="space-y-4">
               
               {/* Info Cards */}
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-3">
                 {[
-                  { icon: Calendar, label: new Date(matchDetails.createdOn || matchDetails.verifiedOn).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }), color: 'text-gray-400', bgColor: 'bg-white/[0.02]' },
-                  { icon: Trophy, label: `Tier ${matchDetails.tier}`, color: 'text-yellow-500', bgColor: 'bg-yellow-500/[0.08]' },
-                  { icon: Users, label: `${matchDetails.numPlayers}`, color: 'text-blue-500', bgColor: 'bg-blue-500/[0.08]' },
-                  { icon: Swords, label: getMatchFormat(matchDetails.numTeams, matchDetails.numPlayers), color: 'text-purple-500', bgColor: 'bg-purple-500/[0.08]' },
+                  { icon: Calendar, label: new Date(matchDetails.createdOn || matchDetails.verifiedOn).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }), color: 'text-gray-400', bgColor: 'bg-white/[0.03]', borderColor: 'border-white/[0.06]' },
+                  { icon: Trophy, label: `Tier ${matchDetails.tier}`, color: 'text-yellow-500', bgColor: 'bg-yellow-500/[0.08]', borderColor: 'border-yellow-500/20' },
+                  { icon: Users, label: `${matchDetails.numPlayers}`, color: 'text-blue-500', bgColor: 'bg-blue-500/[0.08]', borderColor: 'border-blue-500/20' },
+                  { icon: Swords, label: getMatchFormat(matchDetails.numTeams, matchDetails.numPlayers), color: 'text-purple-500', bgColor: 'bg-purple-500/[0.08]', borderColor: 'border-purple-500/20' },
                 ].map((item, i) => (
-                  <div key={i} className={`${item.bgColor} border border-white/[0.04] rounded-lg p-3 text-center transition-all duration-300 hover:scale-105 hover:border-white/[0.08] group`} style={{ animationDelay: `${i * 50}ms` }}>
-                    <item.icon className={`w-4 h-4 mx-auto mb-1.5 ${item.color} group-hover:scale-110 transition-transform duration-300`} />
-                    <p className={`text-xs font-medium ${item.color}`}>{item.label}</p>
+                  <div key={i} className={`${item.bgColor} border ${item.borderColor} rounded-xl p-4 text-center transition-all duration-300 hover:scale-105 hover:shadow-lg group cursor-default`} style={{ animationDelay: `${i * 50}ms` }}>
+                    <item.icon className={`w-5 h-5 mx-auto mb-2 ${item.color} group-hover:scale-110 transition-transform duration-300`} />
+                    <p className={`text-sm font-semibold ${item.color}`}>{item.label}</p>
                   </div>
                 ))}
               </div>
