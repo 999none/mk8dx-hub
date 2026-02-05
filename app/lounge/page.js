@@ -584,26 +584,29 @@ export default function LoungePage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            {/* Lounge Queue Card */}
-            <Card className={`card-premium lg:col-span-2 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '100ms' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Lounge Queue Card - Gradient Purple/Blue */}
+            <Card className={`bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/30 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '100ms' }}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-                  <DoorOpen className="w-4 h-4 text-purple-500" />
+                <CardTitle className="text-purple-400 flex items-center gap-2">
+                  <DoorOpen className="w-5 h-5" />
                   Lounge Queue
                 </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Rejoignez la queue pour participer au prochain Lounge
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       {isQueueOpen ? (
-                        <Badge className="bg-green-500/10 text-green-500 border border-green-500/20 badge-pulse">
+                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 animate-pulse">
                           <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
                           Queue Ouverte
                         </Badge>
                       ) : (
-                        <Badge className="bg-red-500/10 text-red-500 border border-red-500/20">
+                        <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
                           <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
                           Queue Fermée
                         </Badge>
@@ -612,34 +615,33 @@ export default function LoungePage() {
                         <span className="text-xs text-gray-500">Ferme dans {closesIn} min</span>
                       )}
                     </div>
-                    <p className="text-white font-medium">Lounge {formatHour(nextHour)}</p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-white text-xl font-bold">Lounge {formatHour(nextHour)}</p>
+                    <p className="text-sm text-gray-500 mt-1">
                       {isQueueOpen 
-                        ? `Inscrivez-vous maintenant`
-                        : `Réouverture à ${formatHour(nextHour)}`
+                        ? `Inscrivez-vous maintenant pour le Lounge de ${formatHour(nextHour)}`
+                        : `La queue réouvrira à ${formatHour(nextHour)}`
                       }
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="text-3xl font-bold text-white mb-1">{formatHour(nextHour)}</div>
+                    <div className="text-4xl font-bold text-white mb-2">{formatHour(nextHour)}</div>
                     {session?.user ? (
                       <Button 
-                        size="sm"
                         className={isQueueOpen 
                           ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                          : 'bg-gray-700 text-gray-400'
+                          : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                         }
                         disabled={!isQueueOpen}
                         onClick={() => isQueueOpen && openDiscordLinkWithFallback('https://discord.com/channels/445404006177570829/1186158671525318719')}
                       >
-                        <DoorOpen className="w-3 h-3 mr-1" />
-                        Rejoindre
+                        <DoorOpen className="w-4 h-4 mr-2" />
+                        {isQueueOpen ? 'Rejoindre la Queue' : 'Queue Fermée'}
                       </Button>
                     ) : (
                       <a href="/login">
-                        <Button size="sm" className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
-                          <LogIn className="w-3 h-3 mr-1" />
-                          Connexion
+                        <Button className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
+                          <LogIn className="w-4 h-4 mr-2" />
+                          Se connecter
                         </Button>
                       </a>
                     )}
@@ -648,47 +650,49 @@ export default function LoungePage() {
               </CardContent>
             </Card>
 
-            {/* Next SQ Card */}
-            <Card className={`card-premium lg:col-span-2 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '150ms' }}>
+            {/* Next SQ Card - Gradient Yellow/Orange */}
+            <Card className={`bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/30 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '150ms' }}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-yellow-500" />
+                <CardTitle className="text-yellow-400 flex items-center gap-2">
+                  <Trophy className="w-5 h-5" />
                   Prochaine Squad Queue
                 </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Formez votre équipe et rejoignez la queue
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {nextSQ ? (
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className={`${formatColors[nextSQ.format]}`}>
-                          <Users className="w-3 h-3 mr-1" />
+                        <Badge variant="outline" className={`${formatColors[nextSQ.format]} text-lg px-3 py-1`}>
+                          <Users className="w-4 h-4 mr-2" />
                           {nextSQ.format.toUpperCase()}
                         </Badge>
-                        <span className="text-xs text-gray-500">#{nextSQ.id}</span>
+                        <span className="text-gray-400">#{nextSQ.id}</span>
                       </div>
-                      <p className="text-white font-medium">{formatDateTime(nextSQ.time)}</p>
+                      <p className="text-white text-xl font-bold">{formatDateTime(nextSQ.time)}</p>
                       <p className={`text-sm mt-1 ${getTimeStatus(nextSQ.time) === 'soon' ? 'text-green-400 font-medium' : 'text-gray-500'}`}>
-                        <Clock className="w-3 h-3 inline mr-1" />
+                        <Timer className="w-4 h-4 inline mr-1" />
                         {formatRelativeTime(nextSQ.time)}
                       </p>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-bold text-white mb-1">{formatTime(nextSQ.time)}</div>
+                      <div className="text-4xl font-bold text-white mb-2">{formatTime(nextSQ.time)}</div>
                       {session?.user ? (
                         <Button 
-                          size="sm"
                           className="bg-yellow-600 hover:bg-yellow-700 text-white"
                           onClick={() => openDiscordLinkWithFallback('https://discord.com/channels/445404006177570829/772517883107475516')}
                         >
-                          <DoorOpen className="w-3 h-3 mr-1" />
-                          Queue SQ
+                          <DoorOpen className="w-4 h-4 mr-2" />
+                          Rejoindre la Queue
                         </Button>
                       ) : (
                         <a href="/login">
-                          <Button size="sm" className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
-                            <LogIn className="w-3 h-3 mr-1" />
-                            Connexion
+                          <Button className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
+                            <LogIn className="w-4 h-4 mr-2" />
+                            Se connecter
                           </Button>
                         </a>
                       )}
@@ -703,48 +707,50 @@ export default function LoungePage() {
               </CardContent>
             </Card>
 
-            {/* Stats Cards */}
-            <Card className={`card-premium transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
-              <CardContent className="p-6 text-center">
-                <div className="text-4xl font-black text-white mb-1 transition-all duration-500 hover:scale-105">
-                  {upcomingSQ.length}
-                </div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">SQ à venir</p>
-              </CardContent>
-            </Card>
+            {/* Stats Cards - Under Squad Queue (full width) */}
+            <div className={`lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+              <Card className="card-premium">
+                <CardContent className="p-6 text-center">
+                  <div className="text-4xl font-black text-white mb-1 transition-all duration-500 hover:scale-105">
+                    {upcomingSQ.length}
+                  </div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">SQ à venir</p>
+                </CardContent>
+              </Card>
 
-            <Card className={`card-premium transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '250ms' }}>
-              <CardContent className="p-6 text-center">
-                <div className="text-4xl font-black text-green-500 mb-1 transition-all duration-500 hover:scale-105">
-                  {nextSQ ? formatRelativeTime(nextSQ.time).split(' ')[1] || '-' : '-'}
-                </div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Prochaine SQ</p>
-              </CardContent>
-            </Card>
+              <Card className="card-premium">
+                <CardContent className="p-6 text-center">
+                  <div className="text-4xl font-black text-green-500 mb-1 transition-all duration-500 hover:scale-105">
+                    {nextSQ ? formatRelativeTime(nextSQ.time).split(' ')[1] || '-' : '-'}
+                  </div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">Prochaine SQ</p>
+                </CardContent>
+              </Card>
 
-            <Card className={`card-premium lg:col-span-2 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
-              <CardContent className="p-6">
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Par format</p>
-                <div className="grid grid-cols-4 gap-2">
-                  {['2v2', '3v3', '4v4', '6v6'].map((format) => (
-                    <div key={format} className={`stat-card text-center p-2 rounded-lg ${
-                      format === '2v2' ? 'bg-green-500/10 stat-green' :
-                      format === '3v3' ? 'bg-blue-500/10 stat-blue' :
-                      format === '4v4' ? 'bg-purple-500/10 stat-purple' :
-                      'bg-orange-500/10 stat-yellow'
-                    }`}>
-                      <div className={`text-lg font-bold ${
-                        format === '2v2' ? 'text-green-500' :
-                        format === '3v3' ? 'text-blue-500' :
-                        format === '4v4' ? 'text-purple-500' :
-                        'text-orange-500'
-                      }`}>{formatCounts[format] || 0}</div>
-                      <p className="text-[10px] text-gray-500">{format}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+              <Card className="card-premium md:col-span-2">
+                <CardContent className="p-6">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Par format</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {['2v2', '3v3', '4v4', '6v6'].map((format) => (
+                      <div key={format} className={`stat-card text-center p-2 rounded-lg ${
+                        format === '2v2' ? 'bg-green-500/10 stat-green' :
+                        format === '3v3' ? 'bg-blue-500/10 stat-blue' :
+                        format === '4v4' ? 'bg-purple-500/10 stat-purple' :
+                        'bg-orange-500/10 stat-yellow'
+                      }`}>
+                        <div className={`text-lg font-bold ${
+                          format === '2v2' ? 'text-green-500' :
+                          format === '3v3' ? 'text-blue-500' :
+                          format === '4v4' ? 'text-purple-500' :
+                          'text-orange-500'
+                        }`}>{formatCounts[format] || 0}</div>
+                        <p className="text-[10px] text-gray-500">{format}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Filters & Tab Selection */}
             <Card className={`card-premium lg:col-span-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '350ms' }}>
