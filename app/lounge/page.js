@@ -1769,7 +1769,8 @@ export default function LoungePage() {
   const [timeSlotFilter, setTimeSlotFilter] = useState('all');
   const [groupByDayEnabled, setGroupByDayEnabled] = useState(true);
   const [userMatchHistory, setUserMatchHistory] = useState([]);
-  const [participatedSQs, setParticipatedSQs] = useState(new Set());
+  const [participatedSQs, setParticipatedSQs] = useState(new Map()); // Map<sqId, matchId>
+  const [selectedMatchId, setSelectedMatchId] = useState(null);
   
   // Push notification system
   const push = usePushNotifications();
