@@ -1,18 +1,19 @@
 'use client';
 
 import { useSession, signOut } from 'next-auth/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { 
   Trophy, Menu, X, LogOut, User, 
-  BookOpen, Calendar, BarChart3, Gamepad2, Settings, Bell
+  BookOpen, Calendar, BarChart3, Gamepad2, Settings, Bell, Users
 } from 'lucide-react';
 
 export default function Navbar() {
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [trackedPlayers, setTrackedPlayers] = useState(null);
 
   const isAuthenticated = status === 'authenticated' && session;
   const isLoading = status === 'loading';
