@@ -2106,18 +2106,13 @@ export default function LoungePage() {
                   
                   {/* Action Button */}
                   {session?.user ? (
-                    <a
-                      href="https://discord.com/channels/445404006177570829/772517883107475516"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Button 
+                      className="w-full md:w-auto bg-yellow-600 hover:bg-yellow-700 text-white"
+                      onClick={() => openDiscordLinkWithFallback('https://discord.com/channels/445404006177570829/772517883107475516')}
                     >
-                      <Button 
-                        className="w-full md:w-auto bg-yellow-600 hover:bg-yellow-700 text-white"
-                      >
-                        <DoorOpen className="w-4 h-4 mr-2" />
-                        Rejoindre la Queue
-                      </Button>
-                    </a>
+                      <DoorOpen className="w-4 h-4 mr-2" />
+                      Rejoindre la Queue
+                    </Button>
                   ) : (
                     <a href="/login">
                       <Button 
