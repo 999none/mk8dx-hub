@@ -82,6 +82,7 @@ export default function LeaderboardPage() {
   const [trackedPlayers, setTrackedPlayers] = useState([]);
   const [mounted, setMounted] = useState(false);
   const [showAllPlayers, setShowAllPlayers] = useState(false);
+  const [selectedSeason, setSelectedSeason] = useState('');
   
   // Animation mount
   useEffect(() => {
