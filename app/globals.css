@@ -1279,6 +1279,410 @@
 }
 
 /* ========================================
+   PAGE ENTRANCE ANIMATIONS
+   ======================================== */
+
+  /* Page container fade in */
+  .page-enter {
+    animation: page-fade-in 0.6s var(--ease-expo) forwards;
+  }
+
+  @keyframes page-fade-in {
+    from {
+      opacity: 0;
+      filter: blur(8px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+
+  /* Section reveal animation */
+  .section-reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: section-reveal 0.7s var(--ease-expo) forwards;
+  }
+
+  @keyframes section-reveal {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Card pop animation */
+  .card-pop {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+    animation: card-pop 0.5s var(--ease-spring) forwards;
+  }
+
+  @keyframes card-pop {
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  /* Row slide animation for tables */
+  .row-slide {
+    opacity: 0;
+    transform: translateX(-10px);
+    animation: row-slide 0.4s var(--ease-expo) forwards;
+  }
+
+  @keyframes row-slide {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Stats counter animation */
+  .stat-pop {
+    opacity: 0;
+    transform: scale(0.8);
+    animation: stat-pop 0.6s var(--ease-spring) forwards;
+  }
+
+  @keyframes stat-pop {
+    50% {
+      transform: scale(1.05);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Stagger delays for children - extended */
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+  .stagger-6 { animation-delay: 300ms; }
+  .stagger-7 { animation-delay: 350ms; }
+  .stagger-8 { animation-delay: 400ms; }
+  .stagger-9 { animation-delay: 450ms; }
+  .stagger-10 { animation-delay: 500ms; }
+  .stagger-11 { animation-delay: 550ms; }
+  .stagger-12 { animation-delay: 600ms; }
+
+  /* ========================================
+     ENHANCED CARD STYLES
+     ======================================== */
+
+  /* Premium card effect */
+  .card-premium {
+    position: relative;
+    background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: all 0.4s var(--ease-expo);
+    overflow: hidden;
+  }
+
+  .card-premium::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .card-premium::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.03), transparent 40%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .card-premium:hover {
+    border-color: rgba(255,255,255,0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
+  }
+
+  .card-premium:hover::before,
+  .card-premium:hover::after {
+    opacity: 1;
+  }
+
+  /* Stat card glow */
+  .stat-card {
+    position: relative;
+    transition: all 0.3s var(--ease-expo);
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px) scale(1.02);
+  }
+
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+
+  .stat-card.stat-green::after { background: radial-gradient(rgba(34, 197, 94, 0.15), transparent 70%); }
+  .stat-card.stat-red::after { background: radial-gradient(rgba(239, 68, 68, 0.15), transparent 70%); }
+  .stat-card.stat-blue::after { background: radial-gradient(rgba(59, 130, 246, 0.15), transparent 70%); }
+  .stat-card.stat-purple::after { background: radial-gradient(rgba(139, 92, 246, 0.15), transparent 70%); }
+  .stat-card.stat-yellow::after { background: radial-gradient(rgba(245, 158, 11, 0.15), transparent 70%); }
+
+  .stat-card:hover::after {
+    opacity: 1;
+  }
+
+  /* ========================================
+     TABLE ROW ANIMATIONS
+     ======================================== */
+
+  .table-row-hover {
+    position: relative;
+    transition: all 0.25s var(--ease-expo);
+  }
+
+  .table-row-hover::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #5865F2, #7289da);
+    transform: scaleY(0);
+    transition: transform 0.25s var(--ease-expo);
+  }
+
+  .table-row-hover:hover {
+    background: rgba(255,255,255,0.03);
+  }
+
+  .table-row-hover:hover::before {
+    transform: scaleY(1);
+  }
+
+  /* Podium row styles */
+  .podium-gold {
+    background: linear-gradient(90deg, rgba(234, 179, 8, 0.08), transparent);
+    border-left: 2px solid rgba(234, 179, 8, 0.5);
+  }
+  .podium-silver {
+    background: linear-gradient(90deg, rgba(156, 163, 175, 0.08), transparent);
+    border-left: 2px solid rgba(156, 163, 175, 0.5);
+  }
+  .podium-bronze {
+    background: linear-gradient(90deg, rgba(234, 88, 12, 0.08), transparent);
+    border-left: 2px solid rgba(234, 88, 12, 0.5);
+  }
+
+  /* ========================================
+     MODAL ANIMATIONS
+     ======================================== */
+
+  /* Modal backdrop */
+  .modal-backdrop {
+    animation: modal-backdrop-in 0.3s ease forwards;
+  }
+
+  @keyframes modal-backdrop-in {
+    from {
+      opacity: 0;
+      backdrop-filter: blur(0);
+    }
+    to {
+      opacity: 1;
+      backdrop-filter: blur(8px);
+    }
+  }
+
+  /* Modal content */
+  .modal-content {
+    animation: modal-content-in 0.4s var(--ease-spring) forwards;
+  }
+
+  @keyframes modal-content-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(20px);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      filter: blur(0);
+    }
+  }
+
+  /* Modal exit */
+  .modal-exit {
+    animation: modal-exit 0.25s ease forwards;
+  }
+
+  @keyframes modal-exit {
+    to {
+      opacity: 0;
+      transform: scale(0.95) translateY(10px);
+    }
+  }
+
+  /* ========================================
+     BUTTON ENHANCED STYLES
+     ======================================== */
+
+  .btn-glow {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s var(--ease-expo);
+  }
+
+  .btn-glow::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.1), transparent 30%);
+    animation: btn-glow-rotate 4s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .btn-glow:hover::before {
+    opacity: 1;
+  }
+
+  @keyframes btn-glow-rotate {
+    to { transform: rotate(360deg); }
+  }
+
+  .btn-glow:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px -5px currentColor;
+  }
+
+  /* ========================================
+     BADGE ANIMATIONS
+     ======================================== */
+
+  .badge-pulse {
+    animation: badge-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes badge-pulse {
+    0%, 100% { 
+      box-shadow: 0 0 0 0 currentColor;
+    }
+    50% { 
+      box-shadow: 0 0 0 4px transparent;
+    }
+  }
+
+  .badge-shine {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .badge-shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+    transform: translateX(-100%);
+    animation: badge-shine-move 3s ease-in-out infinite;
+  }
+
+  @keyframes badge-shine-move {
+    0%, 100% { transform: translateX(-100%) rotate(45deg); }
+    50% { transform: translateX(100%) rotate(45deg); }
+  }
+
+  /* ========================================
+     CHART ANIMATIONS
+     ======================================== */
+
+  .chart-container {
+    opacity: 0;
+    animation: chart-reveal 0.8s var(--ease-expo) 0.3s forwards;
+  }
+
+  @keyframes chart-reveal {
+    from {
+      opacity: 0;
+      transform: scaleY(0.8);
+      transform-origin: bottom;
+    }
+    to {
+      opacity: 1;
+      transform: scaleY(1);
+    }
+  }
+
+  /* ========================================
+     INPUT FOCUS EFFECTS
+     ======================================== */
+
+  .input-glow {
+    transition: all 0.3s var(--ease-expo);
+  }
+
+  .input-glow:focus {
+    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2), 0 0 20px -5px rgba(88, 101, 242, 0.3);
+    border-color: rgba(88, 101, 242, 0.5);
+  }
+
+  /* ========================================
+     LOADING STATES
+     ======================================== */
+
+  .loading-shimmer {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .loading-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    transform: translateX(-100%);
+    animation: shimmer-loading 1.5s infinite;
+  }
+
+  @keyframes shimmer-loading {
+    to { transform: translateX(100%); }
+  }
+
+  /* Spinner with trail */
+  .spinner-trail {
+    width: 24px;
+    height: 24px;
+    border: 2px solid rgba(255,255,255,0.1);
+    border-top-color: #5865F2;
+    border-radius: 50%;
+    animation: spinner-rotate 0.8s linear infinite;
+  }
+
+  @keyframes spinner-rotate {
+    to { transform: rotate(360deg); }
+  }
+
+/* ========================================
    RECHARTS CUSTOM STYLES
    ======================================== */
 
