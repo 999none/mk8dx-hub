@@ -45,10 +45,26 @@ export default function Navbar() {
       <nav className="fixed top-0 w-full z-50 border-b border-white/[0.04] bg-black/90 backdrop-blur-md">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-            <Trophy className="w-5 h-5 text-gray-500" />
-            <span className="font-semibold text-sm text-gray-200">MK8DX Hub</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+              <Trophy className="w-5 h-5 text-gray-500" />
+              <span className="font-semibold text-sm text-gray-200">MK8DX Hub</span>
+            </Link>
+            
+            {/* Tracked Players Count Badge */}
+            {trackedPlayers && (
+              <Link 
+                href="/leaderboard" 
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full hover:bg-green-500/20 transition-colors"
+                title="Joueurs trackés depuis le Lounge MKCentral"
+              >
+                <Users className="w-3.5 h-3.5 text-green-500" />
+                <span className="text-sm font-semibold text-green-500">
+                  {trackedPlayers.toLocaleString('fr-FR')}
+                </span>
+              </Link>
+            )}
+          </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-1">
