@@ -1750,6 +1750,8 @@ export default function LoungePage() {
   const [dayFilter, setDayFilter] = useState('all');
   const [timeSlotFilter, setTimeSlotFilter] = useState('all');
   const [groupByDayEnabled, setGroupByDayEnabled] = useState(true);
+  const [userMatchHistory, setUserMatchHistory] = useState([]);
+  const [participatedSQs, setParticipatedSQs] = useState(new Set());
   
   // Push notification system
   const push = usePushNotifications();
@@ -1776,6 +1778,60 @@ export default function LoungePage() {
     }
   };
 
+  // Fetch user match history to detect participation
+  const fetchUserMatchHistory = async () => {
+    if (!session?.user?.serverNickname && !session?.user?.name) return;
+    
+    try {
+      const playerName = session.user.serverNickname || session.user.name;
+      const res = await fetch(`/api/lounge/player/${encodeURIComponent(playerName)}`);
+      const data = await res.json();
+      
+      if (data.matchHistory && Array.isArray(data.matchHistory)) {
+        setUserMatchHistory(data.matchHistory);
+      }
+    } catch (err) {
+      console.warn('Could not fetch user match history:', err);
+    }
+  };
+
+  // Detect which SQs the user participated in
+  useEffect(() => {
+    if (userMatchHistory.length === 0 || schedule.length === 0) return;
+    
+    const participated = new Set();
+    const now = Date.now();
+    const pastSQs = schedule.filter(sq => sq.time <= now);
+    
+    pastSQs.forEach(sq => {
+      // Check if any match in user history matches this SQ
+      // Match criteria: same hour (within 30 min tolerance) and compatible format
+      const sqTime = sq.time;
+      const sqFormat = sq.format; // e.g., '2v2', '3v3', '4v4', '6v6'
+      
+      // Extract number of teams from format (2v2 = 6 teams, 3v3 = 4 teams, 4v4 = 3 teams, 6v6 = 2 teams)
+      const formatToTeams = { '2v2': 6, '3v3': 4, '4v4': 3, '6v6': 2 };
+      const expectedTeams = formatToTeams[sqFormat];
+      
+      const matchFound = userMatchHistory.some(match => {
+        const matchTime = new Date(match.time).getTime();
+        const timeDiff = Math.abs(matchTime - sqTime);
+        const withinTimeWindow = timeDiff < 60 * 60 * 1000; // Within 1 hour
+        
+        // Check if format matches (numTeams corresponds to format)
+        const formatMatches = !expectedTeams || match.numTeams === expectedTeams;
+        
+        return withinTimeWindow && formatMatches;
+      });
+      
+      if (matchFound) {
+        participated.add(sq.id);
+      }
+    });
+    
+    setParticipatedSQs(participated);
+  }, [userMatchHistory, schedule]);
+
   useEffect(() => {
     fetchSchedule();
     
@@ -1786,6 +1842,13 @@ export default function LoungePage() {
     
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch user history when session is available
+  useEffect(() => {
+    if (session?.user) {
+      fetchUserMatchHistory();
+    }
+  }, [session]);
 
   const now = Date.now();
   
