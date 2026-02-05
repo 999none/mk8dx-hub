@@ -237,8 +237,13 @@ export default function PushNotificationManager() {
             
             // After max retries, show a helpful error
             let errorMessage = '';
+            const isBrave = navigator.brave !== undefined;
             if (subscribeErr.name === 'AbortError') {
-              errorMessage = 'Le service de notifications push du navigateur n\'est pas disponible. Cela peut être causé par un bloqueur de publicités, le mode navigation privée, ou des paramètres de confidentialité.';
+              if (isBrave) {
+                errorMessage = 'Brave bloque les notifications push par défaut. Pour les activer, cliquez sur le bouclier Shields dans la barre d\'adresse et désactivez le blocage pour ce site.';
+              } else {
+                errorMessage = 'Le service de notifications push du navigateur n\'est pas disponible. Cela peut être causé par un bloqueur de publicités, le mode navigation privée, ou des paramètres de confidentialité.';
+              }
             } else if (subscribeErr.message === 'Push subscription timeout') {
               errorMessage = 'La connexion au service push a expiré. Vérifiez votre connexion internet.';
             } else {
