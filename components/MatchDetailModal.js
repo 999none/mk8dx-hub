@@ -270,9 +270,12 @@ export default function MatchDetailModal({ matchId, onClose }) {
                 </div>
               ) : (
                 /* FFA Format - Classic Table */
-                <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl overflow-hidden">
-                <div className="px-4 py-2 border-b border-white/[0.04]">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Classement</span>
+                <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+                <div className="px-5 py-3 border-b border-white/[0.04]">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-4 h-4 text-yellow-500" />
+                    <span className="text-sm font-medium text-gray-300">Classement</span>
+                  </div>
                 </div>
                 
                 {/* Table Header */}
