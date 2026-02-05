@@ -1175,8 +1175,9 @@ export async function GET(request, context) {
           }
         }
         
-        // Filter out past events automatically
-        const filteredSchedule = schedule.filter(event => event.time > now);
+        // Include recent past events (last 48 hours) and future events
+        const pastCutoff = now - (48 * 60 * 60 * 1000); // 48 hours ago
+        const filteredSchedule = schedule.filter(event => event.time > pastCutoff);
         
         // Cache the filtered result
         await db.collection('sq_schedule_cache').updateOne(
