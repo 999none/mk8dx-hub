@@ -154,6 +154,7 @@ export default function LeaderboardPage() {
       
       if (search) params.append('search', search);
       if (country && country !== 'all') params.append('country', country);
+      if (selectedSeason) params.append('season', selectedSeason);
       
       if (mmrRange && mmrRange !== 'all') {
         const range = MMR_RANGES.find(r => r.value === mmrRange);
