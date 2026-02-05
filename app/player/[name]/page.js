@@ -391,23 +391,23 @@ export default function PlayerProfilePage() {
           {matchHistory.length > 0 ? (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
+                <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
                   <colgroup>
-                    <col style={{ width: '80px' }} />
-                    <col style={{ width: '60px' }} />
-                    <col style={{ width: '70px' }} />
-                    <col style={{ width: '70px' }} />
-                    <col style={{ width: '80px' }} />
-                    <col style={{ width: '100px' }} />
+                    <col style={{ width: '15%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '15%' }} />
+                    <col style={{ width: '15%' }} />
+                    <col style={{ width: '18%' }} />
+                    <col style={{ width: '25%' }} />
                   </colgroup>
                   <thead>
                     <tr className="text-gray-500 text-xs uppercase border-b border-white/[0.04]">
-                      <th className="text-center py-3 px-3 font-medium">Date</th>
-                      <th className="text-center py-3 px-3 font-medium">Tier</th>
-                      <th className="text-center py-3 px-3 font-medium">Format</th>
-                      <th className="text-center py-3 px-3 font-medium">Score</th>
-                      <th className="text-center py-3 px-3 font-medium">Change</th>
-                      <th className="text-center py-3 px-3 font-medium">MMR</th>
+                      <th className="text-center py-3 px-2 font-medium">Date</th>
+                      <th className="text-center py-3 px-2 font-medium">Tier</th>
+                      <th className="text-center py-3 px-2 font-medium">Format</th>
+                      <th className="text-center py-3 px-2 font-medium">Score</th>
+                      <th className="text-center py-3 px-2 font-medium">Change</th>
+                      <th className="text-center py-3 px-2 font-medium">MMR</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.03]">
@@ -422,24 +422,24 @@ export default function PlayerProfilePage() {
                           onClick={() => match.id && setSelectedMatchId(match.id)}
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
-                          <td className="text-center py-3 px-3 text-gray-400 text-sm">
+                          <td className="text-center py-3 px-2 text-gray-400 text-sm">
                             {new Date(match.time).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
                           </td>
-                          <td className="text-center py-3 px-3">
+                          <td className="text-center py-3 px-2">
                             <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-white/[0.04] text-gray-400 text-xs group-hover:bg-white/[0.08] transition-colors duration-300">
                               {match.tier || '?'}
                             </span>
                           </td>
-                          <td className="text-center py-3 px-3 text-gray-500 text-sm">
+                          <td className="text-center py-3 px-2 text-gray-500 text-sm">
                             {getMatchFormat(match.numTeams, match.numPlayers)}
                           </td>
-                          <td className="text-center py-3 px-3 text-white font-medium">{match.score ?? '-'}</td>
-                          <td className="text-center py-3 px-3">
+                          <td className="text-center py-3 px-2 text-white font-medium">{match.score ?? '-'}</td>
+                          <td className="text-center py-3 px-2">
                             <span className={`font-bold transition-transform duration-300 group-hover:scale-110 inline-block ${isWin ? 'text-green-500' : isLoss ? 'text-red-500' : 'text-gray-500'}`}>
                               {match.mmrDelta > 0 ? '+' : ''}{match.mmrDelta}
                             </span>
                           </td>
-                          <td className="text-center py-3 px-3 text-gray-300 font-medium">
+                          <td className="text-center py-3 px-2 text-gray-300 font-medium">
                             {(match.newMmr || 0).toLocaleString('fr-FR')}
                           </td>
                         </tr>
