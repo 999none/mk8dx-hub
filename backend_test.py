@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration from .env
-BASE_URL = "https://push-fix-2.preview.emergentagent.com"
+BASE_URL = "https://tourney-organizer-5.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 class BackendTester:
