@@ -47,6 +47,7 @@ export default function TeamDetailModal({ teamId, onClose }) {
   const [teamDetails, setTeamDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     if (!teamId) return;
@@ -74,14 +75,29 @@ export default function TeamDetailModal({ teamId, onClose }) {
     fetchTeamDetails();
   }, [teamId]);
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 250);
+  };
+
   if (!teamId) return null;
 
   const mkcentralTeamUrl = `https://mkcentral.com/fr/registry/teams/profile?id=${teamId}`;
   const teamColor = teamDetails?.color ? getTeamColorStyle(teamDetails.color) : '#6366f1';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/95 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border border-white/[0.06] rounded-xl" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 transition-all duration-300 ${isClosing ? 'opacity-0' : 'modal-backdrop'}`}
+      style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
+      onClick={handleClose}
+    >
+      <div 
+        className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border border-white/[0.08] rounded-xl shadow-2xl shadow-black/50 transition-all duration-300 ${isClosing ? 'scale-95 opacity-0' : 'modal-content'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-black border-b border-white/[0.06]">
