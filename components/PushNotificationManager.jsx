@@ -402,6 +402,60 @@ export default function PushNotificationManager() {
     );
   }
 
+  // Show a simplified card when push service is unavailable
+  if (!pushServiceAvailable && !isSubscribed) {
+    return (
+      <Card className="bg-white/[0.02] border-white/[0.04]">
+        <CardHeader className="border-b border-white/[0.04]">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
+                <Bell className="w-5 h-5 text-gray-500" />
+                Notifications Push
+              </CardTitle>
+              <CardDescription className="text-gray-500 mt-1">
+                Service temporairement indisponible
+              </CardDescription>
+            </div>
+            <Badge className="bg-orange-500/10 text-orange-400 border-orange-500/20 border">
+              <AlertTriangle className="w-3 h-3 mr-1" /> Limité
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg space-y-3">
+            <p className="text-orange-300 text-sm font-medium">
+              Les notifications push ne sont pas disponibles dans ce navigateur.
+            </p>
+            <div className="text-xs text-gray-400 space-y-1">
+              <p>Causes possibles :</p>
+              <ul className="list-disc list-inside space-y-0.5 text-gray-500">
+                <li>Bloqueur de publicités actif (uBlock, AdBlock...)</li>
+                <li>Mode navigation privée</li>
+                <li>Paramètres de confidentialité du navigateur</li>
+                <li>Navigateur non compatible</li>
+              </ul>
+            </div>
+            <Button
+              onClick={() => {
+                sessionStorage.removeItem('push_service_unavailable');
+                setPushServiceAvailable(true);
+                setLastError(null);
+                subscribeAttempted.current = false;
+              }}
+              variant="outline"
+              size="sm"
+              className="border-orange-500/20 text-orange-300 hover:bg-orange-500/10"
+            >
+              <RefreshCw className="w-3 h-3 mr-2" />
+              Réessayer
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="bg-white/[0.02] border-white/[0.04]">
       <CardHeader className="border-b border-white/[0.04]">
