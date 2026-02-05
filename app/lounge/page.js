@@ -1173,23 +1173,18 @@ function LoungeQueue({ session }) {
           {/* Action Button */}
           <div className="w-full md:w-auto">
             {isAuthenticated ? (
-              <a
-                href={LOUNGE_QUEUE_CHANNEL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Button 
+                className={`w-full md:w-auto ${
+                  isQueueOpen 
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                }`}
+                disabled={!isQueueOpen}
+                onClick={() => isQueueOpen && openDiscordLinkWithFallback(LOUNGE_QUEUE_CHANNEL)}
               >
-                <Button 
-                  className={`w-full md:w-auto ${
-                    isQueueOpen 
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                      : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                  }`}
-                  disabled={!isQueueOpen}
-                >
-                  <DoorOpen className="w-4 h-4 mr-2" />
-                  {isQueueOpen ? 'Rejoindre la Queue' : 'Queue Fermée'}
-                </Button>
-              </a>
+                <DoorOpen className="w-4 h-4 mr-2" />
+                {isQueueOpen ? 'Rejoindre la Queue' : 'Queue Fermée'}
+              </Button>
             ) : (
               <a href="/login">
                 <Button 
