@@ -209,6 +209,7 @@ export default function LeaderboardPage() {
           <p className="text-gray-500 text-sm">
             {season && <span>Saison {season} • </span>}
             <span className="text-green-500 font-medium">{total.toLocaleString('fr-FR')}</span> joueurs
+            <span className="text-gray-600 ml-2">— MK8DX Lounge</span>
           </p>
         </div>
 
