@@ -971,7 +971,7 @@ export default function LoungePage() {
             </Card>
 
             {/* Quick Links */}
-            <Card className={`card-premium lg:col-span-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '450ms' }}>
+            <Card className={`card-premium lg:col-span-2 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '450ms' }}>
               <CardContent className="p-4">
                 <div className="grid grid-cols-3 gap-3">
                   {[
