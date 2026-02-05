@@ -147,77 +147,106 @@ export default function MatchDetailModal({ matchId, onClose }) {
                     <span className="text-xs text-gray-600">{formatInfo.numTeams} équipes • {formatInfo.format}</span>
                   </div>
                   
-                  <div className="divide-y divide-white/[0.04]">
-                    {matchDetails.teams?.sort((a, b) => a.rank - b.rank).map((team, teamIndex) => {
-                      const teamColor = TEAM_COLORS[Math.min(teamIndex, TEAM_COLORS.length - 1)];
-                      const teamTotal = team.scores?.reduce((sum, p) => sum + (p.score || 0), 0) || 0;
-                      const teamAvgDelta = team.scores?.length > 0 
-                        ? Math.round(team.scores.reduce((sum, p) => sum + (p.delta || 0), 0) / team.scores.length)
-                        : 0;
-                      
-                      return (
-                        <div key={teamIndex} className={`${teamColor.light}`}>
-                          {/* Team Header */}
-                          <div className={`flex items-center justify-between px-4 py-3 border-b border-white/[0.04]`}>
-                            <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 ${teamColor.bg} ${teamColor.text} rounded-lg flex items-center justify-center font-bold text-sm`}>
-                                {team.rank}
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold text-white">Équipe {team.rank}</p>
-                                <p className="text-[10px] text-gray-500">{team.scores?.length || 0} joueur{(team.scores?.length || 0) > 1 ? 's' : ''}</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-lg font-bold text-white">{teamTotal} pts</p>
-                              <p className={`text-xs font-medium ${teamAvgDelta > 0 ? 'text-green-500' : teamAvgDelta < 0 ? 'text-red-500' : 'text-gray-500'}`}>
-                                Δ moy: {teamAvgDelta > 0 ? '+' : ''}{teamAvgDelta}
-                              </p>
-                            </div>
-                          </div>
+                  {/* Calculate individual rankings based on score */}
+                  {(() => {
+                    // Get all players with their scores and calculate individual rank
+                    const allPlayersWithScores = matchDetails.teams?.flatMap(team => 
+                      (team.scores || []).map(player => ({
+                        ...player,
+                        teamRank: team.rank
+                      }))
+                    ) || [];
+                    
+                    // Sort by score descending to get individual rankings
+                    const sortedByScore = [...allPlayersWithScores].sort((a, b) => b.score - a.score);
+                    
+                    // Create a map of playerName -> individualRank
+                    const playerRankMap = {};
+                    sortedByScore.forEach((player, index) => {
+                      playerRankMap[player.playerName] = index + 1;
+                    });
+                    
+                    return (
+                      <div className="divide-y divide-white/[0.04]">
+                        {matchDetails.teams?.sort((a, b) => a.rank - b.rank).map((team, teamIndex) => {
+                          const teamColor = TEAM_COLORS[Math.min(teamIndex, TEAM_COLORS.length - 1)];
+                          const teamTotal = team.scores?.reduce((sum, p) => sum + (p.score || 0), 0) || 0;
+                          const teamAvgDelta = team.scores?.length > 0 
+                            ? Math.round(team.scores.reduce((sum, p) => sum + (p.delta || 0), 0) / team.scores.length)
+                            : 0;
                           
-                          {/* Team Players */}
-                          <div className="divide-y divide-white/[0.02]">
-                            {team.scores?.sort((a, b) => b.score - a.score).map((player, playerIndex) => {
-                              const isWin = player.delta > 0;
-                              const isLoss = player.delta < 0;
-                              
-                              return (
-                                <div key={playerIndex} className="grid grid-cols-12 gap-2 px-4 py-2 items-center hover:bg-white/[0.02]">
-                                  <div className="col-span-1">
-                                    <span className={`inline-flex items-center justify-center w-5 h-5 rounded text-[10px] font-bold ${teamColor.bg} ${teamColor.text}`}>
-                                      {team.rank}
-                                    </span>
+                          return (
+                            <div key={teamIndex} className={`${teamColor.light}`}>
+                              {/* Team Header */}
+                              <div className={`flex items-center justify-between px-4 py-3 border-b border-white/[0.04]`}>
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-8 h-8 ${teamColor.bg} ${teamColor.text} rounded-lg flex items-center justify-center font-bold text-sm`}>
+                                    {team.rank}
                                   </div>
-                                  <div className="col-span-5 flex items-center gap-2 min-w-0">
-                                    {player.playerCountryCode && <span className="text-sm flex-shrink-0">{getCountryFlag(player.playerCountryCode)}</span>}
-                                    <Link 
-                                      href={`/player/${encodeURIComponent(player.playerName)}`}
-                                      className="text-sm text-gray-300 truncate hover:text-white hover:underline transition-colors"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      {player.playerName}
-                                    </Link>
-                                  </div>
-                                  <div className="col-span-2 text-center">
-                                    <span className="text-sm font-semibold text-white">{player.score}</span>
-                                  </div>
-                                  <div className="col-span-2 text-center">
-                                    <span className={`text-sm font-bold ${isWin ? 'text-green-500' : isLoss ? 'text-red-500' : 'text-gray-500'}`}>
-                                      {player.delta > 0 ? '+' : ''}{player.delta}
-                                    </span>
-                                  </div>
-                                  <div className="col-span-2 text-right">
-                                    <span className="text-sm text-gray-400">{player.newMmr ? player.newMmr.toLocaleString('fr-FR') : '-'}</span>
+                                  <div>
+                                    <p className="text-sm font-semibold text-white">Équipe {team.rank}</p>
+                                    <p className="text-[10px] text-gray-500">{team.scores?.length || 0} joueur{(team.scores?.length || 0) > 1 ? 's' : ''}</p>
                                   </div>
                                 </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                                <div className="text-right">
+                                  <p className="text-lg font-bold text-white">{teamTotal} pts</p>
+                                  <p className={`text-xs font-medium ${teamAvgDelta > 0 ? 'text-green-500' : teamAvgDelta < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                                    Δ moy: {teamAvgDelta > 0 ? '+' : ''}{teamAvgDelta}
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              {/* Team Players */}
+                              <div className="divide-y divide-white/[0.02]">
+                                {team.scores?.sort((a, b) => b.score - a.score).map((player, playerIndex) => {
+                                  const isWin = player.delta > 0;
+                                  const isLoss = player.delta < 0;
+                                  const individualRank = playerRankMap[player.playerName] || '-';
+                                  
+                                  // Style for podium positions
+                                  let rankStyle = 'bg-white/[0.04] text-gray-400';
+                                  if (individualRank === 1) rankStyle = 'bg-yellow-500 text-black';
+                                  else if (individualRank === 2) rankStyle = 'bg-gray-400 text-black';
+                                  else if (individualRank === 3) rankStyle = 'bg-orange-600 text-white';
+                                  
+                                  return (
+                                    <div key={playerIndex} className="grid grid-cols-12 gap-2 px-4 py-2 items-center hover:bg-white/[0.02]">
+                                      <div className="col-span-1">
+                                        <span className={`inline-flex items-center justify-center w-5 h-5 rounded text-[10px] font-bold ${rankStyle}`}>
+                                          {individualRank}
+                                        </span>
+                                      </div>
+                                      <div className="col-span-5 flex items-center gap-2 min-w-0">
+                                        {player.playerCountryCode && <span className="text-sm flex-shrink-0">{getCountryFlag(player.playerCountryCode)}</span>}
+                                        <Link 
+                                          href={`/player/${encodeURIComponent(player.playerName)}`}
+                                          className="text-sm text-gray-300 truncate hover:text-white hover:underline transition-colors"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          {player.playerName}
+                                        </Link>
+                                      </div>
+                                      <div className="col-span-2 text-center">
+                                        <span className="text-sm font-semibold text-white">{player.score}</span>
+                                      </div>
+                                      <div className="col-span-2 text-center">
+                                        <span className={`text-sm font-bold ${isWin ? 'text-green-500' : isLoss ? 'text-red-500' : 'text-gray-500'}`}>
+                                          {player.delta > 0 ? '+' : ''}{player.delta}
+                                        </span>
+                                      </div>
+                                      <div className="col-span-2 text-right">
+                                        <span className="text-sm text-gray-400">{player.newMmr ? player.newMmr.toLocaleString('fr-FR') : '-'}</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : (
                 /* FFA Format - Classic Table */
