@@ -307,25 +307,28 @@ export default function PlayerProfilePage() {
           ))}
         </div>
 
-        {/* Main Content */}
+        {/* Main Content with staggered animation */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
           {/* Advanced Stats */}
-          <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl">
+          <div className={`card-premium rounded-xl transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '350ms' }}>
             <div className="px-4 py-3 border-b border-white/[0.04]">
-              <span className="text-sm font-medium text-gray-400">Stats Avancées</span>
+              <span className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-purple-500" />
+                Stats Avancées
+              </span>
             </div>
             <div className="p-4">
               {advancedStats ? (
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center p-2 bg-white/[0.02] rounded">
+                  <div className="flex justify-between items-center p-2 bg-white/[0.02] rounded hover:bg-white/[0.04] transition-all duration-300 group">
                     <span className="text-gray-500 text-xs">Δ MMR moy.</span>
-                    <span className={`font-bold ${advancedStats.avgMmrChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    <span className={`font-bold group-hover:scale-110 transition-transform duration-300 ${advancedStats.avgMmrChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                       {advancedStats.avgMmrChange > 0 ? '+' : ''}{advancedStats.avgMmrChange}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center p-2 bg-white/[0.02] rounded">
+                  <div className="flex justify-between items-center p-2 bg-white/[0.02] rounded hover:bg-white/[0.04] transition-all duration-300 group">
                     <span className="text-gray-500 text-xs">10 derniers</span>
-                    <span>
+                    <span className="group-hover:scale-110 transition-transform duration-300">
                       <span className="text-green-500 font-bold">{advancedStats.recentForm.wins}W</span>
                       <span className="text-gray-600 mx-1">/</span>
                       <span className="text-red-500 font-bold">{advancedStats.recentForm.losses}L</span>
@@ -334,7 +337,7 @@ export default function PlayerProfilePage() {
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <BarChart3 className="w-8 h-8 mx-auto mb-2 text-gray-700" />
+                  <BarChart3 className="w-8 h-8 mx-auto mb-2 text-gray-700 animate-pulse" />
                   <p className="text-gray-600 text-xs">Pas de données</p>
                 </div>
               )}
@@ -342,18 +345,21 @@ export default function PlayerProfilePage() {
           </div>
 
           {/* MMR Chart */}
-          <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl lg:col-span-2">
+          <div className={`card-premium rounded-xl lg:col-span-2 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '400ms' }}>
             <div className="px-4 py-3 border-b border-white/[0.04]">
-              <span className="text-sm font-medium text-gray-400">Évolution MMR</span>
+              <span className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-green-500" />
+                Évolution MMR
+              </span>
             </div>
             <div className="p-4">
               {mmrChartData.length > 0 ? (
-                <div className="h-48">
+                <div className="h-48 chart-container">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={mmrChartData}>
                       <defs>
                         <linearGradient id="mmrGradPlayer" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2}/>
+                          <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
                           <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
@@ -374,9 +380,12 @@ export default function PlayerProfilePage() {
         </div>
 
         {/* Match History */}
-        <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl">
+        <div className={`card-premium rounded-xl transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '450ms' }}>
           <div className="px-4 py-3 border-b border-white/[0.04] flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-400">Historique ({matchHistory.length})</span>
+            <span className="text-sm font-medium text-gray-400 flex items-center gap-2">
+              <Swords className="w-4 h-4 text-blue-500" />
+              Historique ({matchHistory.length})
+            </span>
           </div>
           
           {matchHistory.length > 0 ? (
@@ -401,14 +410,15 @@ export default function PlayerProfilePage() {
                       return (
                         <tr 
                           key={match.id || index}
-                          className="hover:bg-white/[0.02] transition-colors cursor-pointer"
+                          className="table-row-hover cursor-pointer group"
                           onClick={() => match.id && setSelectedMatchId(match.id)}
+                          style={{ animationDelay: `${index * 30}ms` }}
                         >
                           <td className="py-3 px-4 text-gray-400 text-sm">
                             {new Date(match.time).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
                           </td>
                           <td className="py-3 px-4 text-center">
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-white/[0.04] text-gray-400 text-xs">
+                            <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-white/[0.04] text-gray-400 text-xs group-hover:bg-white/[0.08] transition-colors duration-300">
                               {match.tier || '?'}
                             </span>
                           </td>
@@ -417,7 +427,7 @@ export default function PlayerProfilePage() {
                           </td>
                           <td className="py-3 px-4 text-center text-white font-medium">{match.score ?? '-'}</td>
                           <td className="py-3 px-4 text-center">
-                            <span className={`font-bold ${isWin ? 'text-green-500' : isLoss ? 'text-red-500' : 'text-gray-500'}`}>
+                            <span className={`font-bold transition-transform duration-300 group-hover:scale-110 inline-block ${isWin ? 'text-green-500' : isLoss ? 'text-red-500' : 'text-gray-500'}`}>
                               {match.mmrDelta > 0 ? '+' : ''}{match.mmrDelta}
                             </span>
                           </td>
@@ -433,8 +443,8 @@ export default function PlayerProfilePage() {
               
               {matchHistory.length > 10 && (
                 <div className="py-3 text-center border-t border-white/[0.04]">
-                  <Button variant="ghost" size="sm" onClick={() => setShowAllMatches(!showAllMatches)} className="text-gray-500 hover:text-white">
-                    {showAllMatches ? <ChevronUp className="w-4 h-4 mr-1" /> : <ChevronDown className="w-4 h-4 mr-1" />}
+                  <Button variant="ghost" size="sm" onClick={() => setShowAllMatches(!showAllMatches)} className="text-gray-500 hover:text-white group">
+                    {showAllMatches ? <ChevronUp className="w-4 h-4 mr-1 group-hover:-translate-y-0.5 transition-transform" /> : <ChevronDown className="w-4 h-4 mr-1 group-hover:translate-y-0.5 transition-transform" />}
                     {showAllMatches ? 'Moins' : `Tout (${matchHistory.length})`}
                   </Button>
                 </div>
@@ -442,7 +452,7 @@ export default function PlayerProfilePage() {
             </>
           ) : (
             <div className="text-center py-12">
-              <Swords className="w-10 h-10 mx-auto mb-3 text-gray-700" />
+              <Swords className="w-10 h-10 mx-auto mb-3 text-gray-700 animate-bounce-subtle" />
               <p className="text-gray-500">Aucun match</p>
             </div>
           )}
