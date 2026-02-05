@@ -862,15 +862,15 @@ export default function LoungePage() {
                 {displayedSQ.length > 0 ? (
                   <>
                     <div className="overflow-x-auto">
-                      <table className="w-full">
+                      <table className="w-full table-fixed">
                         <thead>
                           <tr className="text-gray-500 text-xs uppercase tracking-wider border-b border-white/[0.04]">
-                            <th className="text-left py-3 px-4 font-medium">#</th>
-                            <th className="text-left py-3 px-4 font-medium">Date</th>
-                            <th className="text-left py-3 px-4 font-medium">Heure</th>
-                            <th className="text-center py-3 px-4 font-medium">Format</th>
-                            <th className="text-center py-3 px-4 font-medium">Status</th>
-                            <th className="text-right py-3 px-4 font-medium">Temps</th>
+                            <th className="w-[8%] text-center py-3 px-2 font-medium">#</th>
+                            <th className="w-[18%] text-center py-3 px-2 font-medium">Date</th>
+                            <th className="w-[14%] text-center py-3 px-2 font-medium">Heure</th>
+                            <th className="w-[18%] text-center py-3 px-2 font-medium">Format</th>
+                            <th className="w-[22%] text-center py-3 px-2 font-medium">Status</th>
+                            <th className="w-[20%] text-center py-3 px-2 font-medium">Temps</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.03]">
@@ -886,22 +886,22 @@ export default function LoungePage() {
                                 className={`table-row-hover cursor-pointer group ${isPast ? 'opacity-50' : ''}`}
                                 style={{ animationDelay: `${index * 30}ms` }}
                               >
-                                <td className="py-3 px-4 text-gray-600 text-sm">
+                                <td className="w-[8%] py-3 px-2 text-center text-gray-600 text-sm">
                                   {sq.id}
                                 </td>
-                                <td className="py-3 px-4 text-gray-400 text-sm">
+                                <td className="w-[18%] py-3 px-2 text-center text-gray-400 text-sm">
                                   {formatShortDate(sq.time)}
                                 </td>
-                                <td className="py-3 px-4">
+                                <td className="w-[14%] py-3 px-2 text-center">
                                   <span className="text-white font-medium">{formatTime(sq.time)}</span>
                                 </td>
-                                <td className="py-3 px-4 text-center">
+                                <td className="w-[18%] py-3 px-2 text-center">
                                   <Badge variant="outline" className={`${formatColors[sq.format]} transition-transform duration-300 group-hover:scale-110`}>
                                     <Users className="w-3 h-3 mr-1" />
                                     {sq.format}
                                   </Badge>
                                 </td>
-                                <td className="py-3 px-4 text-center">
+                                <td className="w-[22%] py-3 px-2 text-center">
                                   {isNext && (
                                     <Badge className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 badge-shine">
                                       <Zap className="w-3 h-3 mr-1" />
@@ -923,7 +923,7 @@ export default function LoungePage() {
                                     <span className="text-gray-600 text-sm">-</span>
                                   )}
                                 </td>
-                                <td className="py-3 px-4 text-right">
+                                <td className="w-[20%] py-3 px-2 text-center">
                                   <span className={`text-sm font-medium transition-transform duration-300 group-hover:scale-110 inline-block ${
                                     isSoon ? 'text-green-500' : isPast ? 'text-gray-600' : 'text-gray-400'
                                   }`}>
