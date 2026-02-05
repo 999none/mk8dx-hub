@@ -142,8 +142,12 @@ export default function LoginPage() {
       <Navbar />
       <Card className="w-full max-w-md bg-white/[0.02] border-white/[0.04]">
         <CardHeader className="text-center">
-          <div className="w-12 h-12 bg-white/[0.03] border border-white/[0.06] rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Trophy className="w-6 h-6 text-yellow-500" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full overflow-hidden border-2 border-white/10">
+            <img 
+              src="https://cdn.discordapp.com/icons/445404006177570829/a_2c092bb27de30c6d285d8fafcb69f657.webp?size=64&animated=true" 
+              alt="MK8DX Lounge"
+              className="w-full h-full object-cover"
+            />
           </div>
           <CardTitle className="text-white">Connexion</CardTitle>
           <CardDescription className="text-gray-500">
