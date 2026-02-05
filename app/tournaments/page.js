@@ -7,8 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Calendar, Users, Bell, BellOff, ExternalLink, 
-  RefreshCw, Trophy, Gamepad2, ChevronLeft, ChevronRight
+  RefreshCw, Trophy, Gamepad2, ChevronLeft, ChevronRight,
+  Star, BookOpen, Award
 } from 'lucide-react';
+import Link from 'next/link';
 import RequireAuth from '@/components/RequireAuth';
 import Navbar from '@/components/Navbar';
 
