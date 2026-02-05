@@ -105,7 +105,7 @@ export default function TournamentsPage() {
 
   useEffect(() => {
     fetchTournaments();
-  }, [page, gameFilter, statusFilter]);
+  }, [page, gameFilter, statusFilter, formatFilter]);
 
   const getStatusStyle = (status) => {
     switch(status) {
