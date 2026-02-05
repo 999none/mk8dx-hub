@@ -92,10 +92,10 @@ export default function MatchDetailModal({ matchId, onClose }) {
       >
         
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-black border-b border-white/[0.06]">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-black/95 backdrop-blur-sm border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-white/[0.04] rounded-lg flex items-center justify-center">
-              <Swords className="w-4 h-4 text-gray-500" />
+            <div className="w-8 h-8 bg-gradient-to-br from-white/[0.08] to-white/[0.02] rounded-lg flex items-center justify-center border border-white/[0.06]">
+              <Swords className="w-4 h-4 text-blue-400" />
             </div>
             <div>
               <h2 className="text-sm font-semibold">Match #{matchId}</h2>
@@ -103,7 +103,7 @@ export default function MatchDetailModal({ matchId, onClose }) {
                 <div className="flex items-center gap-2">
                   <p className="text-xs text-gray-500">Tier {matchDetails.tier}</p>
                   {formatInfo && (
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${formatInfo.isTeamFormat ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                    <span className={`text-xs px-1.5 py-0.5 rounded transition-all duration-300 ${formatInfo.isTeamFormat ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'}`}>
                       {formatInfo.format}
                     </span>
                   )}
@@ -111,7 +111,7 @@ export default function MatchDetailModal({ matchId, onClose }) {
               )}
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/[0.04] rounded-lg transition-colors text-gray-500 hover:text-white">
+          <button onClick={handleClose} className="p-2 hover:bg-white/[0.06] rounded-lg transition-all duration-300 text-gray-500 hover:text-white hover:rotate-90">
             <X className="w-4 h-4" />
           </button>
         </div>
