@@ -155,6 +155,12 @@ export default function PushNotificationManager() {
       return;
     }
     
+    // Detect browsers with built-in ad blocking (Brave, etc.)
+    const isBrave = navigator.brave !== undefined;
+    if (isBrave) {
+      console.warn('[Push] Brave browser detected - push may be blocked by Shields');
+    }
+    
     setSubscribing(true);
     setLastError(null);
     setErrorDismissed(false);
