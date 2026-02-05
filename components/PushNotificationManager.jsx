@@ -213,7 +213,12 @@ export default function PushNotificationManager() {
           console.log('[Push] Subscription successful:', pushSubscription.endpoint?.substring(0, 50) + '...');
         } catch (subscribeErr) {
           retryCount++;
-          console.error(`[Push] Subscribe attempt ${retryCount} failed:`, subscribeErr.name, subscribeErr.message);
+          // Use console.warn for expected browser-level blocks (not a code error)
+          if (subscribeErr.name === 'AbortError') {
+            console.warn(`[Push] Subscribe attempt ${retryCount} blocked by browser:`, subscribeErr.message);
+          } else {
+            console.error(`[Push] Subscribe attempt ${retryCount} failed:`, subscribeErr.name, subscribeErr.message);
+          }
           
           // If it's an AbortError or timeout, wait and retry (but less time)
           if ((subscribeErr.name === 'AbortError' || subscribeErr.message === 'Push subscription timeout') && retryCount < maxRetries) {
