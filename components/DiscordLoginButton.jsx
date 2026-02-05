@@ -31,8 +31,7 @@ export default function DiscordLoginButton({
   return (
     <Button 
       onClick={handleSignIn}
-      variant="outline"
-      className={`flex items-center justify-center gap-2 ${className}`}
+      className={`flex items-center justify-center gap-2 bg-[#5865F2] text-white hover:bg-[#4752C4] btn-discord ${className}`}
     >
       <DiscordLogo />
       <span>{buttonText}</span>
