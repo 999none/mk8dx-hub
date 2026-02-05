@@ -199,7 +199,12 @@ export default function DashboardPage() {
                         className="rounded-full mb-4 border-2 border-white/10"
                       />
                     )}
-                    <h3 className="text-xl font-bold mb-1">{loungeData?.name || user?.name}</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-xl font-bold">{loungeData?.name || user?.name}</h3>
+                      {(playerDetails?.countryCode || loungeData?.countryCode) && (
+                        <span className="text-xl">{getCountryFlag(playerDetails?.countryCode || loungeData?.countryCode)}</span>
+                      )}
+                    </div>
                     <p className="text-gray-500 text-sm mb-4">@{user?.username}</p>
                     
                     <div className="w-full p-4 bg-white/[0.02] border border-white/[0.04] rounded-lg mb-4">
