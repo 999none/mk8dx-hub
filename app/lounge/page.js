@@ -2476,6 +2476,14 @@ export default function LoungePage() {
           </CardContent>
         </Card>
       </main>
+      
+      {/* Match Detail Modal */}
+      {selectedMatchId && (
+        <MatchDetailModal 
+          matchId={selectedMatchId} 
+          onClose={() => setSelectedMatchId(null)} 
+        />
+      )}
     </div>
   );
 }
