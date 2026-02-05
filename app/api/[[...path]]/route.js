@@ -1124,8 +1124,9 @@ export async function GET(request, context) {
         const cacheValid = cacheAge < 5 * 60 * 1000; // 5 minutes cache
         
         if (cache && cacheValid && !forceRefresh) {
-          // Filter out past events from cache
-          const filteredSchedule = (cache.data || []).filter(event => event.time > now);
+          // Include recent past events (last 48 hours) from cache
+          const pastCutoff = now - (48 * 60 * 60 * 1000); // 48 hours ago
+          const filteredSchedule = (cache.data || []).filter(event => event.time > pastCutoff);
           return NextResponse.json({
             schedule: filteredSchedule,
             lastUpdate: cache.lastUpdate,
