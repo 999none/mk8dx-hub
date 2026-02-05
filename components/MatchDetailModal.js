@@ -142,13 +142,14 @@ export default function MatchDetailModal({ matchId, onClose }) {
               </div>
 
               {/* Image */}
-              <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl overflow-hidden">
-                <div className="px-4 py-2 border-b border-white/[0.04]">
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Résultat</span>
+              <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+                <div className="px-5 py-3 border-b border-white/[0.04] flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-yellow-500" />
+                  <span className="text-sm font-medium text-gray-300">Résultat</span>
                 </div>
-                <div className="p-2">
+                <div className="p-3">
                   {!imageError ? (
-                    <img src={tableImageUrl} alt={`Table ${matchId}`} className="w-full rounded-lg" onError={() => setImageError(true)} />
+                    <img src={tableImageUrl} alt={`Table ${matchId}`} className="w-full rounded-lg transition-all duration-300 hover:scale-[1.01]" onError={() => setImageError(true)} />
                   ) : (
                     <div className="text-center py-8 text-gray-600 text-sm">Image non disponible</div>
                   )}
