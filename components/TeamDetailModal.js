@@ -100,42 +100,42 @@ export default function TeamDetailModal({ teamId, onClose }) {
       >
         
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-black/95 backdrop-blur-sm border-b border-white/[0.06]">
-          <div className="flex items-center gap-3">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-black/95 backdrop-blur-sm border-b border-white/[0.06]">
+          <div className="flex items-center gap-4">
             {/* Team Logo or Icon */}
             <div 
-              className="w-10 h-10 rounded-lg flex items-center justify-center border border-white/[0.08] transition-transform duration-300 hover:scale-110"
-              style={{ backgroundColor: `${teamColor}20` }}
+              className="w-12 h-12 rounded-xl flex items-center justify-center border border-white/[0.08] transition-transform duration-300 hover:scale-110 shadow-lg"
+              style={{ backgroundColor: `${teamColor}20`, boxShadow: `0 4px 20px ${teamColor}20` }}
             >
               {teamDetails?.logo ? (
                 <img 
                   src={`https://mkcentral.com${teamDetails.logo}`} 
                   alt={teamDetails.name} 
-                  className="w-8 h-8 object-contain"
+                  className="w-9 h-9 object-contain"
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
               ) : (
-                <Shield className="w-5 h-5" style={{ color: teamColor }} />
+                <Shield className="w-6 h-6" style={{ color: teamColor }} />
               )}
             </div>
             <div>
-              <h2 className="text-sm font-semibold flex items-center gap-2">
+              <h2 className="text-lg font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent flex items-center gap-2">
                 {loading ? 'Chargement...' : teamDetails?.name || 'Équipe'}
                 {teamDetails?.tag && (
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-white/[0.06] text-gray-400">
+                  <span className="text-sm px-2 py-0.5 rounded-lg bg-white/[0.06] text-gray-400 font-normal">
                     [{teamDetails.tag}]
                   </span>
                 )}
               </h2>
               {teamDetails && (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 mt-0.5">
                   {teamDetails.rosters?.length || 0} roster{(teamDetails.rosters?.length || 0) > 1 ? 's' : ''}
                 </p>
               )}
             </div>
           </div>
-          <button onClick={handleClose} className="p-2 hover:bg-white/[0.06] rounded-lg transition-all duration-300 text-gray-500 hover:text-white hover:rotate-90">
-            <X className="w-4 h-4" />
+          <button onClick={handleClose} className="p-2.5 hover:bg-white/[0.06] rounded-xl transition-all duration-300 text-gray-500 hover:text-white hover:rotate-90 hover:scale-110">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
