@@ -73,6 +73,12 @@ export default function DashboardPage() {
   const [selectedSeason, setSelectedSeason] = useState('');
   const [selectedMatchId, setSelectedMatchId] = useState(null);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Animation mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
