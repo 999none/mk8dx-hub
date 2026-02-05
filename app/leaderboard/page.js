@@ -263,52 +263,8 @@ export default function LeaderboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            {/* Stats Cards Row */}
-            <Card className={`card-premium transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '100ms' }}>
-              <CardContent className="p-6 text-center">
-                <div className="text-4xl font-black text-white mb-1 transition-all duration-500 hover:scale-105">
-                  {total.toLocaleString('fr-FR')}
-                </div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">Joueurs Total</p>
-              </CardContent>
-            </Card>
-
-            <Card className={`card-premium transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '150ms' }}>
-              <CardContent className="p-6 text-center">
-                <div className="text-4xl font-black text-yellow-500 mb-1 transition-all duration-500 hover:scale-105">
-                  {avgMmr.toLocaleString('fr-FR')}
-                </div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider">MMR Moyen</p>
-              </CardContent>
-            </Card>
-
-            <Card className={`card-premium lg:col-span-2 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
-              <CardContent className="p-6">
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Top Pays (page actuelle)</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {topCountries.map(([code, count], i) => (
-                    <div key={code} className={`stat-card text-center p-2 rounded-lg ${
-                      i === 0 ? 'bg-yellow-500/10 stat-yellow' :
-                      i === 1 ? 'bg-gray-500/10 stat-gray' :
-                      'bg-orange-500/10 stat-orange'
-                    }`}>
-                      <div className={`text-2xl mb-1`}>{getCountryFlag(code)}</div>
-                      <p className={`text-xs font-semibold ${
-                        i === 0 ? 'text-yellow-500' :
-                        i === 1 ? 'text-gray-400' :
-                        'text-orange-500'
-                      }`}>{count}</p>
-                    </div>
-                  ))}
-                  {topCountries.length === 0 && (
-                    <div className="col-span-3 text-center text-gray-600 text-sm py-2">-</div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Filters Card */}
-            <Card className={`card-premium lg:col-span-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '250ms' }}>
+            <Card className={`card-premium lg:col-span-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '100ms' }}>
               <CardContent className="p-4">
                 <div className="flex flex-col gap-4">
                   {/* Search Row */}
