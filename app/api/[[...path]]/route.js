@@ -90,6 +90,9 @@ export async function GET(request, context) {
     // Lounge player count - Get total tracked players from MKCentral Lounge
     if (path === 'lounge/player-count') {
       try {
+        const { searchParams } = new URL(request.url);
+        const forceRefresh = searchParams.get('refresh') === 'true';
+        
         const db = await getDatabase();
         
         // Check cache (5 minutes for player count)
@@ -99,7 +102,7 @@ export async function GET(request, context) {
         const cacheAge = cache ? Date.now() - new Date(cache.lastUpdate).getTime() : Infinity;
         const cacheValid = cacheAge < 5 * 60 * 1000; // 5 minutes cache
         
-        if (cache && cacheValid) {
+        if (cache && cacheValid && !forceRefresh) {
           return NextResponse.json({
             count: cache.count,
             cached: true,
