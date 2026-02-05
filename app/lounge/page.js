@@ -926,7 +926,7 @@ function formatTime(timestamp) {
 }
 
 // SQ Card Component
-function SQCard({ sq, isNext }) {
+function SQCard({ sq, isNext, participated = false }) {
   const status = getTimeStatus(sq.time);
   const isPast = status === 'past';
   const isSoon = status === 'soon';
@@ -947,7 +947,8 @@ function SQCard({ sq, isNext }) {
       ${isNext ? 'ring-2 ring-yellow-500/50 bg-yellow-500/[0.03]' : ''}
       ${isSoon ? 'ring-2 ring-green-500/50' : ''}
       ${isQueueOpen ? 'ring-2 ring-purple-500/50 bg-purple-500/[0.03]' : ''}
-      ${isPast ? 'opacity-50' : 'hover:bg-white/[0.04]'}
+      ${participated && isPast ? 'ring-2 ring-emerald-500/50 bg-emerald-500/[0.05] opacity-100' : ''}
+      ${isPast && !participated ? 'opacity-50' : 'hover:bg-white/[0.04]'}
     `}>
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
@@ -959,6 +960,12 @@ function SQCard({ sq, isNext }) {
                 {sq.format.toUpperCase()}
               </Badge>
               <span className="text-gray-500 text-sm">#{sq.id}</span>
+              {participated && isPast && (
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  Participé
+                </Badge>
+              )}
               {isNext && (
                 <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
                   <Zap className="w-3 h-3 mr-1" />
