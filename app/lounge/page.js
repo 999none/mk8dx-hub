@@ -442,7 +442,7 @@ export default function LoungePage() {
 
   const fetchSchedule = useCallback(async () => {
     try {
-      const res = await fetch('/api/lounge/schedule');
+      const res = await fetch('/api/sq-schedule');
       const data = await res.json();
       
       if (data.schedule) {
