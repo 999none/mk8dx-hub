@@ -851,7 +851,7 @@ export default function LoungePage() {
             </Card>
 
             {/* SQ Table */}
-            <Card className={`card-premium lg:col-span-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '400ms' }}>
+            <Card className={`card-premium lg:col-span-2 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '400ms' }}>
               <CardHeader className="border-b border-white/[0.04] pb-4">
                 <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
                   <Gamepad2 className="w-4 h-4 text-blue-500" />
