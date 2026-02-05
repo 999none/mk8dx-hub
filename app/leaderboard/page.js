@@ -70,6 +70,12 @@ export default function LeaderboardPage() {
   const [season, setSeason] = useState(null);
   const [currentUserLoungeName, setCurrentUserLoungeName] = useState(null);
   const [trackedPlayers, setTrackedPlayers] = useState([]);
+  const [mounted, setMounted] = useState(false);
+  
+  // Animation mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
