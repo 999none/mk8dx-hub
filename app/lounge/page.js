@@ -2331,7 +2331,14 @@ export default function LoungePage() {
                     </div>
                     <div className="space-y-3 pl-2 border-l-2 border-gray-600/30">
                       {sqs.map((sq) => (
-                        <SQCard key={sq.id} sq={sq} isNext={false} />
+                        <SQCard 
+                          key={sq.id} 
+                          sq={sq} 
+                          isNext={false} 
+                          participated={participatedSQs.has(sq.id)}
+                          matchId={participatedSQs.get(sq.id)}
+                          onMatchClick={(id) => setSelectedMatchId(id)}
+                        />
                       ))}
                     </div>
                   </div>
@@ -2340,7 +2347,14 @@ export default function LoungePage() {
             ) : (
               <div className="space-y-3">
                 {pastSQ.map((sq) => (
-                  <SQCard key={sq.id} sq={sq} isNext={false} />
+                  <SQCard 
+                    key={sq.id} 
+                    sq={sq} 
+                    isNext={false}
+                    participated={participatedSQs.has(sq.id)}
+                    matchId={participatedSQs.get(sq.id)}
+                    onMatchClick={(id) => setSelectedMatchId(id)}
+                  />
                 ))}
               </div>
             )}
