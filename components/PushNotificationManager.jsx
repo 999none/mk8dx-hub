@@ -144,6 +144,12 @@ export default function PushNotificationManager() {
 
   // Subscribe to push notifications
   const subscribe = async () => {
+    // Prevent multiple automatic attempts
+    if (subscribeAttempted.current) {
+      console.log('[Push] Subscribe already attempted this session');
+    }
+    subscribeAttempted.current = true;
+    
     if (!vapidPublicKey) {
       toast.error('Configuration push non disponible');
       return;
@@ -151,6 +157,7 @@ export default function PushNotificationManager() {
     
     setSubscribing(true);
     setLastError(null);
+    setErrorDismissed(false);
     
     try {
       // Request notification permission
@@ -187,7 +194,7 @@ export default function PushNotificationManager() {
       // Subscribe to push with retry logic and timeout
       let pushSubscription = null;
       let retryCount = 0;
-      const maxRetries = 3;
+      const maxRetries = 2; // Reduced from 3 to 2 for faster feedback
       
       while (!pushSubscription && retryCount < maxRetries) {
         try {
@@ -197,9 +204,9 @@ export default function PushNotificationManager() {
             applicationServerKey: applicationServerKey
           });
           
-          // Add a 15 second timeout
+          // Add a 10 second timeout (reduced from 15)
           const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Push subscription timeout')), 15000)
+            setTimeout(() => reject(new Error('Push subscription timeout')), 10000)
           );
           
           pushSubscription = await Promise.race([subscriptionPromise, timeoutPromise]);
@@ -208,23 +215,29 @@ export default function PushNotificationManager() {
           retryCount++;
           console.error(`[Push] Subscribe attempt ${retryCount} failed:`, subscribeErr.name, subscribeErr.message);
           
-          // If it's an AbortError or timeout, wait and retry
+          // If it's an AbortError or timeout, wait and retry (but less time)
           if ((subscribeErr.name === 'AbortError' || subscribeErr.message === 'Push subscription timeout') && retryCount < maxRetries) {
             console.log('[Push] Waiting before retry...');
-            // Clear any stuck state by waiting for the service worker to be ready again
-            await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
+            await new Promise(resolve => setTimeout(resolve, 1500 * retryCount));
           } else if (retryCount >= maxRetries) {
+            // Mark push service as unavailable for this session
+            sessionStorage.setItem('push_service_unavailable', 'true');
+            setPushServiceAvailable(false);
+            
             // After max retries, show a helpful error
             let errorMessage = '';
             if (subscribeErr.name === 'AbortError') {
-              errorMessage = 'Le service de notifications push n\'est pas disponible. Cela peut être dû à : 1) Un bloqueur de publicités, 2) Paramètres de confidentialité du navigateur, 3) Mode navigation privée. Essayez de désactiver ces options ou d\'utiliser un autre navigateur.';
+              errorMessage = 'Le service de notifications push du navigateur n\'est pas disponible. Cela peut être causé par un bloqueur de publicités, le mode navigation privée, ou des paramètres de confidentialité.';
             } else if (subscribeErr.message === 'Push subscription timeout') {
-              errorMessage = 'La connexion au service push a expiré. Vérifiez votre connexion internet et réessayez.';
+              errorMessage = 'La connexion au service push a expiré. Vérifiez votre connexion internet.';
             } else {
               errorMessage = `Erreur: ${subscribeErr.message}`;
             }
             setLastError(errorMessage);
-            toast.error('Échec de l\'activation des notifications');
+            // Don't show toast for AbortError as it's a known browser limitation
+            if (subscribeErr.name !== 'AbortError') {
+              toast.error('Échec de l\'activation des notifications');
+            }
             throw subscribeErr;
           }
         }
@@ -252,6 +265,9 @@ export default function PushNotificationManager() {
         if (data.preferences) {
           setPreferences(data.preferences);
         }
+        // Clear any previous failure flag
+        sessionStorage.removeItem('push_service_unavailable');
+        setPushServiceAvailable(true);
         toast.success('Notifications activées!');
       } else {
         throw new Error(data.message || 'Failed to subscribe');
@@ -259,10 +275,10 @@ export default function PushNotificationManager() {
       
     } catch (err) {
       console.error('[Push] Subscribe error:', err.name, err.message);
-      // Only show toast if we haven't already shown one
-      if (!lastError) {
+      // Only set error if we haven't already set one
+      if (!lastError && !errorDismissed) {
         setLastError(err.name === 'AbortError' 
-          ? 'Le service push est temporairement indisponible. Ce problème peut être lié à votre navigateur ou votre connexion. Essayez de rafraîchir la page ou utilisez un autre navigateur.'
+          ? 'Le service push est indisponible dans votre navigateur. Cette fonctionnalité peut ne pas être supportée dans ce contexte.'
           : `Erreur: ${err.message}`
         );
       }
