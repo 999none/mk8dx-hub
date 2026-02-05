@@ -327,6 +327,8 @@ export default function LeaderboardPage() {
                   const rank = getCurrentRank(player.mmr || 0);
                   const globalRank = player.rank || ((page - 1) * limit + index + 1);
                   const isTop3 = globalRank <= 3;
+                  const isCurrentUser = currentUserLoungeName && player.name?.toLowerCase() === currentUserLoungeName?.toLowerCase();
+                  const isTracked = trackedPlayers.includes(player.name?.toLowerCase());
                   
                   let rankStyle = 'bg-white/[0.04] text-gray-400';
                   let rowHighlight = '';
@@ -342,8 +344,18 @@ export default function LeaderboardPage() {
                     rowHighlight = 'bg-orange-600/[0.03]';
                   }
                   
+                  // Override highlight for tracked players and current user
+                  if (isCurrentUser) {
+                    rowHighlight = 'bg-green-500/[0.08] border-l-2 border-green-500';
+                  } else if (isTracked) {
+                    rowHighlight = 'bg-green-500/[0.04] border-l-2 border-green-500/50';
+                  }
+                  
+                  // Determine link destination
+                  const linkHref = isCurrentUser ? '/dashboard' : `/player/${encodeURIComponent(player.name)}`;
+                  
                   return (
-                    <Link key={player.id || index} href={`/player/${encodeURIComponent(player.name)}`}>
+                    <Link key={player.id || index} href={linkHref}>
                       <div className={`grid grid-cols-12 gap-2 px-4 py-3 items-center hover:bg-white/[0.04] transition-colors cursor-pointer ${rowHighlight}`}>
                         {/* Rank */}
                         <div className="col-span-2 sm:col-span-1">
@@ -357,9 +369,17 @@ export default function LeaderboardPage() {
                           {player.countryCode && (
                             <span className="text-sm flex-shrink-0">{getCountryFlag(player.countryCode)}</span>
                           )}
-                          <span className={`text-sm truncate ${isTop3 ? 'font-semibold text-white' : 'text-gray-300'}`}>
+                          <span className={`text-sm truncate ${isCurrentUser ? 'font-semibold text-green-400' : isTracked ? 'text-green-300' : isTop3 ? 'font-semibold text-white' : 'text-gray-300'}`}>
                             {player.name}
                           </span>
+                          {isCurrentUser && (
+                            <Badge className="bg-green-500/20 text-green-400 border border-green-500/30 text-[9px] px-1.5 py-0">
+                              Moi
+                            </Badge>
+                          )}
+                          {isTracked && !isCurrentUser && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" title="Joueur suivi" />
+                          )}
                         </div>
                         
                         {/* Rank Badge */}
