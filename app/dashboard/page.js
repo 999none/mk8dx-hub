@@ -31,6 +31,14 @@ const AVAILABLE_SEASONS = [
   { value: '11', label: 'Saison 11' },
 ];
 
+// Helper to convert country code to flag emoji
+const getCountryFlag = (countryCode) => {
+  if (!countryCode || countryCode.length !== 2) return '';
+  return countryCode.toUpperCase().replace(/./g, char => 
+    String.fromCodePoint(127397 + char.charCodeAt())
+  );
+};
+
 const getMatchFormat = (numTeams, numPlayers) => {
   if (!numTeams || !numPlayers) return '-';
   if (numTeams === numPlayers) return 'FFA';
