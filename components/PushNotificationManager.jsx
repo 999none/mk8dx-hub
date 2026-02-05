@@ -495,27 +495,21 @@ export default function PushNotificationManager() {
           </div>
         )}
         
-        {/* Error Status */}
-        {lastError && !isSubscribed && (
+        {/* Error Status - Dismissible */}
+        {lastError && !isSubscribed && !errorDismissed && (
           <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg space-y-3">
-            <p className="text-orange-400 text-sm">
-              <strong>Erreur d'activation:</strong> {lastError}
-            </p>
-            <div className="text-xs text-gray-400 space-y-1">
-              <p className="font-medium text-gray-300">Solutions possibles :</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>Désactivez les bloqueurs de publicités (uBlock, AdBlock, etc.)</li>
-                <li>Vérifiez que vous n'êtes pas en mode navigation privée</li>
-                <li>Essayez avec un autre navigateur (Chrome, Firefox, Edge)</li>
-                <li>Rafraîchissez la page (Ctrl+F5) et réessayez</li>
-              </ul>
+            <div className="flex items-start justify-between">
+              <p className="text-orange-400 text-sm flex-1">
+                <strong>Note:</strong> {lastError}
+              </p>
+              <button 
+                onClick={() => setErrorDismissed(true)} 
+                className="text-gray-400 hover:text-gray-300 ml-2 text-xl leading-none"
+                aria-label="Fermer"
+              >
+                ×
+              </button>
             </div>
-            <button 
-              onClick={() => setLastError(null)} 
-              className="text-orange-300 text-xs underline hover:text-orange-200"
-            >
-              Fermer ce message
-            </button>
           </div>
         )}
         
