@@ -13,8 +13,8 @@ import {
   Calendar, Clock, Users, RefreshCw, ExternalLink, 
   ChevronRight, Trophy, Gamepad2, Timer, Zap, DoorOpen, LogIn, Filter,
   Bell, BellOff, BellRing, Settings, Check, X, Loader2, Send,
-  CalendarDays, CheckCircle2, Circle, ListChecks, ChevronLeft, ChevronDown,
-  HelpCircle, BookOpen, Award, AlertTriangle, Shield, Star, Info
+  CalendarDays, CheckCircle2, Circle, ListChecks, ChevronLeft, ChevronDown, ChevronUp,
+  HelpCircle, BookOpen, Award, AlertTriangle, Shield, Star, Info, BarChart3, History
 } from 'lucide-react';
 import {
   Select,
@@ -50,7 +50,6 @@ import { toast } from 'sonner';
 // PUSH NOTIFICATION SYSTEM
 // =====================================================
 
-// Check if push notifications are supported
 function isPushSupported() {
   return typeof window !== 'undefined' && 
     'serviceWorker' in navigator && 
@@ -58,7 +57,6 @@ function isPushSupported() {
     'Notification' in window;
 }
 
-// Convert VAPID key to Uint8Array
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding)
@@ -74,7 +72,6 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-// Custom hook for push notification management
 function usePushNotifications() {
   const [permission, setPermission] = useState('default');
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -83,11 +80,10 @@ function usePushNotifications() {
   const [preferences, setPreferences] = useState({
     loungeQueue: true,
     sqQueue: true,
-    selectedSQs: [] // Array of SQ IDs to notify
+    selectedSQs: []
   });
   const [swRegistration, setSwRegistration] = useState(null);
   
-  // Initialize service worker and check subscription status
   useEffect(() => {
     if (!isPushSupported()) {
       setIsLoading(false);
@@ -98,18 +94,14 @@ function usePushNotifications() {
       try {
         setPermission(Notification.permission);
         
-        // Register service worker
         const registration = await navigator.serviceWorker.register('/sw.js');
-        console.log('[Push] Service Worker registered');
         setSwRegistration(registration);
         
-        // Check existing subscription
         const existingSubscription = await registration.pushManager.getSubscription();
         if (existingSubscription) {
           setSubscription(existingSubscription);
           setIsSubscribed(true);
           
-          // Get preferences from server
           try {
             const res = await fetch(`/api/push/status?endpoint=${encodeURIComponent(existingSubscription.endpoint)}`);
             const data = await res.json();
@@ -130,7 +122,6 @@ function usePushNotifications() {
     init();
   }, []);
   
-  // Subscribe to push notifications
   const subscribe = useCallback(async () => {
     if (!swRegistration) {
       toast.error('Service Worker non disponible');
@@ -140,7 +131,6 @@ function usePushNotifications() {
     setIsLoading(true);
     
     try {
-      // Request notification permission if needed
       if (Notification.permission === 'default') {
         const result = await Notification.requestPermission();
         setPermission(result);
@@ -150,12 +140,11 @@ function usePushNotifications() {
           return false;
         }
       } else if (Notification.permission === 'denied') {
-        toast.error('Les notifications sont bloquées. Veuillez les autoriser dans les paramètres de votre navigateur.');
+        toast.error('Les notifications sont bloquées.');
         setIsLoading(false);
         return false;
       }
       
-      // Get VAPID public key
       const vapidRes = await fetch('/api/push/vapid-public-key');
       const { publicKey } = await vapidRes.json();
       
@@ -163,13 +152,11 @@ function usePushNotifications() {
         throw new Error('VAPID key not available');
       }
       
-      // Subscribe to push
       const pushSubscription = await swRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(publicKey)
       });
       
-      // Send subscription to server
       const res = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -202,17 +189,14 @@ function usePushNotifications() {
     }
   }, [swRegistration, preferences]);
   
-  // Unsubscribe from push notifications
   const unsubscribe = useCallback(async () => {
     if (!subscription) return false;
     
     setIsLoading(true);
     
     try {
-      // Unsubscribe from push manager
       await subscription.unsubscribe();
       
-      // Notify server
       await fetch('/api/push/unsubscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -223,7 +207,6 @@ function usePushNotifications() {
       
       setSubscription(null);
       setIsSubscribed(false);
-      // Reset preferences to default (clear planning)
       setPreferences({
         loungeQueue: true,
         sqQueue: true,
@@ -241,7 +224,6 @@ function usePushNotifications() {
     }
   }, [subscription]);
   
-  // Update preferences
   const updatePreferences = useCallback(async (newPreferences) => {
     if (!subscription) return false;
     
@@ -270,7 +252,6 @@ function usePushNotifications() {
     }
   }, [subscription]);
   
-  // Send test notification
   const sendTestNotification = useCallback(async () => {
     if (!subscription) {
       toast.error('Veuillez d\'abord activer les notifications');
@@ -312,590 +293,20 @@ function usePushNotifications() {
   };
 }
 
-// Push Notification Settings Component
-function PushNotificationSettings({ push, schedule = [] }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedSQs, setSelectedSQs] = useState(new Set());
-  const [hasChanges, setHasChanges] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  
-  // Avoid hydration mismatch by only rendering dynamic content after mount
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  
-  // Sync selectedSQs with preferences from server (only after mount)
-  useEffect(() => {
-    if (mounted) {
-      // Sync with server preferences, or reset to empty if no selectedSQs
-      setSelectedSQs(new Set(push.preferences?.selectedSQs || []));
-    }
-  }, [mounted, push.preferences?.selectedSQs]);
-  
-  // During SSR and initial hydration, always show static placeholder
-  // This prevents hydration mismatch - must render EXACTLY the same on server and client
-  if (!mounted) {
-    return (
-      <Button variant="outline" size="sm" className="border-white/10 text-white" disabled>
-        <Bell className="w-4 h-4 mr-2" />
-        Push Notifications
-      </Button>
-    );
-  }
-  
-  // All code below only runs client-side after mount
-  const now = Date.now();
-  const upcomingSQs = schedule.filter(sq => sq.time > now).sort((a, b) => a.time - b.time);
-  
-  // Group SQs by date for calendar view
-  const groupedByDate = upcomingSQs.reduce((acc, sq) => {
-    const dateKey = new Date(sq.time).toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      timeZone: 'Europe/Paris'
-    });
-    if (!acc[dateKey]) acc[dateKey] = [];
-    acc[dateKey].push(sq);
-    return acc;
-  }, {});
-  
-  // Toggle SQ selection
-  const toggleSQ = (sqId) => {
-    const newSelected = new Set(selectedSQs);
-    if (newSelected.has(sqId)) {
-      newSelected.delete(sqId);
-    } else {
-      newSelected.add(sqId);
-    }
-    setSelectedSQs(newSelected);
-    setHasChanges(true);
-  };
-  
-  // Select all SQs
-  const selectAll = () => {
-    setSelectedSQs(new Set(upcomingSQs.map(sq => sq.id)));
-    setHasChanges(true);
-  };
-  
-  // Deselect all SQs
-  const deselectAll = () => {
-    setSelectedSQs(new Set());
-    setHasChanges(true);
-  };
-  
-  // Select by format
-  const selectByFormat = (format) => {
-    const formatSQs = upcomingSQs.filter(sq => sq.format === format).map(sq => sq.id);
-    const newSelected = new Set(selectedSQs);
-    formatSQs.forEach(id => newSelected.add(id));
-    setSelectedSQs(newSelected);
-    setHasChanges(true);
-  };
-  
-  // Select by day of week (0 = Sunday, 6 = Saturday)
-  const selectByDay = (dayNames) => {
-    const newSelected = new Set(selectedSQs);
-    upcomingSQs.forEach(sq => {
-      const date = new Date(sq.time);
-      const dayName = date.toLocaleDateString('fr-FR', { weekday: 'long', timeZone: 'Europe/Paris' });
-      if (dayNames.includes(dayName)) {
-        newSelected.add(sq.id);
-      }
-    });
-    setSelectedSQs(newSelected);
-    setHasChanges(true);
-  };
-  
-  // Apply changes
-  const applyChanges = async () => {
-    setIsSaving(true);
-    try {
-      const newPreferences = {
-        ...push.preferences,
-        selectedSQs: Array.from(selectedSQs),
-        sqQueue: selectedSQs.size > 0 // Auto-enable sqQueue if any SQs selected
-      };
-      await push.updatePreferences(newPreferences);
-      setHasChanges(false);
-      toast.success(`✅ ${selectedSQs.size} SQ(s) sélectionnée(s) pour les notifications`);
-      // Close the dialog after successful save
-      setShowCalendar(false);
-    } catch (error) {
-      toast.error('Erreur lors de la sauvegarde');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-  
-  // Format time helper
-  const formatTimeOnly = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Europe/Paris'
-    });
-  };
-  
-  if (!push.isSupported) {
-    return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="outline" size="sm" disabled className="border-white/10 text-gray-500">
-              <BellOff className="w-4 h-4 mr-2" />
-              Non supporté
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent className="bg-zinc-900 border-white/10">
-            <p>Les notifications push ne sont pas supportées par votre navigateur</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    );
-  }
-  
-  return (
-    <>
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className={`border-white/10 hover:bg-white/[0.05] ${
-              push.isSubscribed ? 'text-green-400' : 'text-white'
-            }`}
-          >
-            {push.isLoading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : push.isSubscribed ? (
-              <BellRing className="w-4 h-4 mr-2" />
-            ) : (
-              <Bell className="w-4 h-4 mr-2" />
-            )}
-            Push Notifications
-            {push.isSubscribed && selectedSQs.size > 0 && (
-              <Badge className="ml-2 bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                {selectedSQs.size} SQ
-              </Badge>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-96 bg-zinc-900 border-white/10" align="end">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium text-white flex items-center gap-2">
-                <Bell className="w-4 h-4 text-purple-400" />
-                Notifications Push
-              </h4>
-              {push.isSubscribed && (
-                <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                  <Check className="w-3 h-3 mr-1" />
-                  Activé
-                </Badge>
-              )}
-            </div>
-            
-            {push.permission === 'denied' && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                <p className="text-red-400 text-sm">
-                  Les notifications sont bloquées par votre navigateur. Veuillez les autoriser dans les paramètres.
-                </p>
-              </div>
-            )}
-            
-            {!push.isSubscribed ? (
-              <div className="space-y-4">
-                <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-                  <h5 className="font-medium text-purple-400 mb-2">🔔 Recevez des alertes automatiques</h5>
-                  <ul className="text-sm text-gray-400 space-y-1">
-                    <li>• <strong>Lounge Queue</strong> : Notification à chaque heure (XX:00)</li>
-                    <li>• <strong>Squad Queue</strong> : Choisissez vos SQs préférées</li>
-                  </ul>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Fonctionne même quand le navigateur est fermé!
-                  </p>
-                </div>
-                
-                <Button 
-                  onClick={push.subscribe}
-                  disabled={push.isLoading}
-                  className="w-full bg-purple-600 hover:bg-purple-700"
-                >
-                  {push.isLoading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Bell className="w-4 h-4 mr-2" />
-                  )}
-                  Activer les notifications push
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Lounge Queue Toggle */}
-                <div className="flex items-center justify-between p-3 bg-white/[0.02] rounded-lg">
-                  <div>
-                    <p className="text-white text-sm font-medium">🏠 Lounge Queue</p>
-                    <p className="text-xs text-gray-500">Notification à l'ouverture (chaque heure)</p>
-                  </div>
-                  <Switch 
-                    checked={push.preferences.loungeQueue}
-                    onCheckedChange={(checked) => {
-                      push.updatePreferences({ ...push.preferences, loungeQueue: checked });
-                    }}
-                  />
-                </div>
-                
-                {/* SQ Calendar Button */}
-                <div className="p-3 bg-white/[0.02] rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <p className="text-white text-sm font-medium">🏁 Squad Queues</p>
-                      <p className="text-xs text-gray-500">
-                        {selectedSQs.size > 0 
-                          ? `${selectedSQs.size} SQ sélectionnée${selectedSQs.size > 1 ? 's' : ''}`
-                          : 'Aucune SQ sélectionnée'
-                        }
-                      </p>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setShowCalendar(true)}
-                      className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
-                    >
-                      <CalendarDays className="w-4 h-4 mr-2" />
-                      Planifier
-                    </Button>
-                  </div>
-                  
-                  {/* Quick preview of selected SQs */}
-                  {selectedSQs.size > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {upcomingSQs.filter(sq => selectedSQs.has(sq.id)).slice(0, 4).map(sq => (
-                        <Badge 
-                          key={sq.id}
-                          variant="outline" 
-                          className={`${formatColors[sq.format] || 'bg-gray-500/20 text-gray-400'} text-xs`}
-                        >
-                          {sq.format} {formatTimeOnly(sq.time)}
-                        </Badge>
-                      ))}
-                      {selectedSQs.size > 4 && (
-                        <Badge variant="outline" className="bg-white/5 text-gray-400 text-xs">
-                          +{selectedSQs.size - 4}
-                        </Badge>
-                      )}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="pt-3 border-t border-white/10 space-y-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={push.sendTestNotification}
-                    className="w-full border-white/10 text-gray-300 hover:text-white"
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Envoyer une notification test
-                  </Button>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={push.unsubscribe}
-                    disabled={push.isLoading}
-                    className="w-full text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                  >
-                    {push.isLoading ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <BellOff className="w-4 h-4 mr-2" />
-                    )}
-                    Désactiver les notifications
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
-      
-      {/* SQ Calendar Dialog */}
-      <Dialog open={showCalendar} onOpenChange={setShowCalendar}>
-        <DialogContent className="max-w-2xl bg-zinc-900 border-white/10 text-white max-h-[90vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <CalendarDays className="w-5 h-5 text-purple-400" />
-              Planning des notifications SQ
-            </DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Sélectionnez les Squad Queues pour lesquelles vous souhaitez recevoir des notifications
-            </DialogDescription>
-          </DialogHeader>
-          
-          {/* Quick Actions */}
-          <div className="flex flex-wrap gap-2 py-3 border-b border-white/10">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={selectAll}
-              className="border-white/10 text-gray-300 hover:text-white"
-            >
-              <CheckCircle2 className="w-3 h-3 mr-1" />
-              Tout
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={deselectAll}
-              className="border-white/10 text-gray-300 hover:text-white"
-            >
-              <Circle className="w-3 h-3 mr-1" />
-              Aucun
-            </Button>
-            <div className="w-px h-6 bg-white/10" />
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => selectByFormat('2v2')}
-              className="border-green-500/30 text-green-400 hover:bg-green-500/10"
-            >
-              2v2
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => selectByFormat('3v3')}
-              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
-            >
-              3v3
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => selectByFormat('4v4')}
-              className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
-            >
-              4v4
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => selectByFormat('6v6')}
-              className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10"
-            >
-              6v6
-            </Button>
-            <div className="w-px h-6 bg-white/10" />
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => selectByDay(['samedi', 'dimanche'])}
-              className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
-            >
-              Weekend
-            </Button>
-          </div>
-          
-          {/* SQ Calendar List */}
-          <ScrollArea className="h-[400px] pr-4">
-            <div className="space-y-4 py-2">
-              {Object.entries(groupedByDate).length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>Aucune Squad Queue à venir</p>
-                </div>
-              ) : (
-                Object.entries(groupedByDate).map(([date, sqs]) => (
-                  <div key={date} className="space-y-2">
-                    <div className="flex items-center justify-between sticky top-0 bg-zinc-900 py-1 z-10">
-                      <h3 className="text-sm font-medium text-gray-300 capitalize flex items-center gap-2">
-                        <CalendarDays className="w-4 h-4 text-purple-400" />
-                        {date}
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">
-                          {sqs.filter(sq => selectedSQs.has(sq.id)).length}/{sqs.length}
-                        </span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            const newSelected = new Set(selectedSQs);
-                            const allSelected = sqs.every(sq => selectedSQs.has(sq.id));
-                            sqs.forEach(sq => {
-                              if (allSelected) {
-                                newSelected.delete(sq.id);
-                              } else {
-                                newSelected.add(sq.id);
-                              }
-                            });
-                            setSelectedSQs(newSelected);
-                            setHasChanges(true);
-                          }}
-                          className="h-6 px-2 text-xs text-gray-400 hover:text-white"
-                        >
-                          {sqs.every(sq => selectedSQs.has(sq.id)) ? 'Désélectionner' : 'Sélectionner'}
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      {sqs.map(sq => {
-                        const isSelected = selectedSQs.has(sq.id);
-                        return (
-                          <div 
-                            key={sq.id}
-                            onClick={() => toggleSQ(sq.id)}
-                            className={`
-                              flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all
-                              ${isSelected 
-                                ? 'bg-purple-500/20 border border-purple-500/50' 
-                                : 'bg-white/[0.02] border border-transparent hover:bg-white/[0.04]'
-                              }
-                            `}
-                          >
-                            <Checkbox 
-                              checked={isSelected}
-                              onCheckedChange={() => toggleSQ(sq.id)}
-                              className="border-white/30 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
-                            />
-                            
-                            <Badge 
-                              variant="outline" 
-                              className={`${formatColors[sq.format] || 'bg-gray-500/20 text-gray-400'} min-w-[50px] justify-center`}
-                            >
-                              <Users className="w-3 h-3 mr-1" />
-                              {sq.format}
-                            </Badge>
-                            
-                            <div className="flex-1">
-                              <div className="text-white font-medium">
-                                {formatTimeOnly(sq.time)}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                SQ #{sq.id}
-                              </div>
-                            </div>
-                            
-                            {isSelected && (
-                              <Badge className="bg-purple-500/30 text-purple-300 border-purple-500/50 text-xs">
-                                <Bell className="w-3 h-3 mr-1" />
-                                Notifié
-                              </Badge>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
-          
-          {/* Footer with summary and apply button */}
-          <div className="pt-4 border-t border-white/10 space-y-3">
-            {/* Summary */}
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2 text-gray-400">
-                <ListChecks className="w-4 h-4" />
-                <span>
-                  <strong className="text-white">{selectedSQs.size}</strong> SQ{selectedSQs.size > 1 ? 's' : ''} sélectionnée{selectedSQs.size > 1 ? 's' : ''}
-                </span>
-              </div>
-              
-              {selectedSQs.size > 0 && (
-                <div className="flex flex-wrap gap-1 justify-end max-w-[300px]">
-                  {['2v2', '3v3', '4v4', '6v6'].map(format => {
-                    const count = upcomingSQs.filter(sq => selectedSQs.has(sq.id) && sq.format === format).length;
-                    if (count === 0) return null;
-                    return (
-                      <Badge 
-                        key={format}
-                        variant="outline" 
-                        className={`${formatColors[format]} text-xs`}
-                      >
-                        {count}x {format}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-            
-            {/* Actions */}
-            <div className="flex gap-2">
-              <Button 
-                variant="outline"
-                onClick={() => setShowCalendar(false)}
-                className="flex-1 border-white/10 text-gray-300 hover:text-white"
-              >
-                Annuler
-              </Button>
-              <Button 
-                onClick={applyChanges}
-                disabled={!hasChanges || isSaving}
-                className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
-              >
-                {isSaving ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4 mr-2" />
-                )}
-                Appliquer ({selectedSQs.size} SQ)
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
 // =====================================================
 // DISCORD APP LINK HANDLER
 // =====================================================
 
-// Function to open Discord links - tries app first, then falls back to web
-function openDiscordLink(webUrl) {
-  // Extract the path from the URL (e.g., /channels/445404006177570829/1186158671525318719)
-  const urlPath = webUrl.replace('https://discord.com', '');
-  
-  // Create the discord:// protocol URL
-  const appUrl = `discord://${urlPath}`;
-  
-  // Try to open the Discord app
-  const appWindow = window.open(appUrl, '_self');
-  
-  // Set a timeout to open web version if app doesn't respond
-  // This handles the case where the app isn't installed
-  setTimeout(() => {
-    // Check if we're still on the same page (app didn't open)
-    // Open the web version as fallback
-    window.open(webUrl, '_blank', 'noopener,noreferrer');
-  }, 1500);
-}
-
-// Alternative approach using hidden iframe for better UX
 function openDiscordLinkWithFallback(webUrl) {
-  // Extract the path from the URL
   const urlPath = webUrl.replace('https://discord.com', '');
   const appUrl = `discord://${urlPath}`;
   
-  // Create a hidden iframe to try opening the app
   const iframe = document.createElement('iframe');
   iframe.style.display = 'none';
   document.body.appendChild(iframe);
   
-  // Track if the app opened successfully
   let appOpened = false;
   
-  // Listen for visibility change (indicates app opened)
   const handleVisibilityChange = () => {
     if (document.hidden) {
       appOpened = true;
@@ -903,15 +314,12 @@ function openDiscordLinkWithFallback(webUrl) {
   };
   document.addEventListener('visibilitychange', handleVisibilityChange);
   
-  // Try to open the Discord app via iframe
   iframe.contentWindow.location.href = appUrl;
   
-  // Set a timeout to check if app opened
   setTimeout(() => {
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     document.body.removeChild(iframe);
     
-    // If app didn't open, open web version
     if (!appOpened) {
       window.open(webUrl, '_blank', 'noopener,noreferrer');
     }
@@ -920,10 +328,10 @@ function openDiscordLinkWithFallback(webUrl) {
 
 // Format badge colors based on format type
 const formatColors = {
-  '2v2': 'bg-green-500/20 text-green-400 border-green-500/30',
-  '3v3': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  '4v4': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  '6v6': 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+  '2v2': 'bg-green-500/10 text-green-500 border-green-500/20',
+  '3v3': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+  '4v4': 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+  '6v6': 'bg-orange-500/10 text-orange-500 border-orange-500/20',
 };
 
 // Time status helpers
@@ -932,8 +340,8 @@ function getTimeStatus(timestamp) {
   const diff = timestamp - now;
   
   if (diff < 0) return 'past';
-  if (diff < 30 * 60 * 1000) return 'soon'; // Within 30 minutes
-  if (diff < 2 * 60 * 60 * 1000) return 'upcoming'; // Within 2 hours
+  if (diff < 30 * 60 * 1000) return 'soon';
+  if (diff < 2 * 60 * 60 * 1000) return 'upcoming';
   return 'future';
 }
 
@@ -987,742 +395,6 @@ function formatTime(timestamp) {
   });
 }
 
-// SQ Card Component
-function SQCard({ sq, isNext, participated = false, matchId = null, onMatchClick = null }) {
-  const status = getTimeStatus(sq.time);
-  const isPast = status === 'past';
-  const isSoon = status === 'soon';
-  
-  // Check if queue is open (starts at :45 and closes at :55 for the next hour's SQ)
-  const now = Date.now();
-  // Queue opens 15 minutes before the hour (XX:45) and closes at XX:55
-  const sqHour = new Date(sq.time);
-  const queueOpenTime = new Date(sq.time);
-  queueOpenTime.setMinutes(queueOpenTime.getMinutes() - 15); // XX:45 for XX:00 SQ
-  const queueCloseTime = new Date(sq.time);
-  queueCloseTime.setMinutes(-5); // XX:55 of previous hour
-  const isQueueOpen = now >= queueOpenTime.getTime() && now < sq.time;
-  
-  const handleParticipatedClick = (e) => {
-    e.stopPropagation();
-    if (matchId && onMatchClick) {
-      onMatchClick(matchId);
-    }
-  };
-  
-  return (
-    <Card className={`
-      bg-white/[0.02] border-white/[0.06] transition-all duration-300
-      ${isNext ? 'ring-2 ring-yellow-500/50 bg-yellow-500/[0.03]' : ''}
-      ${isSoon ? 'ring-2 ring-green-500/50' : ''}
-      ${isQueueOpen ? 'ring-2 ring-purple-500/50 bg-purple-500/[0.03]' : ''}
-      ${participated && isPast ? 'ring-2 ring-emerald-500/50 bg-emerald-500/[0.05] opacity-100' : ''}
-      ${isPast && !participated ? 'opacity-50' : 'hover:bg-white/[0.04]'}
-    `}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-4">
-          {/* Left: Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <Badge variant="outline" className={formatColors[sq.format] || 'bg-gray-500/20 text-gray-400'}>
-                <Users className="w-3 h-3 mr-1" />
-                {sq.format.toUpperCase()}
-              </Badge>
-              <span className="text-gray-500 text-sm">#{sq.id}</span>
-              {participated && isPast && (
-                <Badge 
-                  className={`bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs ${matchId ? 'cursor-pointer hover:bg-emerald-500/30 transition-colors' : ''}`}
-                  onClick={matchId ? handleParticipatedClick : undefined}
-                >
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                  Participé
-                  {matchId && <ExternalLink className="w-3 h-3 ml-1" />}
-                </Badge>
-              )}
-              {isNext && (
-                <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
-                  <Zap className="w-3 h-3 mr-1" />
-                  Prochaine
-                </Badge>
-              )}
-              {isQueueOpen && (
-                <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs animate-pulse">
-                  <DoorOpen className="w-3 h-3 mr-1" />
-                  Queue Ouverte
-                </Badge>
-              )}
-              {isSoon && !isNext && !isQueueOpen && (
-                <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
-                  <Timer className="w-3 h-3 mr-1" />
-                  Bientôt
-                </Badge>
-              )}
-            </div>
-            
-            <div className="text-white font-medium mb-1">
-              {formatDateTime(sq.time)}
-            </div>
-            
-            <div className={`text-sm ${isSoon || isQueueOpen ? 'text-green-400 font-medium' : 'text-gray-500'}`}>
-              <Clock className="w-3 h-3 inline mr-1" />
-              {formatRelativeTime(sq.time)}
-            </div>
-            
-            {!isPast && (
-              <div className="text-xs text-gray-600 mt-1">
-                Queue: {new Date(sq.time - 15 * 60 * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' })} - {formatTime(sq.time).replace(':00', ':55').replace(':30', ':55')}
-              </div>
-            )}
-          </div>
-          
-          {/* Right: Time display */}
-          <div className="text-right">
-            <div className="text-2xl font-bold text-white">
-              {formatTime(sq.time)}
-            </div>
-            <div className="text-xs text-gray-500">
-              {formatShortDate(sq.time)}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Lounge Queue Component - Shows hourly queue status
-function LoungeQueue({ session }) {
-  const isAuthenticated = !!session?.user;
-  const [currentTime, setCurrentTime] = useState(new Date());
-  
-  // Update time every minute
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-    return () => clearInterval(interval);
-  }, []);
-  
-  // Get current hour and next hour in Paris timezone
-  const parisTime = new Date(currentTime.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
-  const currentHour = parisTime.getHours();
-  const currentMinutes = parisTime.getMinutes();
-  const nextHour = (currentHour + 1) % 24;
-  
-  // Queue is open for the next hour's lounge, closes at XX:55
-  const isQueueOpen = currentMinutes < 55;
-  const closesIn = 55 - currentMinutes;
-  
-  // Format hour display
-  const formatHour = (hour) => `${hour.toString().padStart(2, '0')}H`;
-  
-  // Discord channel URL for lounge queue
-  const LOUNGE_QUEUE_CHANNEL = 'https://discord.com/channels/445404006177570829/1186158671525318719';
-  
-  return (
-    <Card className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/30 mb-8">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-purple-400 flex items-center gap-2">
-          <DoorOpen className="w-5 h-5" />
-          Lounge Queue
-        </CardTitle>
-        <CardDescription className="text-gray-400">
-          Rejoignez la queue pour participer au prochain Lounge • Ouverte de {formatHour(currentHour)} à {formatHour(currentHour).replace('H', '')}:55
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          {/* Queue Status */}
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              {isQueueOpen ? (
-                <>
-                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30 animate-pulse">
-                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                    Queue Ouverte
-                  </Badge>
-                  <span className="text-gray-500 text-sm">
-                    Ferme dans {closesIn} min
-                  </span>
-                </>
-              ) : (
-                <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
-                  <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                  Queue Fermée
-                </Badge>
-              )}
-            </div>
-            
-            <div className="text-white mb-2">
-              <span className="text-2xl font-bold">Lounge {formatHour(nextHour)}</span>
-              {isQueueOpen && (
-                <span className="text-gray-400 text-sm ml-2">
-                  (ferme à {formatHour(currentHour).replace('H', '')}:55)
-                </span>
-              )}
-            </div>
-            
-            <p className="text-gray-500 text-sm">
-              {isQueueOpen 
-                ? `Inscrivez-vous maintenant pour le Lounge de ${formatHour(nextHour)}`
-                : `La queue réouvrira à ${formatHour(nextHour)} pour le Lounge de ${formatHour((nextHour + 1) % 24)}`
-              }
-            </p>
-          </div>
-          
-          {/* Action Button */}
-          <div className="w-full md:w-auto">
-            {isAuthenticated ? (
-              <Button 
-                className={`w-full md:w-auto ${
-                  isQueueOpen 
-                    ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                }`}
-                disabled={!isQueueOpen}
-                onClick={() => isQueueOpen && openDiscordLinkWithFallback(LOUNGE_QUEUE_CHANNEL)}
-              >
-                <DoorOpen className="w-4 h-4 mr-2" />
-                {isQueueOpen ? 'Rejoindre la Queue' : 'Queue Fermée'}
-              </Button>
-            ) : (
-              <a href="/login">
-                <Button 
-                  className="w-full md:w-auto bg-[#5865F2] hover:bg-[#4752C4] text-white"
-                >
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Se connecter avec Discord
-                </Button>
-              </a>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Stats Summary Component
-function ScheduleStats({ schedule }) {
-  const now = Date.now();
-  const upcoming = schedule.filter(sq => sq.time > now);
-  const past = schedule.filter(sq => sq.time <= now);
-  
-  const formatCounts = upcoming.reduce((acc, sq) => {
-    acc[sq.format] = (acc[sq.format] || 0) + 1;
-    return acc;
-  }, {});
-  
-  const nextSQ = upcoming[0];
-  const timeUntilNext = nextSQ ? nextSQ.time - now : null;
-  
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      <Card className="bg-white/[0.02] border-white/[0.06]">
-        <CardContent className="p-4 text-center">
-          <div className="text-3xl font-bold text-white mb-1">{upcoming.length}</div>
-          <div className="text-sm text-gray-500">SQ à venir</div>
-        </CardContent>
-      </Card>
-      
-      <Card className="bg-white/[0.02] border-white/[0.06]">
-        <CardContent className="p-4 text-center">
-          <div className="text-3xl font-bold text-green-400 mb-1">
-            {timeUntilNext ? formatRelativeTime(nextSQ.time) : '-'}
-          </div>
-          <div className="text-sm text-gray-500">Prochaine SQ</div>
-        </CardContent>
-      </Card>
-      
-      <Card className="bg-white/[0.02] border-white/[0.06]">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-1 justify-center mb-2">
-            {Object.entries(formatCounts).map(([format, count]) => (
-              <Badge key={format} variant="outline" className={formatColors[format] || ''}>
-                {format}: {count}
-              </Badge>
-            ))}
-          </div>
-          <div className="text-sm text-gray-500 text-center">Par format</div>
-        </CardContent>
-      </Card>
-      
-      <Card className="bg-white/[0.02] border-white/[0.06]">
-        <CardContent className="p-4 text-center">
-          <div className="text-3xl font-bold text-gray-400 mb-1">{past.length}</div>
-          <div className="text-sm text-gray-500">SQ passées</div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// My SQ Planning Section - Shows user's selected SQs
-function MySQPlanningSection({ schedule, selectedSQIds }) {
-  const now = Date.now();
-  
-  // Filter and sort selected upcoming SQs
-  const selectedSQs = schedule
-    .filter(sq => selectedSQIds.includes(sq.id) && sq.time > now)
-    .sort((a, b) => a.time - b.time);
-  
-  if (selectedSQs.length === 0) return null;
-  
-  // Count by format
-  const formatCounts = selectedSQs.reduce((acc, sq) => {
-    acc[sq.format] = (acc[sq.format] || 0) + 1;
-    return acc;
-  }, {});
-  
-  return (
-    <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/30 mb-8">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-purple-400 flex items-center gap-2">
-          <Bell className="w-5 h-5" />
-          Mon Planning SQ
-          <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 ml-2">
-            {selectedSQs.length} notifications programmées
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Format summary */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {Object.entries(formatCounts).map(([format, count]) => (
-            <Badge 
-              key={format}
-              variant="outline" 
-              className={`${formatColors[format]} text-sm`}
-            >
-              <Users className="w-3 h-3 mr-1" />
-              {count}x {format}
-            </Badge>
-          ))}
-        </div>
-        
-        {/* Selected SQs grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {selectedSQs.slice(0, 6).map((sq, idx) => {
-            const isNext = idx === 0;
-            const isSoon = sq.time - now < 2 * 60 * 60 * 1000;
-            
-            return (
-              <div 
-                key={sq.id}
-                className={`
-                  flex items-center justify-between p-3 rounded-lg transition-all
-                  ${isNext ? 'bg-purple-500/20 border border-purple-500/40' : 'bg-white/[0.03] border border-white/[0.05]'}
-                `}
-              >
-                <div className="flex items-center gap-3">
-                  <Badge 
-                    variant="outline" 
-                    className={`${formatColors[sq.format]} min-w-[50px] justify-center`}
-                  >
-                    {sq.format}
-                  </Badge>
-                  <div>
-                    <div className="text-white font-medium text-sm">
-                      {formatShortDate(sq.time)} - {formatTime(sq.time)}
-                    </div>
-                    <div className={`text-xs ${isSoon ? 'text-green-400 font-medium' : 'text-gray-500'}`}>
-                      <Clock className="w-3 h-3 inline mr-1" />
-                      {formatRelativeTime(sq.time)}
-                    </div>
-                  </div>
-                </div>
-                {isNext && (
-                  <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
-                    <Zap className="w-3 h-3 mr-1" />
-                    Next
-                  </Badge>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        
-        {selectedSQs.length > 6 && (
-          <div className="mt-3 text-center text-sm text-gray-500">
-            +{selectedSQs.length - 6} autres SQ programmées
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-// FAQ Data with comprehensive lounge information
-const faqData = [
-  {
-    question: "Qu'est-ce que le Lounge ?",
-    answer: `Le MK8DX Lounge est un système de matchmaking compétitif pour Mario Kart 8 Deluxe géré par MKCentral. 
-    
-Depuis sa création en 2018, plus de 53 000 joueurs ont participé au Lounge avec plus de 964 000 événements vérifiés ! 
-
-Le Lounge utilise un système de classement basé sur le MMR (Matchmaking Rating) qui vous permet de jouer contre des adversaires de niveau similaire. Chaque match vous fait gagner ou perdre des points en fonction de vos performances.
-
-C'est l'endroit idéal pour progresser dans un environnement compétitif structuré.`
-  },
-  {
-    question: "Comment fonctionne le Lounge ?",
-    answer: `Le Lounge fonctionne avec un système de queue horaire :
-
-🏠 **Lounge Queue:**
-• La queue s'ouvre à XX:00 et ferme à XX:55
-• Vous êtes matché automatiquement avec d'autres joueurs
-• Format à 12 joueurs
-• Les équipes sont formées aléatoirement par le bot
-
-🏁 **Squad Queue:**
-• La queue s'ouvre à XX:45 et ferme à (XX+1):55
-• Exemple: queue ouverte 13:45 → ferme 14:55 → match 15:00
-• Vous formez votre équipe avant de rejoindre
-• Formats: 2v2, 3v3, 4v4 ou 6v6 selon le planning
-
-⚡ **Déroulement d'un match:**
-1. Rejoignez la queue avant la fermeture
-2. Le bot vous assigne un room et une équipe
-3. Le host ouvre la room avec l'ID fourni
-4. Jouez 12 courses
-5. Le résultat est enregistré automatiquement`
-  },
-  {
-    question: "Comment se préparer pour un Lounge ?",
-    answer: `Voici les étapes essentielles pour bien vous préparer :
-
-📋 **Prérequis:**
-• Compte Discord lié à MKCentral
-• Nintendo Switch Online actif
-• Code ami à jour sur MKCentral
-
-🎮 **Avant le match:**
-• Vérifiez votre pseudo in-game (doit correspondre à votre nom Lounge)
-• Assurez-vous d'une connexion internet stable
-• Prévoyez 45-60 minutes pour un match complet
-
-📸 **Pendant le match:**
-• Prenez des screenshots à chaque fin de course (tous les joueurs!)
-• Signalez immédiatement tout problème de connexion
-• Respectez le host et les règles du Lounge
-
-⚠️ **Important:**
-• Ne quittez jamais un match en cours (pénalités sévères)
-• Les problèmes personnels prévisibles ne sont pas excusés
-• La tag/nom incorrect = -50 MMR + Strike à partir de la 2ème course`
-  }
-];
-
-// Detailed Lounge Information Modal Content
-const loungeGuideContent = {
-  ranking: {
-    title: "Système de Classement",
-    icon: Award,
-    content: `Le Lounge utilise un système de MMR (Matchmaking Rating) pour classer les joueurs :
-
-**Rangs disponibles (du plus bas au plus haut):**
-• Iron, Bronze, Silver, Gold
-• Platinum, Sapphire, Diamond
-• Master, Grandmaster
-
-Chaque victoire/défaite modifie votre MMR. Plus l'écart de MMR avec vos adversaires est grand, plus le changement est important.
-
-Nouveau joueur = placement automatique après quelques matchs.`
-  },
-  rules: {
-    title: "Règles Essentielles",
-    icon: Shield,
-    content: `**Système de Strikes:**
-Accumuler des pénalités mène à des strikes qui peuvent résulter en suspensions.
-
-**Pénalités courantes:**
-• Late (arrivée tardive): -50 MMR + Strike
-• Drop (abandon): -100 MMR + Strike  
-• Tag incorrect: -50 MMR + Strike
-• Changer d'équipe: -100 MMR + Strike
-
-**Host:**
-• Le host est désigné automatiquement
-• Doit poster le Room ID après la formation des équipes
-• Les joueurs media-restricted ne peuvent pas host
-
-**Règles de conduite:**
-• Pas de targeting intentionnel
-• Pas de throwing/trolling
-• Pas de teaming en FFA
-• Respect des autres joueurs`
-  },
-  formats: {
-    title: "Formats de Jeu",
-    icon: Users,
-    content: `**Lounge Queue:**
-• 12 joueurs, équipes de 2 formées aléatoirement
-• Points basés sur votre placement individuel
-• Système de points: 1er: 15pts, 2e: 12pts, 3e: 10pts, 4e: 9pts...
-
-**Squad Queue:**
-• 2v2: Duo - équipes de 2
-• 3v3: Trio - équipes de 3
-• 4v4: Squad - équipes de 4
-• 6v6: équipes de 6
-
-**À chaque format:**
-• 12 courses au total
-• Tous les circuits DLC inclus
-• MMR ajusté selon vos performances`
-  },
-  queue: {
-    title: "Système de Queue",
-    icon: Clock,
-    content: `**Horaires (Heure de Paris):**
-
-🏠 **Lounge Queue:**
-• Ouverture: XX:00
-• Fermeture: XX:55
-• Match: commence à l'heure suivante
-
-🏁 **Squad Queue:**
-• Ouverture: XX:45
-• Fermeture: (XX+1):55 (heure d'après)
-• Match: commence à (XX+2):00
-
-**Exemple concret:**
-Queue SQ ouverte à 13:45, ferme à 14:55, match à 15:00.
-
-**Conseils:**
-• Rejoignez tôt pour être sûr d'avoir une place
-• La queue peut se remplir vite aux heures de pointe
-• Activez les notifications pour ne pas rater l'ouverture`
-  },
-  disconnections: {
-    title: "Déconnexions & Lag",
-    icon: AlertTriangle,
-    content: `**En cas de déconnexion:**
-• Signalez immédiatement dans le chat
-• Fournissez une preuve (screenshot code erreur Switch)
-• Tentez de vous reconnecter rapidement
-
-**Règles de réouverture:**
-• Chaque joueur peut demander 1 réouverture par match
-• Si < 10 joueurs et 2+ équipes touchées: réouverture obligatoire
-
-**Course invalidée si:**
-• 11-12 joueurs: 3 déconnexions de 2 équipes différentes
-• 10 joueurs: 2 déconnexions de 2 équipes différentes
-
-**Réduction de perte MMR:**
-Si votre coéquipier manque 3+ courses:
-• 3 courses: -16.7% de perte
-• 4 courses: -33.3% de perte
-• 5 courses: -50% de perte
-• 8+ courses: 0 perte`
-  },
-  tips: {
-    title: "Conseils Pro",
-    icon: Star,
-    content: `**Pour bien débuter:**
-• Commencez par des Lounge Queue (FFA) pour vous habituer
-• Observez les meilleurs joueurs sur le leaderboard
-• Rejoignez le Discord pour poser vos questions
-
-**Pour progresser:**
-• Entraînez-vous sur les circuits difficiles
-• Apprenez les shortcuts et les strats optimales
-• Regardez des replays de vos matchs
-
-**Mindset compétitif:**
-• Un mauvais match arrive à tout le monde
-• Le MMR se rattrape toujours avec de la régularité
-• Le respect des adversaires est primordial
-
-**Ressources utiles:**
-• #player-guides sur Discord
-• Le site lounge.mkcentral.com
-• Cette app pour suivre vos stats!`
-  }
-};
-
-// FAQ Section Component
-function FAQSection() {
-  const [openFAQ, setOpenFAQ] = useState(null);
-  const [showGuide, setShowGuide] = useState(false);
-  const [activeGuideTab, setActiveGuideTab] = useState('ranking');
-  
-  const toggleFAQ = (index) => {
-    setOpenFAQ(openFAQ === index ? null : index);
-  };
-  
-  return (
-    <Card className="bg-white/[0.02] border-white/[0.06] mt-8">
-      <CardHeader>
-        <CardTitle className="text-purple-400 flex items-center gap-2">
-          <HelpCircle className="w-5 h-5" />
-          Questions Fréquentes
-        </CardTitle>
-        <CardDescription className="text-gray-400">
-          Tout ce que vous devez savoir pour commencer
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {/* FAQ Accordion */}
-        <div className="space-y-3 mb-6">
-          {faqData.map((faq, index) => (
-            <div 
-              key={index}
-              className={`rounded-lg border transition-all duration-200 ${
-                openFAQ === index 
-                  ? 'bg-purple-500/10 border-purple-500/30' 
-                  : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.1]'
-              }`}
-            >
-              <button
-                onClick={() => toggleFAQ(index)}
-                className="w-full flex items-center justify-between p-4 text-left"
-              >
-                <span className="font-medium text-white flex items-center gap-2">
-                  <span className="text-purple-400 text-lg">
-                    {index === 0 ? '❓' : index === 1 ? '⚙️' : '📋'}
-                  </span>
-                  {faq.question}
-                </span>
-                <ChevronDown 
-                  className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                    openFAQ === index ? 'rotate-180' : ''
-                  }`}
-                />
-              </button>
-              
-              {openFAQ === index && (
-                <div className="px-4 pb-4 pt-0">
-                  <div className="border-t border-white/[0.06] pt-4">
-                    <div className="text-gray-300 text-sm whitespace-pre-line leading-relaxed">
-                      {faq.answer.split('**').map((part, i) => 
-                        i % 2 === 1 
-                          ? <strong key={i} className="text-white">{part}</strong>
-                          : part
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        
-        {/* En Savoir Plus Button */}
-        <div className="flex justify-center">
-          <Dialog open={showGuide} onOpenChange={setShowGuide}>
-            <DialogTrigger asChild>
-              <Button 
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
-              >
-                <BookOpen className="w-4 h-4 mr-2" />
-                En savoir plus sur le Lounge
-                <ChevronRight className="w-4 h-4 ml-2" />
-              </Button>
-            </DialogTrigger>
-            
-            <DialogContent className="max-w-4xl max-h-[90vh] bg-zinc-900 border-white/10 text-white overflow-hidden">
-              <DialogHeader>
-                <DialogTitle className="text-2xl flex items-center gap-2">
-                  <Trophy className="w-6 h-6 text-yellow-500" />
-                  Guide Complet du MK8DX Lounge
-                </DialogTitle>
-                <DialogDescription className="text-gray-400">
-                  Tout ce qu'il faut savoir pour maîtriser le Lounge
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="flex flex-col md:flex-row gap-4 mt-4">
-                {/* Sidebar Navigation */}
-                <div className="md:w-48 flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0">
-                  {Object.entries(loungeGuideContent).map(([key, section]) => {
-                    const Icon = section.icon;
-                    return (
-                      <button
-                        key={key}
-                        onClick={() => setActiveGuideTab(key)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all whitespace-nowrap ${
-                          activeGuideTab === key
-                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                            : 'text-gray-400 hover:text-white hover:bg-white/[0.05]'
-                        }`}
-                      >
-                        <Icon className="w-4 h-4 flex-shrink-0" />
-                        <span className="hidden md:inline">{section.title}</span>
-                        <span className="md:hidden">{section.title.split(' ')[0]}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                
-                {/* Content Area */}
-                <ScrollArea className="flex-1 h-[400px] md:h-[500px] pr-4">
-                  <div className="space-y-4">
-                    {(() => {
-                      const section = loungeGuideContent[activeGuideTab];
-                      const Icon = section.icon;
-                      return (
-                        <div>
-                          <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/[0.1]">
-                            <div className="p-2 bg-purple-500/20 rounded-lg">
-                              <Icon className="w-6 h-6 text-purple-400" />
-                            </div>
-                            <h3 className="text-xl font-bold text-white">{section.title}</h3>
-                          </div>
-                          
-                          <div className="text-gray-300 text-sm whitespace-pre-line leading-relaxed">
-                            {section.content.split('**').map((part, i) => 
-                              i % 2 === 1 
-                                ? <strong key={i} className="text-white">{part}</strong>
-                                : part
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </ScrollArea>
-              </div>
-              
-              {/* Footer */}
-              <div className="pt-4 border-t border-white/10 mt-4">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <p className="text-xs text-gray-500">
-                    📖 Basé sur le ruleset officiel MKCentral - Mise à jour 2025
-                  </p>
-                  <div className="flex gap-2">
-                    <a
-                      href="https://discord.gg/revmGkE"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Button variant="outline" size="sm" className="border-white/10 text-gray-300 hover:text-white">
-                        <ExternalLink className="w-3 h-3 mr-2" />
-                        Discord Lounge
-                      </Button>
-                    </a>
-                    <a
-                      href="https://lounge.mkcentral.com/mk8dx/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Button variant="outline" size="sm" className="border-white/10 text-gray-300 hover:text-white">
-                        <ExternalLink className="w-3 h-3 mr-2" />
-                        MKCentral
-                      </Button>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 // Day filter options
 const dayFilterOptions = [
   { value: 'all', label: 'Tous les jours' },
@@ -1747,75 +419,10 @@ const timeSlotOptions = [
   { value: 'night', label: 'Nuit (00h-6h)', start: 0, end: 6 },
 ];
 
-// Helper function to check if a timestamp matches a day filter
-function matchesDayFilter(timestamp, dayFilter) {
-  const date = new Date(timestamp);
-  const parisDate = new Date(date.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
-  const dayName = parisDate.toLocaleDateString('fr-FR', { weekday: 'long', timeZone: 'Europe/Paris' }).toLowerCase();
-  
-  const today = new Date();
-  const todayParis = new Date(today.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
-  const todayStr = todayParis.toDateString();
-  
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowParis = new Date(tomorrow.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
-  const tomorrowStr = tomorrowParis.toDateString();
-  
-  switch (dayFilter) {
-    case 'all':
-      return true;
-    case 'today':
-      return new Date(parisDate.toLocaleString('en-US', { timeZone: 'Europe/Paris' })).toDateString() === todayStr;
-    case 'tomorrow':
-      return new Date(parisDate.toLocaleString('en-US', { timeZone: 'Europe/Paris' })).toDateString() === tomorrowStr;
-    case 'weekend':
-      return dayName === 'samedi' || dayName === 'dimanche';
-    default:
-      return dayName === dayFilter;
-  }
-}
-
-// Helper function to check if a timestamp matches a time slot filter
-function matchesTimeSlotFilter(timestamp, timeSlotFilter) {
-  if (timeSlotFilter === 'all') return true;
-  
-  const date = new Date(timestamp);
-  const hour = parseInt(date.toLocaleTimeString('fr-FR', { hour: '2-digit', hour12: false, timeZone: 'Europe/Paris' }));
-  
-  const slot = timeSlotOptions.find(s => s.value === timeSlotFilter);
-  if (!slot) return true;
-  
-  // Handle night slot (0-6h) 
-  if (slot.value === 'night') {
-    return hour >= 0 && hour < 6;
-  }
-  // Handle evening slot (18h-24h)
-  if (slot.value === 'evening') {
-    return hour >= 18 && hour < 24;
-  }
-  
-  return hour >= slot.start && hour < slot.end;
-}
-
-// Group SQs by day for display
-function groupByDay(sqs) {
-  return sqs.reduce((acc, sq) => {
-    const date = new Date(sq.time);
-    const dateKey = date.toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      timeZone: 'Europe/Paris'
-    });
-    if (!acc[dateKey]) acc[dateKey] = [];
-    acc[dateKey].push(sq);
-    return acc;
-  }, {});
-}
-
 export default function LoungePage() {
   const { data: session } = useSession();
+  const push = usePushNotifications();
+  const [mounted, setMounted] = useState(false);
   const [schedule, setSchedule] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1824,135 +431,104 @@ export default function LoungePage() {
   const [formatFilter, setFormatFilter] = useState('all');
   const [dayFilter, setDayFilter] = useState('all');
   const [timeSlotFilter, setTimeSlotFilter] = useState('all');
-  const [groupByDayEnabled, setGroupByDayEnabled] = useState(true);
-  const [userMatchHistory, setUserMatchHistory] = useState([]);
-  const [participatedSQs, setParticipatedSQs] = useState(new Map()); // Map<sqId, matchId>
+  const [participationHistory, setParticipationHistory] = useState({});
   const [selectedMatchId, setSelectedMatchId] = useState(null);
-  
-  // Push notification system
-  const push = usePushNotifications();
+  const [showAllSQ, setShowAllSQ] = useState(false);
 
-  const fetchSchedule = async () => {
-    setLoading(true);
-    setError(null);
-    
+  // Animation mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const fetchSchedule = useCallback(async () => {
     try {
-      const res = await fetch('/api/sq-schedule');
+      const res = await fetch('/api/lounge/schedule');
       const data = await res.json();
       
-      if (data.error) {
-        throw new Error(data.error);
+      if (data.schedule) {
+        setSchedule(data.schedule);
+        setLastUpdate(Date.now());
+        setError(null);
+      } else if (data.error) {
+        setError(data.error);
       }
-      
-      setSchedule(data.schedule || []);
-      setLastUpdate(data.lastUpdate || new Date().toISOString());
     } catch (err) {
       console.error('Failed to fetch schedule:', err);
-      setError(err.message);
+      setError('Impossible de charger le planning');
     } finally {
       setLoading(false);
     }
-  };
-
-  // Fetch user match history to detect participation
-  const fetchUserMatchHistory = async () => {
-    if (!session?.user?.serverNickname && !session?.user?.name) return;
-    
-    try {
-      const playerName = session.user.serverNickname || session.user.name;
-      const res = await fetch(`/api/lounge/player-details/${encodeURIComponent(playerName)}`);
-      const data = await res.json();
-      
-      if (data.matchHistory && Array.isArray(data.matchHistory)) {
-        setUserMatchHistory(data.matchHistory);
-      }
-    } catch (err) {
-      console.warn('Could not fetch user match history:', err);
-    }
-  };
-
-  // Detect which SQs the user participated in
-  useEffect(() => {
-    if (userMatchHistory.length === 0 || schedule.length === 0) return;
-    
-    const participated = new Map();
-    const now = Date.now();
-    const pastSQs = schedule.filter(sq => sq.time <= now);
-    
-    pastSQs.forEach(sq => {
-      // Check if any match in user history matches this SQ
-      // Match criteria: same hour (within 60 min tolerance) and compatible format
-      const sqTime = sq.time;
-      const sqFormat = sq.format; // e.g., '2v2', '3v3', '4v4', '6v6'
-      
-      // Extract number of teams from format (2v2 = 6 teams, 3v3 = 4 teams, 4v4 = 3 teams, 6v6 = 2 teams)
-      const formatToTeams = { '2v2': 6, '3v3': 4, '4v4': 3, '6v6': 2 };
-      const expectedTeams = formatToTeams[sqFormat];
-      
-      const matchFound = userMatchHistory.find(match => {
-        const matchTime = new Date(match.time).getTime();
-        const timeDiff = Math.abs(matchTime - sqTime);
-        const withinTimeWindow = timeDiff < 60 * 60 * 1000; // Within 1 hour
-        
-        // Check if format matches (numTeams corresponds to format)
-        const formatMatches = !expectedTeams || match.numTeams === expectedTeams;
-        
-        return withinTimeWindow && formatMatches;
-      });
-      
-      if (matchFound) {
-        participated.set(sq.id, matchFound.id);
-      }
-    });
-    
-    setParticipatedSQs(participated);
-  }, [userMatchHistory, schedule]);
+  }, []);
 
   useEffect(() => {
     fetchSchedule();
-    
-    // Refresh every minute to update relative times
-    const interval = setInterval(() => {
-      setSchedule(prev => [...prev]); // Force re-render
-    }, 60000);
-    
+    const interval = setInterval(fetchSchedule, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchSchedule]);
 
-  // Fetch user history when session is available
-  useEffect(() => {
-    if (session?.user) {
-      fetchUserMatchHistory();
-    }
-  }, [session]);
-
-  const now = Date.now();
-  
-  // Apply all filters (format, day, time slot)
+  // Apply filters
   const filteredSchedule = schedule.filter(sq => {
-    // Format filter
     if (formatFilter !== 'all' && sq.format !== formatFilter) return false;
-    // Day filter
-    if (!matchesDayFilter(sq.time, dayFilter)) return false;
-    // Time slot filter
-    if (!matchesTimeSlotFilter(sq.time, timeSlotFilter)) return false;
+    
+    if (dayFilter !== 'all') {
+      const sqDate = new Date(sq.time);
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      if (dayFilter === 'today') {
+        if (sqDate.toDateString() !== today.toDateString()) return false;
+      } else if (dayFilter === 'tomorrow') {
+        if (sqDate.toDateString() !== tomorrow.toDateString()) return false;
+      } else if (dayFilter === 'weekend') {
+        const dayOfWeek = sqDate.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) return false;
+      } else {
+        const dayName = sqDate.toLocaleDateString('fr-FR', { weekday: 'long', timeZone: 'Europe/Paris' }).toLowerCase();
+        if (dayName !== dayFilter) return false;
+      }
+    }
+    
+    if (timeSlotFilter !== 'all') {
+      const slot = timeSlotOptions.find(s => s.value === timeSlotFilter);
+      if (slot) {
+        const sqHour = new Date(sq.time).toLocaleString('fr-FR', { hour: 'numeric', hour12: false, timeZone: 'Europe/Paris' });
+        const hour = parseInt(sqHour);
+        if (hour < slot.start || hour >= slot.end) return false;
+      }
+    }
+    
     return true;
   });
-  
+
+  const now = Date.now();
   const upcomingSQ = filteredSchedule.filter(sq => sq.time > now).sort((a, b) => a.time - b.time);
   const pastSQ = filteredSchedule.filter(sq => sq.time <= now).sort((a, b) => b.time - a.time);
   const nextSQ = upcomingSQ[0];
-  
-  // Group by day for display
-  const upcomingSQByDay = groupByDay(upcomingSQ);
-  const pastSQByDay = groupByDay(pastSQ);
-  const allSQByDay = groupByDay([...filteredSchedule].sort((a, b) => a.time - b.time));
-  
-  // Check if any filters are active
+
+  // Calculate stats
+  const formatCounts = upcomingSQ.reduce((acc, sq) => {
+    acc[sq.format] = (acc[sq.format] || 0) + 1;
+    return acc;
+  }, {});
+
+  const displayedSQ = activeTab === 'upcoming' ? upcomingSQ : activeTab === 'past' ? pastSQ : filteredSchedule;
+  const visibleSQ = showAllSQ ? displayedSQ : displayedSQ.slice(0, 10);
+
+  // Get current lounge queue status
+  const currentTime = new Date();
+  const parisTime = new Date(currentTime.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+  const currentHour = parisTime.getHours();
+  const currentMinutes = parisTime.getMinutes();
+  const nextHour = (currentHour + 1) % 24;
+  const isQueueOpen = currentMinutes < 55;
+  const closesIn = 55 - currentMinutes;
+
+  const formatHour = (hour) => `${hour.toString().padStart(2, '0')}H`;
+
   const hasActiveFilters = formatFilter !== 'all' || dayFilter !== 'all' || timeSlotFilter !== 'all';
-  
-  // Clear all filters
-  const clearAllFilters = () => {
+
+  const clearFilters = () => {
     setFormatFilter('all');
     setDayFilter('all');
     setTimeSlotFilter('all');
@@ -1961,579 +537,467 @@ export default function LoungePage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar />
-      
-      <main className="container mx-auto px-4 pt-20 pb-12">
+
+      <div className="container mx-auto px-4 py-8 pt-20">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-            <div>
-              <h1 className="text-3xl font-bold flex items-center gap-3">
-                <Gamepad2 className="w-8 h-8 text-purple-500" />
-                MK8DX Lounge
-              </h1>
-              <p className="text-gray-500 mt-2">
-                Hub compétitif MK8DX - Queue, Planning & Matchmaking
-              </p>
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Push Notification Button */}
-              <PushNotificationSettings push={push} schedule={schedule} />
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={fetchSchedule}
-                disabled={loading}
-                className="border-white/10 hover:bg-white/[0.05]"
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Actualiser
-              </Button>
-              
-              <a
-                href="https://discord.gg/revmGkE"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button variant="outline" size="sm" className="border-white/10 hover:bg-white/[0.05]">
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Discord
-                </Button>
-              </a>
-            </div>
+        <div className={`mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <div>
+            <h1 className="text-3xl font-bold mb-1 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">Lounge</h1>
+            <p className="text-gray-500">Planning des Squad Queues et Lounge Queue</p>
           </div>
           
-          {lastUpdate && (
-            <div className="text-xs text-gray-600">
-              Dernière mise à jour: {new Date(lastUpdate).toLocaleString('fr-FR')}
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchSchedule}
+              disabled={loading}
+              className="border-white/[0.06] hover:bg-white/[0.04] text-gray-300 hover:text-white"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Actualiser
+            </Button>
+            
+            <a
+              href="https://discord.gg/revmGkE"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="outline" size="sm" className="border-white/[0.06] hover:bg-white/[0.04] text-gray-300 hover:text-white">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Discord
+              </Button>
+            </a>
+          </div>
         </div>
 
-        {/* My SQ Planning - Show selected SQs at the top */}
-        {push.isSubscribed && push.preferences?.selectedSQs?.length > 0 && !loading && schedule.length > 0 && (
-          <MySQPlanningSection 
-            schedule={schedule} 
-            selectedSQIds={push.preferences.selectedSQs} 
-          />
-        )}
-
-        {/* Error State */}
-        {error && (
-          <Card className="bg-red-500/10 border-red-500/30 mb-8">
-            <CardContent className="p-4">
-              <p className="text-red-400">Erreur: {error}</p>
-              <p className="text-gray-500 text-sm mt-2">
-                Le planning n'a pas pu être chargé. Vérifiez que le bot Discord est actif.
-              </p>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="spinner-trail mb-4" />
+            <span className="text-gray-500">Chargement du planning...</span>
+          </div>
+        ) : error ? (
+          <Card className="card-premium">
+            <CardContent className="p-6 text-center">
+              <AlertTriangle className="w-10 h-10 mx-auto mb-3 text-red-500" />
+              <p className="text-red-400">{error}</p>
             </CardContent>
           </Card>
-        )}
-
-        {/* Loading State */}
-        {loading && schedule.length === 0 && (
-          <div className="flex justify-center py-20">
-            <RefreshCw className="w-8 h-8 animate-spin text-gray-500" />
-          </div>
-        )}
-
-        {/* Stats Summary */}
-        {!loading && schedule.length > 0 && (
-          <ScheduleStats schedule={schedule} />
-        )}
-
-        {/* Lounge Queue Section */}
-        <LoungeQueue session={session} />
-
-        {/* Next SQ Highlight */}
-        {nextSQ && (
-          <Card className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/30 mb-8">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-yellow-400 flex items-center gap-2">
-                <Trophy className="w-5 h-5" />
-                Prochaine Squad Queue
-              </CardTitle>
-              <CardDescription className="text-gray-400">
-                Formez votre équipe et rejoignez la queue • Ouverte de {formatTime(nextSQ.time - 75 * 60 * 1000)} à {new Date(nextSQ.time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }).slice(0, -2)}55
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                {/* Left: Info */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Badge variant="outline" className={`${formatColors[nextSQ.format]} text-lg px-3 py-1`}>
-                      <Users className="w-4 h-4 mr-2" />
-                      {nextSQ.format.toUpperCase()}
-                    </Badge>
-                    <span className="text-gray-400">SQ #{nextSQ.id}</span>
-                    {(() => {
-                      const now = Date.now();
-                      const queueOpenTime = nextSQ.time - 75 * 60 * 1000; // Opens 1h15 before (XX:45)
-                      const queueCloseTime = nextSQ.time - 5 * 60 * 1000; // Closes 5 min before (XX:55)
-                      const isQueueOpen = now >= queueOpenTime && now < queueCloseTime;
-                      return isQueueOpen ? (
-                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 animate-pulse">
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            {/* Lounge Queue Card */}
+            <Card className={`card-premium lg:col-span-2 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '100ms' }}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                  <DoorOpen className="w-4 h-4 text-purple-500" />
+                  Lounge Queue
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      {isQueueOpen ? (
+                        <Badge className="bg-green-500/10 text-green-500 border border-green-500/20 badge-pulse">
                           <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
                           Queue Ouverte
                         </Badge>
-                      ) : null;
-                    })()}
+                      ) : (
+                        <Badge className="bg-red-500/10 text-red-500 border border-red-500/20">
+                          <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                          Queue Fermée
+                        </Badge>
+                      )}
+                      {isQueueOpen && (
+                        <span className="text-xs text-gray-500">Ferme dans {closesIn} min</span>
+                      )}
+                    </div>
+                    <p className="text-white font-medium">Lounge {formatHour(nextHour)}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {isQueueOpen 
+                        ? `Inscrivez-vous maintenant`
+                        : `Réouverture à ${formatHour(nextHour)}`
+                      }
+                    </p>
                   </div>
-                  <div className="text-white mb-2">
-                    <span className="text-2xl font-bold">{formatDateTime(nextSQ.time)}</span>
-                  </div>
-                  <div className="text-green-400 font-medium text-lg mb-2">
-                    <Timer className="w-4 h-4 inline mr-2" />
-                    {formatRelativeTime(nextSQ.time)}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Queue: {formatTime(nextSQ.time - 75 * 60 * 1000)} → {new Date(nextSQ.time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }).slice(0, -2)}55 (ferme 5 min avant le match)
-                  </div>
-                </div>
-                
-                {/* Right: Time + Action */}
-                <div className="w-full md:w-auto flex flex-col items-end gap-3">
                   <div className="text-right">
-                    <div className="text-5xl font-bold text-white">
-                      {formatTime(nextSQ.time)}
+                    <div className="text-3xl font-bold text-white mb-1">{formatHour(nextHour)}</div>
+                    {session?.user ? (
+                      <Button 
+                        size="sm"
+                        className={isQueueOpen 
+                          ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                          : 'bg-gray-700 text-gray-400'
+                        }
+                        disabled={!isQueueOpen}
+                        onClick={() => isQueueOpen && openDiscordLinkWithFallback('https://discord.com/channels/445404006177570829/1186158671525318719')}
+                      >
+                        <DoorOpen className="w-3 h-3 mr-1" />
+                        Rejoindre
+                      </Button>
+                    ) : (
+                      <a href="/login">
+                        <Button size="sm" className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
+                          <LogIn className="w-3 h-3 mr-1" />
+                          Connexion
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Next SQ Card */}
+            <Card className={`card-premium lg:col-span-2 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '150ms' }}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-yellow-500" />
+                  Prochaine Squad Queue
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {nextSQ ? (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="outline" className={`${formatColors[nextSQ.format]}`}>
+                          <Users className="w-3 h-3 mr-1" />
+                          {nextSQ.format.toUpperCase()}
+                        </Badge>
+                        <span className="text-xs text-gray-500">#{nextSQ.id}</span>
+                      </div>
+                      <p className="text-white font-medium">{formatDateTime(nextSQ.time)}</p>
+                      <p className={`text-sm mt-1 ${getTimeStatus(nextSQ.time) === 'soon' ? 'text-green-400 font-medium' : 'text-gray-500'}`}>
+                        <Clock className="w-3 h-3 inline mr-1" />
+                        {formatRelativeTime(nextSQ.time)}
+                      </p>
                     </div>
-                    <div className="text-gray-500 mt-1">
-                      Heure de Paris
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-white mb-1">{formatTime(nextSQ.time)}</div>
+                      {session?.user ? (
+                        <Button 
+                          size="sm"
+                          className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                          onClick={() => openDiscordLinkWithFallback('https://discord.com/channels/445404006177570829/772517883107475516')}
+                        >
+                          <DoorOpen className="w-3 h-3 mr-1" />
+                          Queue SQ
+                        </Button>
+                      ) : (
+                        <a href="/login">
+                          <Button size="sm" className="bg-[#5865F2] hover:bg-[#4752C4] text-white">
+                            <LogIn className="w-3 h-3 mr-1" />
+                            Connexion
+                          </Button>
+                        </a>
+                      )}
                     </div>
                   </div>
-                  
-                  {/* Action Button */}
-                  {session?.user ? (
-                    <Button 
-                      className="w-full md:w-auto bg-yellow-600 hover:bg-yellow-700 text-white"
-                      onClick={() => openDiscordLinkWithFallback('https://discord.com/channels/445404006177570829/772517883107475516')}
-                    >
-                      <DoorOpen className="w-4 h-4 mr-2" />
-                      Rejoindre la Queue
-                    </Button>
-                  ) : (
-                    <a href="/login">
-                      <Button 
-                        className="w-full md:w-auto bg-[#5865F2] hover:bg-[#4752C4] text-white"
-                      >
-                        <LogIn className="w-4 h-4 mr-2" />
-                        Se connecter avec Discord
-                      </Button>
-                    </a>
-                  )}
+                ) : (
+                  <div className="text-center py-4">
+                    <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-700" />
+                    <p className="text-gray-500 text-sm">Aucune SQ à venir</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Stats Cards */}
+            <Card className={`card-premium transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+              <CardContent className="p-6 text-center">
+                <div className="text-4xl font-black text-white mb-1 transition-all duration-500 hover:scale-105">
+                  {upcomingSQ.length}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                <p className="text-xs text-gray-500 uppercase tracking-wider">SQ à venir</p>
+              </CardContent>
+            </Card>
 
-        {/* Tabs for Upcoming/Past */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex flex-col gap-4 mb-6">
-            {/* First row: Tabs */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <TabsList className="bg-white/[0.02] border border-white/[0.06]">
-                <TabsTrigger 
-                  value="upcoming" 
-                  className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
-                >
-                  <Calendar className="w-4 h-4 mr-2" />
-                  À venir ({upcomingSQ.length})
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="past" 
-                  className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
-                >
-                  <Clock className="w-4 h-4 mr-2" />
-                  Passées ({pastSQ.length})
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="all" 
-                  className="data-[state=active]:bg-white/[0.1] data-[state=active]:text-white"
-                >
-                  Tout ({filteredSchedule.length})
-                </TabsTrigger>
-              </TabsList>
+            <Card className={`card-premium transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '250ms' }}>
+              <CardContent className="p-6 text-center">
+                <div className="text-4xl font-black text-green-500 mb-1 transition-all duration-500 hover:scale-105">
+                  {nextSQ ? formatRelativeTime(nextSQ.time).split(' ')[1] || '-' : '-'}
+                </div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider">Prochaine SQ</p>
+              </CardContent>
+            </Card>
 
-              {/* Group by day toggle */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">Grouper par jour</span>
-                <Switch 
-                  checked={groupByDayEnabled}
-                  onCheckedChange={setGroupByDayEnabled}
-                />
-              </div>
-            </div>
-
-            {/* Second row: Filters */}
-            <div className="flex flex-wrap items-center gap-2 p-3 bg-white/[0.02] border border-white/[0.06] rounded-lg">
-              <Filter className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-400 mr-2">Filtres:</span>
-              
-              {/* Day Filter */}
-              <Select value={dayFilter} onValueChange={setDayFilter}>
-                <SelectTrigger className="w-[160px] bg-white/[0.02] border-white/[0.06] text-white h-9">
-                  <CalendarDays className="w-3 h-3 mr-2 text-purple-400" />
-                  <SelectValue placeholder="Jour" />
-                </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-white/[0.1]">
-                  {dayFilterOptions.map(option => (
-                    <SelectItem 
-                      key={option.value} 
-                      value={option.value} 
-                      className={`text-white hover:bg-white/[0.1] ${
-                        option.value === 'today' ? 'text-green-400' :
-                        option.value === 'tomorrow' ? 'text-blue-400' :
-                        option.value === 'weekend' ? 'text-yellow-400' : ''
-                      }`}
-                    >
-                      {option.label}
-                    </SelectItem>
+            <Card className={`card-premium lg:col-span-2 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '300ms' }}>
+              <CardContent className="p-6">
+                <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">Par format</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {['2v2', '3v3', '4v4', '6v6'].map((format) => (
+                    <div key={format} className={`stat-card text-center p-2 rounded-lg ${
+                      format === '2v2' ? 'bg-green-500/10 stat-green' :
+                      format === '3v3' ? 'bg-blue-500/10 stat-blue' :
+                      format === '4v4' ? 'bg-purple-500/10 stat-purple' :
+                      'bg-orange-500/10 stat-yellow'
+                    }`}>
+                      <div className={`text-lg font-bold ${
+                        format === '2v2' ? 'text-green-500' :
+                        format === '3v3' ? 'text-blue-500' :
+                        format === '4v4' ? 'text-purple-500' :
+                        'text-orange-500'
+                      }`}>{formatCounts[format] || 0}</div>
+                      <p className="text-[10px] text-gray-500">{format}</p>
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Time Slot Filter */}
-              <Select value={timeSlotFilter} onValueChange={setTimeSlotFilter}>
-                <SelectTrigger className="w-[180px] bg-white/[0.02] border-white/[0.06] text-white h-9">
-                  <Clock className="w-3 h-3 mr-2 text-blue-400" />
-                  <SelectValue placeholder="Horaire" />
-                </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-white/[0.1]">
-                  {timeSlotOptions.map(option => (
-                    <SelectItem 
-                      key={option.value} 
-                      value={option.value} 
-                      className="text-white hover:bg-white/[0.1]"
-                    >
-                      {option.label}
-                    </SelectItem>
+            {/* Filters & Tab Selection */}
+            <Card className={`card-premium lg:col-span-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '350ms' }}>
+              <CardContent className="p-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+                    <TabsList className="bg-white/[0.02] border border-white/[0.04]">
+                      <TabsTrigger value="upcoming" className="data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-gray-400">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        À venir ({upcomingSQ.length})
+                      </TabsTrigger>
+                      <TabsTrigger value="past" className="data-[state=active]:bg-white/[0.08] data-[state=active]:text-white text-gray-400">
+                        <History className="w-4 h-4 mr-2" />
+                        Passées ({pastSQ.length})
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Filter className="w-4 h-4 text-gray-600" />
+                    
+                    <Select value={formatFilter} onValueChange={setFormatFilter}>
+                      <SelectTrigger className="w-[100px] bg-white/[0.02] border-white/[0.06] text-white h-9">
+                        <SelectValue placeholder="Format" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-white/[0.1]">
+                        <SelectItem value="all" className="text-white hover:bg-white/[0.1]">Tous</SelectItem>
+                        <SelectItem value="2v2" className="text-green-400 hover:bg-white/[0.1]">2v2</SelectItem>
+                        <SelectItem value="3v3" className="text-blue-400 hover:bg-white/[0.1]">3v3</SelectItem>
+                        <SelectItem value="4v4" className="text-purple-400 hover:bg-white/[0.1]">4v4</SelectItem>
+                        <SelectItem value="6v6" className="text-orange-400 hover:bg-white/[0.1]">6v6</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={dayFilter} onValueChange={setDayFilter}>
+                      <SelectTrigger className="w-[140px] bg-white/[0.02] border-white/[0.06] text-white h-9">
+                        <CalendarDays className="w-3 h-3 mr-2 text-purple-400" />
+                        <SelectValue placeholder="Jour" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-white/[0.1]">
+                        {dayFilterOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/[0.1]">
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={timeSlotFilter} onValueChange={setTimeSlotFilter}>
+                      <SelectTrigger className="w-[160px] bg-white/[0.02] border-white/[0.06] text-white h-9">
+                        <Clock className="w-3 h-3 mr-2 text-blue-400" />
+                        <SelectValue placeholder="Horaire" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-white/[0.1]">
+                        {timeSlotOptions.map(option => (
+                          <SelectItem key={option.value} value={option.value} className="text-white hover:bg-white/[0.1]">
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {hasActiveFilters && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearFilters}
+                        className="text-gray-400 hover:text-white h-9"
+                      >
+                        <X className="w-3 h-3 mr-1" />
+                        Effacer
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {hasActiveFilters && (
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.04]">
+                    <span className="text-xs text-gray-500">{filteredSchedule.length} résultat(s)</span>
+                    {formatFilter !== 'all' && (
+                      <Badge variant="outline" className={formatColors[formatFilter]}>
+                        {formatFilter}
+                      </Badge>
+                    )}
+                    {dayFilter !== 'all' && (
+                      <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20">
+                        {dayFilterOptions.find(d => d.value === dayFilter)?.label}
+                      </Badge>
+                    )}
+                    {timeSlotFilter !== 'all' && (
+                      <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
+                        {timeSlotOptions.find(t => t.value === timeSlotFilter)?.label}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* SQ Table */}
+            <Card className={`card-premium lg:col-span-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '400ms' }}>
+              <CardHeader className="border-b border-white/[0.04] pb-4">
+                <CardTitle className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                  <Gamepad2 className="w-4 h-4 text-blue-500" />
+                  Planning des Squad Queues ({displayedSQ.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {displayedSQ.length > 0 ? (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="text-gray-500 text-xs uppercase tracking-wider border-b border-white/[0.04]">
+                            <th className="text-left py-3 px-4 font-medium">#</th>
+                            <th className="text-left py-3 px-4 font-medium">Date</th>
+                            <th className="text-left py-3 px-4 font-medium">Heure</th>
+                            <th className="text-center py-3 px-4 font-medium">Format</th>
+                            <th className="text-center py-3 px-4 font-medium">Status</th>
+                            <th className="text-right py-3 px-4 font-medium">Temps</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/[0.03]">
+                          {visibleSQ.map((sq, index) => {
+                            const status = getTimeStatus(sq.time);
+                            const isNext = sq.id === nextSQ?.id;
+                            const isPast = status === 'past';
+                            const isSoon = status === 'soon';
+                            
+                            return (
+                              <tr 
+                                key={sq.id}
+                                className={`table-row-hover cursor-pointer group ${isPast ? 'opacity-50' : ''}`}
+                                style={{ animationDelay: `${index * 30}ms` }}
+                              >
+                                <td className="py-3 px-4 text-gray-600 text-sm">
+                                  {sq.id}
+                                </td>
+                                <td className="py-3 px-4 text-gray-400 text-sm">
+                                  {formatShortDate(sq.time)}
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="text-white font-medium">{formatTime(sq.time)}</span>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <Badge variant="outline" className={`${formatColors[sq.format]} transition-transform duration-300 group-hover:scale-110`}>
+                                    <Users className="w-3 h-3 mr-1" />
+                                    {sq.format}
+                                  </Badge>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  {isNext && (
+                                    <Badge className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 badge-shine">
+                                      <Zap className="w-3 h-3 mr-1" />
+                                      Prochaine
+                                    </Badge>
+                                  )}
+                                  {isSoon && !isNext && (
+                                    <Badge className="bg-green-500/10 text-green-500 border border-green-500/20 badge-pulse">
+                                      <Timer className="w-3 h-3 mr-1" />
+                                      Bientôt
+                                    </Badge>
+                                  )}
+                                  {isPast && (
+                                    <Badge className="bg-gray-500/10 text-gray-500 border border-gray-500/20">
+                                      Terminée
+                                    </Badge>
+                                  )}
+                                  {!isNext && !isSoon && !isPast && (
+                                    <span className="text-gray-600 text-sm">-</span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-4 text-right">
+                                  <span className={`text-sm font-medium transition-transform duration-300 group-hover:scale-110 inline-block ${
+                                    isSoon ? 'text-green-500' : isPast ? 'text-gray-600' : 'text-gray-400'
+                                  }`}>
+                                    {formatRelativeTime(sq.time)}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    {displayedSQ.length > 10 && (
+                      <div className="py-3 text-center border-t border-white/[0.04]">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowAllSQ(!showAllSQ)}
+                          className="text-gray-500 hover:text-white group"
+                        >
+                          {showAllSQ ? <ChevronUp className="w-4 h-4 mr-1 group-hover:-translate-y-0.5 transition-transform" /> : <ChevronDown className="w-4 h-4 mr-1 group-hover:translate-y-0.5 transition-transform" />}
+                          {showAllSQ ? 'Moins' : `Tout afficher (${displayedSQ.length})`}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-12">
+                    <Calendar className="w-10 h-10 mx-auto mb-3 text-gray-700 animate-bounce-subtle" />
+                    <p className="text-gray-500">Aucune SQ trouvée avec ces filtres</p>
+                    {hasActiveFilters && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearFilters}
+                        className="mt-3 text-gray-400 hover:text-white"
+                      >
+                        Effacer les filtres
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Quick Links */}
+            <Card className={`card-premium lg:col-span-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '450ms' }}>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { href: '/leaderboard', icon: Trophy, label: 'Leaderboard', color: 'text-yellow-500', bg: 'bg-yellow-500/10', hoverBg: 'hover:bg-yellow-500/20' },
+                    { href: '/academy', icon: BookOpen, label: 'Academy', color: 'text-blue-500', bg: 'bg-blue-500/10', hoverBg: 'hover:bg-blue-500/20' },
+                    { href: '/tournaments', icon: Award, label: 'Tournois', color: 'text-purple-500', bg: 'bg-purple-500/10', hoverBg: 'hover:bg-purple-500/20' },
+                  ].map((link, i) => (
+                    <a key={i} href={link.href}>
+                      <div className={`p-4 ${link.bg} ${link.hoverBg} rounded-lg text-center transition-all duration-300 hover:scale-105 hover:shadow-lg group cursor-pointer`}>
+                        <link.icon className={`w-6 h-6 mx-auto mb-2 ${link.color} group-hover:scale-110 transition-transform duration-300`} />
+                        <p className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors duration-300">{link.label}</p>
+                      </div>
+                    </a>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Format Filter */}
-              <Select value={formatFilter} onValueChange={setFormatFilter}>
-                <SelectTrigger className="w-[150px] bg-white/[0.02] border-white/[0.06] text-white h-9">
-                  <Users className="w-3 h-3 mr-2 text-orange-400" />
-                  <SelectValue placeholder="Format" />
-                </SelectTrigger>
-                <SelectContent className="bg-zinc-900 border-white/[0.1]">
-                  <SelectItem value="all" className="text-white hover:bg-white/[0.1]">
-                    Tous les formats
-                  </SelectItem>
-                  <SelectItem value="2v2" className="text-green-400 hover:bg-white/[0.1]">
-                    <span className="flex items-center gap-2">
-                      <Users className="w-3 h-3" /> 2v2 - Duo
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="3v3" className="text-blue-400 hover:bg-white/[0.1]">
-                    <span className="flex items-center gap-2">
-                      <Users className="w-3 h-3" /> 3v3 - Trio
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="4v4" className="text-purple-400 hover:bg-white/[0.1]">
-                    <span className="flex items-center gap-2">
-                      <Users className="w-3 h-3" /> 4v4 - Squad
-                    </span>
-                  </SelectItem>
-                  <SelectItem value="6v6" className="text-orange-400 hover:bg-white/[0.1]">
-                    <span className="flex items-center gap-2">
-                      <Users className="w-3 h-3" /> 6v6
-                    </span>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-
-              {/* Clear filters button */}
-              {hasActiveFilters && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAllFilters}
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-9"
-                >
-                  <X className="w-3 h-3 mr-1" />
-                  Effacer filtres
-                </Button>
-              )}
-            </div>
-
-            {/* Active filters summary */}
-            {hasActiveFilters && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-gray-500">Filtres actifs:</span>
-                {dayFilter !== 'all' && (
-                  <Badge variant="outline" className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">
-                    <CalendarDays className="w-3 h-3 mr-1" />
-                    {dayFilterOptions.find(d => d.value === dayFilter)?.label}
-                  </Badge>
-                )}
-                {timeSlotFilter !== 'all' && (
-                  <Badge variant="outline" className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-xs">
-                    <Clock className="w-3 h-3 mr-1" />
-                    {timeSlotOptions.find(t => t.value === timeSlotFilter)?.label}
-                  </Badge>
-                )}
-                {formatFilter !== 'all' && (
-                  <Badge variant="outline" className={`${formatColors[formatFilter]} text-xs`}>
-                    <Users className="w-3 h-3 mr-1" />
-                    {formatFilter.toUpperCase()}
-                  </Badge>
-                )}
-                <span className="text-xs text-gray-500 ml-2">
-                  ({filteredSchedule.length} résultat{filteredSchedule.length > 1 ? 's' : ''})
-                </span>
+            {/* Last Update */}
+            {lastUpdate && (
+              <div className={`lg:col-span-4 text-center transition-all duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '500ms' }}>
+                <p className="text-xs text-gray-600">
+                  Dernière mise à jour: {new Date(lastUpdate).toLocaleString('fr-FR')}
+                </p>
               </div>
             )}
           </div>
+        )}
+      </div>
 
-          <TabsContent value="upcoming">
-            {upcomingSQ.length === 0 ? (
-              <Card className="bg-white/[0.02] border-white/[0.06]">
-                <CardContent className="p-8 text-center">
-                  <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-400">
-                    {hasActiveFilters
-                      ? 'Aucune Squad Queue correspondant aux filtres'
-                      : 'Aucune Squad Queue à venir'
-                    }
-                  </p>
-                  {hasActiveFilters ? (
-                    <Button 
-                      variant="link" 
-                      onClick={clearAllFilters} 
-                      className="text-purple-400 mt-2"
-                    >
-                      Effacer les filtres
-                    </Button>
-                  ) : (
-                    <p className="text-gray-600 text-sm mt-2">
-                      Le planning est généralement mis à jour chaque lundi.
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            ) : groupByDayEnabled ? (
-              <div className="space-y-6">
-                {Object.entries(upcomingSQByDay).map(([date, sqs]) => (
-                  <div key={date} className="space-y-3">
-                    <div className="sticky top-0 bg-black/80 backdrop-blur-sm py-2 z-10 border-b border-white/[0.06]">
-                      <h3 className="text-lg font-semibold text-white capitalize flex items-center gap-2">
-                        <CalendarDays className="w-5 h-5 text-purple-400" />
-                        {date}
-                        <Badge variant="outline" className="ml-2 bg-white/[0.05] text-gray-400 border-white/[0.1]">
-                          {sqs.length} SQ
-                        </Badge>
-                      </h3>
-                    </div>
-                    <div className="space-y-3 pl-2 border-l-2 border-purple-500/30">
-                      {sqs.map((sq, idx) => (
-                        <SQCard key={sq.id} sq={sq} isNext={upcomingSQ[0]?.id === sq.id} />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {upcomingSQ.map((sq, idx) => (
-                  <SQCard key={sq.id} sq={sq} isNext={idx === 0} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="past">
-            {pastSQ.length === 0 ? (
-              <Card className="bg-white/[0.02] border-white/[0.06]">
-                <CardContent className="p-8 text-center">
-                  <Clock className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-400">
-                    {hasActiveFilters
-                      ? 'Aucune Squad Queue passée correspondant aux filtres'
-                      : 'Aucune Squad Queue passée'
-                    }
-                  </p>
-                  {hasActiveFilters && (
-                    <Button 
-                      variant="link" 
-                      onClick={clearAllFilters} 
-                      className="text-purple-400 mt-2"
-                    >
-                      Effacer les filtres
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ) : groupByDayEnabled ? (
-              <div className="space-y-6">
-                {Object.entries(pastSQByDay).map(([date, sqs]) => (
-                  <div key={date} className="space-y-3">
-                    <div className="sticky top-0 bg-black/80 backdrop-blur-sm py-2 z-10 border-b border-white/[0.06]">
-                      <h3 className="text-lg font-semibold text-white capitalize flex items-center gap-2">
-                        <CalendarDays className="w-5 h-5 text-gray-500" />
-                        {date}
-                        <Badge variant="outline" className="ml-2 bg-white/[0.05] text-gray-400 border-white/[0.1]">
-                          {sqs.length} SQ
-                        </Badge>
-                      </h3>
-                    </div>
-                    <div className="space-y-3 pl-2 border-l-2 border-gray-600/30">
-                      {sqs.map((sq) => (
-                        <SQCard 
-                          key={sq.id} 
-                          sq={sq} 
-                          isNext={false} 
-                          participated={participatedSQs.has(sq.id)}
-                          matchId={participatedSQs.get(sq.id)}
-                          onMatchClick={(id) => setSelectedMatchId(id)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pastSQ.map((sq) => (
-                  <SQCard 
-                    key={sq.id} 
-                    sq={sq} 
-                    isNext={false}
-                    participated={participatedSQs.has(sq.id)}
-                    matchId={participatedSQs.get(sq.id)}
-                    onMatchClick={(id) => setSelectedMatchId(id)}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="all">
-            {filteredSchedule.length === 0 ? (
-              <Card className="bg-white/[0.02] border-white/[0.06]">
-                <CardContent className="p-8 text-center">
-                  <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                  <p className="text-gray-400">
-                    {hasActiveFilters
-                      ? 'Aucune Squad Queue correspondant aux filtres'
-                      : 'Aucune donnée de planning'
-                    }
-                  </p>
-                  {hasActiveFilters && (
-                    <Button 
-                      variant="link" 
-                      onClick={clearAllFilters} 
-                      className="text-purple-400 mt-2"
-                    >
-                      Effacer les filtres
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ) : groupByDayEnabled ? (
-              <div className="space-y-6">
-                {Object.entries(allSQByDay).map(([date, sqs]) => {
-                  const isUpcoming = sqs.some(sq => sq.time > now);
-                  return (
-                    <div key={date} className="space-y-3">
-                      <div className="sticky top-0 bg-black/80 backdrop-blur-sm py-2 z-10 border-b border-white/[0.06]">
-                        <h3 className="text-lg font-semibold text-white capitalize flex items-center gap-2">
-                          <CalendarDays className={`w-5 h-5 ${isUpcoming ? 'text-purple-400' : 'text-gray-500'}`} />
-                          {date}
-                          <Badge variant="outline" className="ml-2 bg-white/[0.05] text-gray-400 border-white/[0.1]">
-                            {sqs.length} SQ
-                          </Badge>
-                          {isUpcoming && (
-                            <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-xs">
-                              À venir
-                            </Badge>
-                          )}
-                        </h3>
-                      </div>
-                      <div className={`space-y-3 pl-2 border-l-2 ${isUpcoming ? 'border-purple-500/30' : 'border-gray-600/30'}`}>
-                        {sqs.map((sq) => (
-                          <SQCard 
-                            key={sq.id} 
-                            sq={sq} 
-                            isNext={sq.id === nextSQ?.id}
-                            participated={participatedSQs.has(sq.id)}
-                            matchId={participatedSQs.get(sq.id)}
-                            onMatchClick={(id) => setSelectedMatchId(id)}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {[...filteredSchedule].sort((a, b) => a.time - b.time).map((sq) => (
-                  <SQCard 
-                    key={sq.id} 
-                    sq={sq} 
-                    isNext={sq.id === nextSQ?.id}
-                    participated={participatedSQs.has(sq.id)}
-                    matchId={participatedSQs.get(sq.id)}
-                    onMatchClick={(id) => setSelectedMatchId(id)}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-
-        {/* FAQ Section */}
-        <FAQSection />
-        
-        {/* Info Footer */}
-        <Card className="bg-white/[0.02] border-white/[0.06] mt-8">
-          <CardContent className="p-6">
-            <h3 className="font-semibold text-white mb-3 flex items-center gap-2">
-              <Gamepad2 className="w-5 h-5 text-purple-500" />
-              À propos des Squad Queues
-            </h3>
-            <div className="grid md:grid-cols-2 gap-6 text-sm text-gray-400">
-              <div>
-                <p className="mb-2">
-                  Les <strong className="text-white">Squad Queues</strong> sont des sessions de matchmaking 
-                  compétitif organisées par le MK8DX Lounge.
-                </p>
-                <p className="mb-2">
-                  <strong className="text-white">Horaires des queues:</strong>
-                </p>
-                <ul className="list-disc list-inside space-y-1 text-gray-500">
-                  <li><strong className="text-purple-400">Lounge Queue:</strong> XX:00 à XX:55</li>
-                  <li><strong className="text-yellow-400">Squad Queue:</strong> XX:45 → XX:55</li>
-                </ul>
-              </div>
-              <div>
-                <p className="mb-2"><strong className="text-white">Formats disponibles:</strong></p>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className={formatColors['2v2']}>2v2 - Duo</Badge>
-                  <Badge variant="outline" className={formatColors['3v3']}>3v3 - Trio</Badge>
-                  <Badge variant="outline" className={formatColors['4v4']}>4v4 - Squad</Badge>
-                  <Badge variant="outline" className={formatColors['6v6']}>6v6</Badge>
-                </div>
-                <p className="mt-3 text-xs text-gray-600">
-                  💡 Activez les notifications push pour être alerté automatiquement!
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </main>
-      
-      {/* Match Detail Modal */}
       {selectedMatchId && (
-        <MatchDetailModal 
-          matchId={selectedMatchId} 
-          onClose={() => setSelectedMatchId(null)} 
-        />
+        <MatchDetailModal matchId={selectedMatchId} onClose={() => setSelectedMatchId(null)} />
       )}
     </div>
   );
