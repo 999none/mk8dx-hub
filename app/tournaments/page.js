@@ -138,37 +138,41 @@ export default function TournamentsPage() {
         <Navbar />
 
         <div className="container mx-auto px-4 py-8 pt-20">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Tournois</h1>
+          {/* Header with animation */}
+          <div className={`mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Tournois</h1>
             <p className="text-gray-500 text-sm">
               Événements officiels MKCentral
             </p>
           </div>
 
-          {/* Summary Stats */}
+          {/* Summary Stats with staggered animation */}
           {summary && (
             <div className="grid grid-cols-4 gap-3 mb-6">
               {[
-                { label: 'MK World', value: summary.mkworld || 0, color: 'text-green-500', bg: 'bg-green-500/10', icon: '🌍' },
-                { label: 'MK8 Deluxe', value: summary.mk8dx || 0, color: 'text-blue-500', bg: 'bg-blue-500/10', icon: '🏎️' },
-                { label: 'MK Wii', value: summary.mkw || 0, color: 'text-purple-500', bg: 'bg-purple-500/10', icon: '🏁' },
-                { label: 'Inscriptions', value: summary.registrationsOpen || 0, color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: '✍️' },
+                { label: 'MK World', value: summary.mkworld || 0, color: 'text-green-500', bg: 'bg-green-500/10', icon: '🌍', borderColor: 'border-green-500/20' },
+                { label: 'MK8 Deluxe', value: summary.mk8dx || 0, color: 'text-blue-500', bg: 'bg-blue-500/10', icon: '🏎️', borderColor: 'border-blue-500/20' },
+                { label: 'MK Wii', value: summary.mkw || 0, color: 'text-purple-500', bg: 'bg-purple-500/10', icon: '🏁', borderColor: 'border-purple-500/20' },
+                { label: 'Inscriptions', value: summary.registrationsOpen || 0, color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: '✍️', borderColor: 'border-yellow-500/20' },
               ].map((stat, i) => (
-                <div key={i} className={`text-center p-4 ${stat.bg} border border-white/[0.04] rounded-xl`}>
-                  <div className="text-lg mb-1">{stat.icon}</div>
-                  <div className={`text-xl font-bold ${stat.color}`}>{stat.value}</div>
+                <div 
+                  key={i} 
+                  className={`text-center p-4 ${stat.bg} border ${stat.borderColor} rounded-xl group cursor-default transition-all duration-500 hover:scale-105 hover:shadow-lg ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                  style={{ transitionDelay: `${100 + i * 50}ms` }}
+                >
+                  <div className="text-lg mb-1 transition-transform duration-300 group-hover:scale-125">{stat.icon}</div>
+                  <div className={`text-xl font-bold ${stat.color} transition-all duration-300 group-hover:scale-110`}>{stat.value}</div>
                   <p className="text-xs text-gray-500">{stat.label}</p>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Filters */}
-          <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 mb-6">
+          {/* Filters with animation */}
+          <div className={`bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 mb-6 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`} style={{ transitionDelay: '200ms' }}>
             <div className="grid grid-cols-3 gap-3">
               <Select value={gameFilter} onValueChange={(v) => { setGameFilter(v); setPage(1); }}>
-                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400">
+                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 hover:border-white/20 transition-colors">
                   <Gamepad2 className="w-4 h-4 mr-2 text-gray-600" />
                   <SelectValue placeholder="Jeu" />
                 </SelectTrigger>
@@ -182,7 +186,7 @@ export default function TournamentsPage() {
               </Select>
 
               <Select value={formatFilter} onValueChange={(v) => { setFormatFilter(v); setPage(1); }}>
-                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400">
+                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 hover:border-white/20 transition-colors">
                   <Users className="w-4 h-4 mr-2 text-gray-600" />
                   <SelectValue placeholder="Format" />
                 </SelectTrigger>
@@ -196,7 +200,7 @@ export default function TournamentsPage() {
               </Select>
 
               <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400">
+                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400 hover:border-white/20 transition-colors">
                   <Calendar className="w-4 h-4 mr-2 text-gray-600" />
                   <SelectValue placeholder="Statut" />
                 </SelectTrigger>
@@ -228,29 +232,31 @@ export default function TournamentsPage() {
             </div>
           ) : tournaments.length === 0 ? (
             <div className="text-center py-20">
-              <Trophy className="w-10 h-10 mx-auto mb-3 text-gray-700" />
+              <Trophy className="w-10 h-10 mx-auto mb-3 text-gray-700 animate-bounce-subtle" />
               <p className="text-gray-500">Aucun tournoi trouvé</p>
             </div>
           ) : (
             <>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                {tournaments.map((tournament) => {
+                {tournaments.map((tournament, index) => {
                   const statusStyle = getStatusStyle(tournament.status);
                   
                   return (
                     <Card 
                       key={tournament.id} 
-                      className={`bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.04] transition-all overflow-hidden ${
+                      className={`bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.04] transition-all duration-500 overflow-hidden group hover:scale-[1.02] hover:shadow-xl hover:shadow-black/50 ${
                         tournament.status === 'live' ? 'ring-1 ring-green-500/30' : ''
-                      }`}
+                      } ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+                      style={{ transitionDelay: `${300 + index * 50}ms` }}
                     >
                       {/* Tournament/Series Logo */}
-                      <div className="h-28 bg-gradient-to-b from-white/[0.04] to-transparent flex items-center justify-center p-4 relative">
+                      <div className="h-28 bg-gradient-to-b from-white/[0.04] to-transparent flex items-center justify-center p-4 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                         {(tournament.logo || tournament.seriesLogo || tournament.tournamentLogo) ? (
                           <img 
                             src={tournament.logo || tournament.seriesLogo || tournament.tournamentLogo} 
                             alt={tournament.name}
-                            className="max-h-20 max-w-full object-contain"
+                            className="max-h-20 max-w-full object-contain transition-transform duration-500 group-hover:scale-110"
                             onError={(e) => {
                               // Try series logo if main logo fails
                               if (tournament.seriesLogo && e.target.src !== tournament.seriesLogo) {
@@ -267,7 +273,7 @@ export default function TournamentsPage() {
                         ) : null}
                         {/* Fallback icon when no logo or image fails to load */}
                         <div className={`flex flex-col items-center justify-center ${(tournament.logo || tournament.seriesLogo || tournament.tournamentLogo) ? 'hidden' : ''}`}>
-                          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] flex items-center justify-center border border-white/[0.06]">
+                          <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] flex items-center justify-center border border-white/[0.06] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                             {tournament.game === 'mkworld' ? (
                               <span className="text-3xl">🌍</span>
                             ) : tournament.game === 'mk8dx' ? (
@@ -289,39 +295,39 @@ export default function TournamentsPage() {
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between gap-2 mb-3">
                           <div className="flex-1">
-                            <Badge className={`${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border} text-[10px] mb-2`}>
+                            <Badge className={`${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border} text-[10px] mb-2 transition-all duration-300 ${tournament.status === 'live' ? 'animate-pulse' : ''}`}>
                               {statusStyle.label}
                             </Badge>
-                            <h3 className="font-semibold text-sm line-clamp-2">{tournament.name}</h3>
+                            <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-white transition-colors">{tournament.name}</h3>
                           </div>
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => setNotifications(prev => ({ ...prev, [tournament.id]: !prev[tournament.id] }))}
-                            className="h-8 w-8 hover:bg-white/[0.04] flex-shrink-0"
+                            className="h-8 w-8 hover:bg-white/[0.04] flex-shrink-0 transition-all duration-300 hover:scale-110"
                           >
                             {notifications[tournament.id] ? (
-                              <Bell className="w-4 h-4 text-yellow-500" />
+                              <Bell className="w-4 h-4 text-yellow-500 animate-bounce-subtle" />
                             ) : (
-                              <BellOff className="w-4 h-4 text-gray-600" />
+                              <BellOff className="w-4 h-4 text-gray-600 group-hover:text-gray-400 transition-colors" />
                             )}
                           </Button>
                         </div>
                         
                         <div className="space-y-2 text-xs text-gray-500">
                           {tournament.gameHuman && (
-                            <div className="flex items-center gap-2">
-                              <Gamepad2 className="w-3 h-3" />
+                            <div className="flex items-center gap-2 group/item">
+                              <Gamepad2 className="w-3 h-3 transition-transform duration-300 group-hover/item:scale-110" />
                               <span>{tournament.gameHuman}</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-3 h-3" />
+                          <div className="flex items-center gap-2 group/item">
+                            <Calendar className="w-3 h-3 transition-transform duration-300 group-hover/item:scale-110" />
                             <span>{tournament.startDateHuman || formatDate(tournament.startDate)}</span>
                           </div>
                           {tournament.format && (
-                            <div className="flex items-center gap-2">
-                              <Users className="w-3 h-3" />
+                            <div className="flex items-center gap-2 group/item">
+                              <Users className="w-3 h-3 transition-transform duration-300 group-hover/item:scale-110" />
                               <span>{tournament.format}</span>
                             </div>
                           )}
@@ -329,12 +335,12 @@ export default function TournamentsPage() {
                         
                         <div className="flex flex-wrap gap-1 mt-3">
                           {tournament.game && (
-                            <Badge variant="outline" className="border-white/10 text-[10px] text-gray-400">
+                            <Badge variant="outline" className="border-white/10 text-[10px] text-gray-400 transition-colors group-hover:border-white/20">
                               {tournament.game.toUpperCase()}
                             </Badge>
                           )}
                           {tournament.registrationsOpen && (
-                            <Badge className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[10px]">
+                            <Badge className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-[10px] animate-pulse-subtle">
                               Inscriptions
                             </Badge>
                           )}
@@ -342,9 +348,9 @@ export default function TournamentsPage() {
                         
                         {tournament.link && (
                           <a href={tournament.link} target="_blank" rel="noopener noreferrer" className="block mt-4">
-                            <Button size="sm" className="w-full bg-white text-black hover:bg-gray-200 text-xs h-8">
+                            <Button size="sm" className="w-full bg-white text-black hover:bg-gray-200 text-xs h-8 transition-all duration-300 group-hover:shadow-lg group-hover:shadow-white/10">
                               Voir
-                              <ExternalLink className="ml-2 w-3 h-3" />
+                              <ExternalLink className="ml-2 w-3 h-3 transition-transform duration-300 group-hover:translate-x-1" />
                             </Button>
                           </a>
                         )}
@@ -354,15 +360,15 @@ export default function TournamentsPage() {
                 })}
               </div>
 
-              {/* Pagination */}
+              {/* Pagination with animation */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2">
+                <div className={`flex items-center justify-center gap-2 transition-all duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 w-8"
+                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 w-8 transition-all hover:-translate-x-0.5"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
@@ -374,7 +380,7 @@ export default function TournamentsPage() {
                     size="icon"
                     onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 w-8"
+                    className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-8 w-8 transition-all hover:translate-x-0.5"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </Button>
