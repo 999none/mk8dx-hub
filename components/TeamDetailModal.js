@@ -143,12 +143,12 @@ export default function TeamDetailModal({ teamId, onClose }) {
         <div className="p-4">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16">
-              <RefreshCw className="w-5 h-5 animate-spin text-gray-600 mb-3" />
+              <div className="spinner-trail mb-4" />
               <span className="text-gray-500 text-sm">Chargement des détails...</span>
             </div>
           ) : error ? (
             <div className="text-center py-16">
-              <Shield className="w-10 h-10 mx-auto mb-3 text-gray-700" />
+              <Shield className="w-10 h-10 mx-auto mb-3 text-gray-700 animate-pulse" />
               <p className="text-gray-500 text-sm">{error}</p>
             </div>
           ) : teamDetails ? (
@@ -156,7 +156,7 @@ export default function TeamDetailModal({ teamId, onClose }) {
               
               {/* Team Info Card */}
               <div 
-                className="p-4 rounded-xl border border-white/[0.06]"
+                className="p-4 rounded-xl border border-white/[0.06] transition-all duration-300 hover:border-white/[0.12]"
                 style={{ background: `linear-gradient(135deg, ${teamColor}10, transparent)` }}
               >
                 <div className="flex items-start gap-4">
