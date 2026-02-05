@@ -185,7 +185,9 @@ export default function MatchDetailModal({ matchId, onClose }) {
                               return (
                                 <div key={playerIndex} className="grid grid-cols-12 gap-2 px-4 py-2 items-center hover:bg-white/[0.02]">
                                   <div className="col-span-1">
-                                    <span className="text-[10px] text-gray-600">{playerIndex + 1}</span>
+                                    <span className={`inline-flex items-center justify-center w-5 h-5 rounded text-[10px] font-bold ${teamColor.bg} ${teamColor.text}`}>
+                                      {team.rank}
+                                    </span>
                                   </div>
                                   <div className="col-span-5 flex items-center gap-2 min-w-0">
                                     {player.playerCountryCode && <span className="text-sm flex-shrink-0">{getCountryFlag(player.playerCountryCode)}</span>}
