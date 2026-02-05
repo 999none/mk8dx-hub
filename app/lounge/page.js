@@ -862,23 +862,15 @@ export default function LoungePage() {
                 {displayedSQ.length > 0 ? (
                   <>
                     <div className="overflow-x-auto">
-                      <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
-                        <colgroup>
-                          <col style={{ width: '10%' }} />
-                          <col style={{ width: '18%' }} />
-                          <col style={{ width: '12%' }} />
-                          <col style={{ width: '15%' }} />
-                          <col style={{ width: '20%' }} />
-                          <col style={{ width: '25%' }} />
-                        </colgroup>
+                      <table className="w-full">
                         <thead>
                           <tr className="text-gray-500 text-xs uppercase tracking-wider border-b border-white/[0.04]">
-                            <th className="text-center py-3 px-2 font-medium">#</th>
-                            <th className="text-center py-3 px-2 font-medium">Date</th>
-                            <th className="text-center py-3 px-2 font-medium">Heure</th>
-                            <th className="text-center py-3 px-2 font-medium">Format</th>
-                            <th className="text-center py-3 px-2 font-medium">Status</th>
-                            <th className="text-center py-3 px-2 font-medium">Temps</th>
+                            <th className="text-center py-3 px-4 font-medium w-16">#</th>
+                            <th className="text-center py-3 px-4 font-medium">Date</th>
+                            <th className="text-center py-3 px-4 font-medium">Heure</th>
+                            <th className="text-center py-3 px-4 font-medium">Format</th>
+                            <th className="text-center py-3 px-4 font-medium">Status</th>
+                            <th className="text-center py-3 px-4 font-medium">Temps</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.03]">
@@ -891,25 +883,25 @@ export default function LoungePage() {
                             return (
                               <tr 
                                 key={sq.id}
-                                className={`table-row-hover cursor-pointer group ${isPast ? 'opacity-50' : ''}`}
+                                className={`hover:bg-white/[0.03] cursor-pointer group ${isPast ? 'opacity-50' : ''}`}
                                 style={{ animationDelay: `${index * 30}ms` }}
                               >
-                                <td className="text-center py-3 px-2 text-gray-600 text-sm">
+                                <td className="text-center py-3 px-4 text-gray-600 text-sm w-16">
                                   {sq.id}
                                 </td>
-                                <td className="text-center py-3 px-2 text-gray-400 text-sm">
+                                <td className="text-center py-3 px-4 text-gray-400 text-sm">
                                   {formatShortDate(sq.time)}
                                 </td>
-                                <td className="text-center py-3 px-2">
+                                <td className="text-center py-3 px-4">
                                   <span className="text-white font-medium">{formatTime(sq.time)}</span>
                                 </td>
-                                <td className="text-center py-3 px-2">
+                                <td className="text-center py-3 px-4">
                                   <Badge variant="outline" className={`${formatColors[sq.format]} transition-transform duration-300 group-hover:scale-110`}>
                                     <Users className="w-3 h-3 mr-1" />
                                     {sq.format}
                                   </Badge>
                                 </td>
-                                <td className="text-center py-3 px-2">
+                                <td className="text-center py-3 px-4">
                                   {isNext && (
                                     <Badge className="bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 badge-shine">
                                       <Zap className="w-3 h-3 mr-1" />
@@ -931,7 +923,7 @@ export default function LoungePage() {
                                     <span className="text-gray-600 text-sm">-</span>
                                   )}
                                 </td>
-                                <td className="text-center py-3 px-2">
+                                <td className="text-center py-3 px-4">
                                   <span className={`text-sm font-medium transition-transform duration-300 group-hover:scale-110 inline-block ${
                                     isSoon ? 'text-green-500' : isPast ? 'text-gray-600' : 'text-gray-400'
                                   }`}>
