@@ -73,9 +73,9 @@ export default function Navbar() {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  className="text-gray-500 hover:text-white hover:bg-white/[0.04] text-sm font-normal"
+                  className="nav-link text-gray-500 hover:text-white hover:bg-white/[0.04] text-sm font-normal"
                 >
-                  <item.icon className="w-4 h-4 mr-2" />
+                  <item.icon className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:scale-110" />
                   {item.label}
                 </Button>
               </Link>
