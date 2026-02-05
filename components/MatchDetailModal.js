@@ -43,6 +43,7 @@ export default function MatchDetailModal({ matchId, onClose }) {
   const [matchDetails, setMatchDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     if (!matchId) return;
@@ -63,6 +64,14 @@ export default function MatchDetailModal({ matchId, onClose }) {
     fetchMatchDetails();
   }, [matchId]);
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onClose();
+    }, 250);
+  };
+
   if (!matchId) return null;
 
   const tableImageUrl = `https://lounge.mkcentral.com/TableImage/${matchId}.png`;
@@ -72,8 +81,15 @@ export default function MatchDetailModal({ matchId, onClose }) {
   const formatInfo = matchDetails ? getFormatInfo(matchDetails.numTeams, matchDetails.numPlayers) : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/95 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border border-white/[0.06] rounded-xl" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 transition-all duration-300 ${isClosing ? 'opacity-0' : 'modal-backdrop'}`}
+      style={{ backgroundColor: 'rgba(0,0,0,0.95)' }}
+      onClick={handleClose}
+    >
+      <div 
+        className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-[#0a0a0a] border border-white/[0.08] rounded-xl shadow-2xl shadow-black/50 transition-all duration-300 ${isClosing ? 'scale-95 opacity-0' : 'modal-content'}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-black border-b border-white/[0.06]">
