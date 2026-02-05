@@ -331,6 +331,9 @@ frontend:
       - working: true
         agent: "main"
         comment: "Nouvel endpoint GET /api/lounge/player-count qui récupère le nombre total de joueurs depuis l'API MKCentral Lounge (totalPlayers). Cache de 5 minutes. Affichage dans la Navbar avec badge vert (icône Users + nombre formaté en français). La page d'accueil affiche aussi ce nombre dans la section Stats. API testée OK: retourne 54869 joueurs."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Lounge player count API endpoint working perfectly. All test scenarios passed: 1) GET /api/lounge/player-count returns correct format {count: 54869, cached: true, lastUpdate: string}, 2) GET /api/lounge/player-count?refresh=true forces cache refresh and returns cached: false, 3) Caching behavior works correctly with 5-minute cache duration, 4) Error handling graceful for invalid parameters and methods. Player count exactly matches expected value of 54869. Response format matches specification exactly."
 
 metadata:
   created_by: "main_agent"
