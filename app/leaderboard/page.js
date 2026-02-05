@@ -184,7 +184,7 @@ export default function LeaderboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search, country, mmrRange, eventsRange, sortBy]);
+  }, [page, limit, search, country, mmrRange, eventsRange, sortBy, selectedSeason]);
 
   useEffect(() => {
     fetchLeaderboard();
