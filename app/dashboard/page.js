@@ -580,7 +580,16 @@ export default function DashboardPage() {
                       { href: '/leaderboard', icon: Trophy, label: 'Leaderboard', color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
                       { href: '/academy', icon: Star, label: 'Academy', color: 'text-blue-500', bg: 'bg-blue-500/10' },
                       { href: '/tournaments', icon: Award, label: 'Tournois', color: 'text-purple-500', bg: 'bg-purple-500/10' },
-                      { href: 'https://lounge.mkcentral.com/mk8dx/', icon: ExternalLink, label: 'MKCentral', color: 'text-green-500', bg: 'bg-green-500/10', external: true },
+                      { 
+                        href: playerDetails?.mkcId 
+                          ? `https://mkcentral.com/fr/registry/players/profile?id=${playerDetails.mkcId}` 
+                          : 'https://mkcentral.com/fr/registry/players', 
+                        icon: ExternalLink, 
+                        label: 'MKCentral', 
+                        color: 'text-green-500', 
+                        bg: 'bg-green-500/10', 
+                        external: true 
+                      },
                     ].map((link, i) => (
                       link.external ? (
                         <a key={i} href={link.href} target="_blank" rel="noopener noreferrer" className="block">
