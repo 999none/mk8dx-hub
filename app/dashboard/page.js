@@ -226,6 +226,19 @@ export default function DashboardPage() {
                         En attente
                       </Badge>
                     )}
+
+                    {/* Lien vers profil MK8DX Lounge */}
+                    {(playerDetails?.playerId || playerDetails?.id || loungeData?.playerId || loungeData?.id) && (
+                      <a 
+                        href={`https://lounge.mkcentral.com/mk8dx/PlayerDetails/${playerDetails?.playerId || playerDetails?.id || loungeData?.playerId || loungeData?.id}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="mt-4 inline-flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Profil MK8DX Lounge
+                      </a>
+                    )}
                   </div>
                 </CardContent>
               </Card>
