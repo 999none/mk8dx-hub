@@ -100,11 +100,11 @@ export default function TeamDetailModal({ teamId, onClose }) {
       >
         
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-black border-b border-white/[0.06]">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-black/95 backdrop-blur-sm border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
             {/* Team Logo or Icon */}
             <div 
-              className="w-10 h-10 rounded-lg flex items-center justify-center border border-white/[0.08]"
+              className="w-10 h-10 rounded-lg flex items-center justify-center border border-white/[0.08] transition-transform duration-300 hover:scale-110"
               style={{ backgroundColor: `${teamColor}20` }}
             >
               {teamDetails?.logo ? (
@@ -134,7 +134,7 @@ export default function TeamDetailModal({ teamId, onClose }) {
               )}
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/[0.04] rounded-lg transition-colors text-gray-500 hover:text-white">
+          <button onClick={handleClose} className="p-2 hover:bg-white/[0.06] rounded-lg transition-all duration-300 text-gray-500 hover:text-white hover:rotate-90">
             <X className="w-4 h-4" />
           </button>
         </div>
