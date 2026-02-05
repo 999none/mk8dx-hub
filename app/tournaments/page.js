@@ -41,6 +41,7 @@ export default function TournamentsPage() {
   const [summary, setSummary] = useState(null);
   const [gameFilter, setGameFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [formatFilter, setFormatFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
