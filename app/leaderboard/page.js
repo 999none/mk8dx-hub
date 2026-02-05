@@ -254,6 +254,18 @@ export default function LeaderboardPage() {
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Actualiser
           </Button>
+          
+          <select
+            value={selectedSeason}
+            onChange={(e) => { setSelectedSeason(e.target.value); setPage(1); }}
+            className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-4 py-2 text-sm text-gray-300 focus:outline-none focus:border-white/20 hover:border-white/10 transition-all duration-300 cursor-pointer"
+          >
+            {AVAILABLE_SEASONS.map((season) => (
+              <option key={season.value} value={season.value} className="bg-black">
+                {season.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         {loading && leaderboard.length === 0 ? (
