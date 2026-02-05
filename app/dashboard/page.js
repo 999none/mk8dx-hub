@@ -227,18 +227,31 @@ export default function DashboardPage() {
                       </Badge>
                     )}
 
-                    {/* Lien vers profil MK8DX Lounge */}
-                    {(playerDetails?.playerId || playerDetails?.id || loungeData?.playerId || loungeData?.id) && (
+                    {/* Liens externes */}
+                    <div className="flex flex-col gap-2 mt-4">
+                      {(playerDetails?.playerId || playerDetails?.id || loungeData?.playerId || loungeData?.id) && (
+                        <a 
+                          href={`https://lounge.mkcentral.com/mk8dx/PlayerDetails/${playerDetails?.playerId || playerDetails?.id || loungeData?.playerId || loungeData?.id}`}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm transition-colors"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          MK8DX Lounge
+                        </a>
+                      )}
                       <a 
-                        href={`https://lounge.mkcentral.com/mk8dx/PlayerDetails/${playerDetails?.playerId || playerDetails?.id || loungeData?.playerId || loungeData?.id}`}
+                        href={playerDetails?.mkcId 
+                          ? `https://mkcentral.com/fr/registry/players/profile?id=${playerDetails.mkcId}` 
+                          : 'https://mkcentral.com/fr/registry/players'} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="mt-4 inline-flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm transition-colors"
+                        className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm transition-colors"
                       >
                         <ExternalLink className="w-3 h-3" />
-                        Profil MK8DX Lounge
+                        MKCentral
                       </a>
-                    )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -575,37 +588,18 @@ export default function DashboardPage() {
               {/* Quick Links */}
               <Card className="bg-white/[0.02] border-white/[0.04] lg:col-span-4">
                 <CardContent className="p-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {[
                       { href: '/leaderboard', icon: Trophy, label: 'Leaderboard', color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
                       { href: '/academy', icon: Star, label: 'Academy', color: 'text-blue-500', bg: 'bg-blue-500/10' },
                       { href: '/tournaments', icon: Award, label: 'Tournois', color: 'text-purple-500', bg: 'bg-purple-500/10' },
-                      { 
-                        href: playerDetails?.mkcId 
-                          ? `https://mkcentral.com/fr/registry/players/profile?id=${playerDetails.mkcId}` 
-                          : 'https://mkcentral.com/fr/registry/players', 
-                        icon: ExternalLink, 
-                        label: 'MKCentral', 
-                        color: 'text-green-500', 
-                        bg: 'bg-green-500/10', 
-                        external: true 
-                      },
                     ].map((link, i) => (
-                      link.external ? (
-                        <a key={i} href={link.href} target="_blank" rel="noopener noreferrer" className="block">
-                          <div className={`p-4 ${link.bg} rounded-lg text-center hover:opacity-80 transition-opacity`}>
-                            <link.icon className={`w-6 h-6 mx-auto mb-2 ${link.color}`} />
-                            <p className="text-sm font-medium text-gray-300">{link.label}</p>
-                          </div>
-                        </a>
-                      ) : (
-                        <Link key={i} href={link.href}>
-                          <div className={`p-4 ${link.bg} rounded-lg text-center hover:opacity-80 transition-opacity`}>
-                            <link.icon className={`w-6 h-6 mx-auto mb-2 ${link.color}`} />
-                            <p className="text-sm font-medium text-gray-300">{link.label}</p>
-                          </div>
-                        </Link>
-                      )
+                      <Link key={i} href={link.href}>
+                        <div className={`p-4 ${link.bg} rounded-lg text-center hover:opacity-80 transition-opacity`}>
+                          <link.icon className={`w-6 h-6 mx-auto mb-2 ${link.color}`} />
+                          <p className="text-sm font-medium text-gray-300">{link.label}</p>
+                        </div>
+                      </Link>
                     ))}
                   </div>
                 </CardContent>
