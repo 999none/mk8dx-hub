@@ -156,8 +156,8 @@ export default function PlayerProfilePage() {
         <Navbar />
         <div className="container mx-auto px-4 py-8 pt-20">
           <div className="flex flex-col items-center justify-center py-20">
-            <RefreshCw className="w-6 h-6 animate-spin mb-3 text-gray-600" />
-            <p className="text-gray-500 text-sm">Chargement...</p>
+            <div className="spinner-trail mb-4" />
+            <p className="text-gray-500 text-sm">Chargement du profil...</p>
           </div>
         </div>
       </div>
@@ -170,10 +170,10 @@ export default function PlayerProfilePage() {
         <Navbar />
         <div className="container mx-auto px-4 py-8 pt-20">
           <div className="text-center py-20">
-            <Trophy className="w-12 h-12 mx-auto mb-4 text-gray-700" />
+            <Trophy className="w-12 h-12 mx-auto mb-4 text-gray-700 animate-bounce-subtle" />
             <h2 className="text-xl font-bold mb-2">{error || 'Joueur non trouvé'}</h2>
             <p className="text-gray-500 mb-6 text-sm">"{playerName}"</p>
-            <Button onClick={() => router.back()} variant="outline" className="border-white/10 text-gray-400 hover:bg-white/[0.04]">
+            <Button onClick={() => router.back()} variant="outline" className="border-white/10 text-gray-400 hover:bg-white/[0.04] hover:text-white transition-all duration-300">
               <ArrowLeft className="w-4 h-4 mr-2" />Retour
             </Button>
           </div>
@@ -187,16 +187,16 @@ export default function PlayerProfilePage() {
       <Navbar />
       
       <div className="container mx-auto px-4 py-8 pt-20">
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <Button onClick={() => router.back()} variant="ghost" className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-9 px-3">
-            <ArrowLeft className="w-4 h-4 mr-2" />Retour
+        {/* Header with animation */}
+        <div className={`mb-6 flex items-center justify-between transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <Button onClick={() => router.back()} variant="ghost" className="text-gray-500 hover:text-white hover:bg-white/[0.04] h-9 px-3 group">
+            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />Retour
           </Button>
           
           <select
             value={selectedSeason}
             onChange={(e) => setSelectedSeason(e.target.value)}
-            className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-1.5 text-sm text-gray-400 focus:outline-none"
+            className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-1.5 text-sm text-gray-400 focus:outline-none hover:border-white/10 transition-all duration-300 cursor-pointer"
           >
             {AVAILABLE_SEASONS.map((s) => (
               <option key={s.value} value={s.value} className="bg-black">{s.label}</option>
@@ -204,38 +204,37 @@ export default function PlayerProfilePage() {
           </select>
         </div>
 
-        {/* Player Header */}
-        <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-6 mb-4">
+        {/* Player Header with animation */}
+        <div className={`card-premium rounded-xl p-6 mb-4 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '100ms' }}>
           <div className="flex flex-col sm:flex-row items-center gap-6">
             {/* Avatar MKCentral ou initiale */}
             {registryData?.avatarUrl ? (
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-white/[0.04] flex-shrink-0">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-white/[0.04] flex-shrink-0 ring-2 ring-white/[0.08] transition-transform duration-300 hover:scale-105">
                 <img 
                   src={registryData.avatarUrl}
                   alt={`${player.name} avatar`}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    // Fallback to initial if image fails to load
                     e.target.style.display = 'none';
                     e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-500">${player.name?.charAt(0).toUpperCase() || '?'}</div>`;
                   }}
                 />
               </div>
             ) : (
-              <div className="w-20 h-20 bg-white/[0.04] rounded-full flex items-center justify-center text-3xl font-bold text-gray-500 flex-shrink-0">
+              <div className="w-20 h-20 bg-gradient-to-br from-white/[0.06] to-white/[0.02] rounded-full flex items-center justify-center text-3xl font-bold text-gray-500 flex-shrink-0 ring-2 ring-white/[0.08] transition-transform duration-300 hover:scale-105">
                 {player.name?.charAt(0).toUpperCase()}
               </div>
             )}
             
             <div className="flex-1 text-center sm:text-left">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
-                <h1 className="text-2xl font-bold">{player.name}</h1>
-                {player.countryCode && <span className="text-xl">{getCountryFlag(player.countryCode)}</span>}
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{player.name}</h1>
+                {player.countryCode && <span className="text-xl transition-transform duration-300 hover:scale-125">{getCountryFlag(player.countryCode)}</span>}
               </div>
               
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                 {rank && (
-                  <Badge style={{ backgroundColor: rank.color }} className="text-black text-xs px-2 font-semibold">
+                  <Badge style={{ backgroundColor: rank.color }} className="text-black text-xs px-2 font-semibold badge-shine transition-transform duration-300 hover:scale-105">
                     {rank.name}
                   </Badge>
                 )}
@@ -245,40 +244,44 @@ export default function PlayerProfilePage() {
             
             <div className="text-center">
               <p className="text-xs text-gray-500 mb-1">MMR</p>
-              <div className="text-4xl font-black">{(player.mmr || 0).toLocaleString('fr-FR')}</div>
-              {player.maxMmr && <p className="text-xs text-yellow-500 mt-1">Peak: {player.maxMmr.toLocaleString('fr-FR')}</p>}
+              <div className="text-4xl font-black transition-all duration-300 hover:scale-105">{(player.mmr || 0).toLocaleString('fr-FR')}</div>
+              {player.maxMmr && <p className="text-xs text-yellow-500 mt-1 transition-all duration-300 hover:text-yellow-400">Peak: {player.maxMmr.toLocaleString('fr-FR')}</p>}
             </div>
           </div>
           
           <div className="mt-4 pt-4 border-t border-white/[0.04] flex items-center justify-center gap-4">
-            <a href={loungeProfileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm">
-              <ExternalLink className="w-3 h-3" />MK8DX Lounge
+            <a href={loungeProfileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm transition-all duration-300 hover:translate-x-1 group">
+              <ExternalLink className="w-3 h-3 group-hover:rotate-12 transition-transform duration-300" />MK8DX Lounge
             </a>
             {(player?.mkcId || playerDetails?.mkcId) && (
               <a 
                 href={`https://mkcentral.com/fr/registry/players/profile?id=${player?.mkcId || playerDetails?.mkcId}`} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm"
+                className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-300 text-sm transition-all duration-300 hover:translate-x-1 group"
               >
-                <ExternalLink className="w-3 h-3" />MKCentral
+                <ExternalLink className="w-3 h-3 group-hover:rotate-12 transition-transform duration-300" />MKCentral
               </a>
             )}
           </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid with staggered animation */}
         <div className="grid grid-cols-4 gap-3 mb-4">
           {[
-            { label: 'Wins', value: playerDetails?.wins || 0, color: 'text-green-500', bg: 'bg-green-500/10' },
-            { label: 'Losses', value: playerDetails?.losses || 0, color: 'text-red-500', bg: 'bg-red-500/10' },
-            { label: 'Events', value: player.eventsPlayed || 0, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+            { label: 'Wins', value: playerDetails?.wins || 0, color: 'text-green-500', bg: 'bg-green-500/10', statClass: 'stat-green' },
+            { label: 'Losses', value: playerDetails?.losses || 0, color: 'text-red-500', bg: 'bg-red-500/10', statClass: 'stat-red' },
+            { label: 'Events', value: player.eventsPlayed || 0, color: 'text-blue-500', bg: 'bg-blue-500/10', statClass: 'stat-blue' },
             { label: 'Win %', value: `${(() => {
               const w = playerDetails?.wins || 0, l = playerDetails?.losses || 0;
               return w + l > 0 ? Math.round((w / (w + l)) * 100) : 0;
-            })()}%`, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+            })()}%`, color: 'text-purple-500', bg: 'bg-purple-500/10', statClass: 'stat-purple' },
           ].map((s, i) => (
-            <div key={i} className={`${s.bg} border border-white/[0.04] rounded-lg p-3 text-center`}>
+            <div 
+              key={i} 
+              className={`stat-card ${s.statClass} ${s.bg} border border-white/[0.04] rounded-lg p-3 text-center cursor-default transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+              style={{ transitionDelay: `${150 + i * 50}ms` }}
+            >
               <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>
               <p className="text-[10px] text-gray-500 uppercase">{s.label}</p>
             </div>
@@ -293,7 +296,11 @@ export default function PlayerProfilePage() {
             { label: '+ Grand Gain', value: playerDetails?.largestGain ? `+${playerDetails.largestGain}` : '-', color: 'text-green-500' },
             { label: '+ Grande Perte', value: playerDetails?.largestLoss || '-', color: 'text-red-500' },
           ].map((s, i) => (
-            <div key={i} className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-3 text-center">
+            <div 
+              key={i} 
+              className={`bg-white/[0.02] border border-white/[0.04] rounded-lg p-3 text-center hover:bg-white/[0.04] transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+              style={{ transitionDelay: `${250 + i * 50}ms` }}
+            >
               <div className={`text-sm font-bold ${s.color || 'text-gray-300'}`}>{s.value}</div>
               <p className="text-[10px] text-gray-600">{s.label}</p>
             </div>
