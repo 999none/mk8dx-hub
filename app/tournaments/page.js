@@ -15,8 +15,8 @@ import Navbar from '@/components/Navbar';
 const GAME_FILTERS = [
   { value: 'all', label: 'Tous les jeux', icon: '🎮' },
   { value: 'mkworld', label: 'Mario Kart World', icon: '🌍' },
-  { value: 'mk8dx', label: 'Mario Kart 8 Deluxe', icon: '🏎️' },
-  { value: 'mkw', label: 'Mario Kart Wii', icon: '🏁' },
+  { value: 'mk8dx', label: 'MK8 Deluxe', icon: '🏎️' },
+  { value: 'mkw', label: 'MK Wii', icon: '🏁' },
 ];
 
 const STATUS_FILTERS = [
@@ -25,6 +25,12 @@ const STATUS_FILTERS = [
   { value: 'upcoming', label: 'À venir' },
   { value: 'registration', label: 'Inscriptions' },
   { value: 'completed', label: 'Terminés' },
+];
+
+const FORMAT_FILTERS = [
+  { value: 'all', label: 'Tous formats', icon: '🎯' },
+  { value: 'solo', label: 'Solo / FFA', icon: '👤' },
+  { value: 'squad', label: 'Squad / Équipe', icon: '👥' },
 ];
 
 export default function TournamentsPage() {
