@@ -39,6 +39,14 @@ export default function PushNotificationManager() {
       if (supported) {
         setPermission(Notification.permission);
         
+        // Check if push service has failed before in this session
+        const pushFailed = sessionStorage.getItem('push_service_unavailable');
+        if (pushFailed === 'true') {
+          setPushServiceAvailable(false);
+          setLoading(false);
+          return;
+        }
+        
         // Fetch VAPID public key
         try {
           const res = await fetch('/api/push/vapid-public-key');
