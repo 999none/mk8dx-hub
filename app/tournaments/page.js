@@ -160,7 +160,7 @@ export default function TournamentsPage() {
 
           {/* Filters */}
           <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-4 mb-6">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <Select value={gameFilter} onValueChange={(v) => { setGameFilter(v); setPage(1); }}>
                 <SelectTrigger className="bg-black border-white/[0.06] text-gray-400">
                   <Gamepad2 className="w-4 h-4 mr-2 text-gray-600" />
@@ -170,6 +170,20 @@ export default function TournamentsPage() {
                   {GAME_FILTERS.map(g => (
                     <SelectItem key={g.value} value={g.value}>
                       <span className="mr-2">{g.icon}</span>{g.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={formatFilter} onValueChange={(v) => { setFormatFilter(v); setPage(1); }}>
+                <SelectTrigger className="bg-black border-white/[0.06] text-gray-400">
+                  <Users className="w-4 h-4 mr-2 text-gray-600" />
+                  <SelectValue placeholder="Format" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0a0a0a] border-white/[0.06]">
+                  {FORMAT_FILTERS.map(f => (
+                    <SelectItem key={f.value} value={f.value}>
+                      <span className="mr-2">{f.icon}</span>{f.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -188,7 +202,15 @@ export default function TournamentsPage() {
               </Select>
             </div>
             <p className="text-xs text-gray-600 mt-3">
-              <span className="text-white font-medium">{total}</span> tournois trouvés
+              <span className="text-white font-medium">{tournaments.length}</span> tournois affichés
+              {(gameFilter !== 'all' || statusFilter !== 'all' || formatFilter !== 'all') && (
+                <button 
+                  onClick={() => { setGameFilter('all'); setStatusFilter('all'); setFormatFilter('all'); setPage(1); }}
+                  className="ml-2 text-gray-500 hover:text-white transition-colors"
+                >
+                  — Effacer filtres
+                </button>
+              )}
             </p>
           </div>
 
