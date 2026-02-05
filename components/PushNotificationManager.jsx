@@ -279,7 +279,12 @@ export default function PushNotificationManager() {
       }
       
     } catch (err) {
-      console.error('[Push] Subscribe error:', err.name, err.message);
+      // Use console.warn for expected browser blocks (AbortError is not a code bug)
+      if (err.name === 'AbortError') {
+        console.warn('[Push] Subscription blocked by browser:', err.message);
+      } else {
+        console.error('[Push] Subscribe error:', err.name, err.message);
+      }
       // Only set error if we haven't already set one
       if (!lastError && !errorDismissed) {
         setLastError(err.name === 'AbortError' 
