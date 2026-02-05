@@ -46,6 +46,12 @@ export default function TournamentsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [limit] = useState(12);
+  const [mounted, setMounted] = useState(false);
+
+  // Animation mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const fetchTournaments = async () => {
     setLoading(true);
