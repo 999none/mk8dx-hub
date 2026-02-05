@@ -402,6 +402,35 @@ export default function TournamentsPage() {
             </>
           )}
 
+          {/* Quick Links */}
+          <Card className={`card-premium mt-6 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '450ms' }}>
+            <CardContent className="p-4">
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { href: '/lounge', icon: Star, label: 'Lounge', color: 'text-purple-500', bg: 'bg-purple-500/10', hoverBg: 'hover:bg-purple-500/20' },
+                  { href: '/leaderboard', icon: Trophy, label: 'Leaderboard', color: 'text-yellow-500', bg: 'bg-yellow-500/10', hoverBg: 'hover:bg-yellow-500/20' },
+                  { href: '/academy', icon: BookOpen, label: 'Academy', color: 'text-blue-500', bg: 'bg-blue-500/10', hoverBg: 'hover:bg-blue-500/20' },
+                ].map((link, i) => (
+                  <Link key={i} href={link.href}>
+                    <div className={`p-4 ${link.bg} ${link.hoverBg} rounded-lg text-center transition-all duration-300 hover:scale-105 hover:shadow-lg group cursor-pointer`}>
+                      <link.icon className={`w-6 h-6 mx-auto mb-2 ${link.color} group-hover:scale-110 transition-transform duration-300`} />
+                      <p className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors duration-300">{link.label}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Last Update */}
+          {lastUpdate && (
+            <div className={`text-center mt-4 transition-all duration-500 ${mounted ? 'opacity-100' : 'opacity-0'}`} style={{ transitionDelay: '500ms' }}>
+              <p className="text-xs text-gray-600">
+                Mis à jour: {new Date(lastUpdate).toLocaleString('fr-FR')}
+              </p>
+            </div>
+          )}
+
         </div>
       </div>
     </RequireAuth>
