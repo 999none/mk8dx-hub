@@ -87,6 +87,63 @@ export async function GET(request, context) {
       });
     }
 
+    // Lounge player count - Get total tracked players from MKCentral Lounge
+    if (path === 'lounge/player-count') {
+      try {
+        const db = await getDatabase();
+        
+        // Check cache (5 minutes for player count)
+        const cacheKey = 'lounge_player_count';
+        const cache = await db.collection('stats_cache').findOne({ key: cacheKey });
+        
+        const cacheAge = cache ? Date.now() - new Date(cache.lastUpdate).getTime() : Infinity;
+        const cacheValid = cacheAge < 5 * 60 * 1000; // 5 minutes cache
+        
+        if (cache && cacheValid) {
+          return NextResponse.json({
+            count: cache.count,
+            cached: true,
+            lastUpdate: cache.lastUpdate
+          });
+        }
+        
+        // Fetch from MKCentral Lounge API
+        const loungeApi = new LoungeApi();
+        const response = await loungeApi.getLeaderboard({
+          game: 'mk8dx',
+          pageSize: 1 // We only need totalCount, not the players
+        });
+        
+        const totalCount = response.totalCount || 0;
+        
+        // Cache the result
+        await db.collection('stats_cache').updateOne(
+          { key: cacheKey },
+          { 
+            $set: { 
+              key: cacheKey,
+              count: totalCount,
+              lastUpdate: new Date()
+            } 
+          },
+          { upsert: true }
+        );
+        
+        return NextResponse.json({
+          count: totalCount,
+          cached: false,
+          lastUpdate: new Date().toISOString()
+        });
+        
+      } catch (error) {
+        console.error('Lounge player count error:', error);
+        return NextResponse.json({ 
+          count: null,
+          error: 'Failed to fetch player count' 
+        }, { status: 500 });
+      }
+    }
+
     // Player info (current user)
     if (path === 'player') {
       // Return mock data for now
