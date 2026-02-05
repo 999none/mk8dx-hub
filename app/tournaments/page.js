@@ -139,11 +139,22 @@ export default function TournamentsPage() {
 
         <div className="container mx-auto px-4 py-8 pt-20">
           {/* Header with animation */}
-          <div className={`mb-8 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Tournois</h1>
-            <p className="text-gray-500 text-sm">
-              Événements officiels MKCentral
-            </p>
+          <div className={`mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            <div>
+              <h1 className="text-3xl font-bold mb-1 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">Tournois</h1>
+              <p className="text-gray-500">Événements officiels MKCentral</p>
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchTournaments}
+              disabled={loading}
+              className="border-white/[0.06] hover:bg-white/[0.04] text-gray-300 hover:text-white"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Actualiser
+            </Button>
           </div>
 
           {/* Summary Stats with staggered animation */}
