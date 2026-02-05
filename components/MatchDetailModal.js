@@ -92,18 +92,18 @@ export default function MatchDetailModal({ matchId, onClose }) {
       >
         
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-black/95 backdrop-blur-sm border-b border-white/[0.06]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-white/[0.08] to-white/[0.02] rounded-lg flex items-center justify-center border border-white/[0.06]">
-              <Swords className="w-4 h-4 text-blue-400" />
+        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-black/95 backdrop-blur-sm border-b border-white/[0.06]">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500/20 to-purple-500/10 rounded-xl flex items-center justify-center border border-white/[0.08] shadow-lg shadow-blue-500/10">
+              <Swords className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold">Match #{matchId}</h2>
+              <h2 className="text-lg font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">Match #{matchId}</h2>
               {matchDetails && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mt-0.5">
                   <p className="text-xs text-gray-500">Tier {matchDetails.tier}</p>
                   {formatInfo && (
-                    <span className={`text-xs px-1.5 py-0.5 rounded transition-all duration-300 ${formatInfo.isTeamFormat ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-md font-medium transition-all duration-300 ${formatInfo.isTeamFormat ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'}`}>
                       {formatInfo.format}
                     </span>
                   )}
@@ -111,8 +111,8 @@ export default function MatchDetailModal({ matchId, onClose }) {
               )}
             </div>
           </div>
-          <button onClick={handleClose} className="p-2 hover:bg-white/[0.06] rounded-lg transition-all duration-300 text-gray-500 hover:text-white hover:rotate-90">
-            <X className="w-4 h-4" />
+          <button onClick={handleClose} className="p-2.5 hover:bg-white/[0.06] rounded-xl transition-all duration-300 text-gray-500 hover:text-white hover:rotate-90 hover:scale-110">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
