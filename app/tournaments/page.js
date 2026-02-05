@@ -61,6 +61,36 @@ export default function TournamentsPage() {
         filtered = filtered.filter(t => t.status === statusFilter);
       }
       
+      // Filter by format (solo/squad)
+      if (formatFilter !== 'all') {
+        filtered = filtered.filter(t => {
+          const format = (t.format || '').toLowerCase();
+          const name = (t.name || '').toLowerCase();
+          
+          if (formatFilter === 'solo') {
+            // Solo: FFA, 1v1, Solo tournaments
+            return format.includes('ffa') || 
+                   format.includes('solo') || 
+                   format.includes('1v1') ||
+                   name.includes('ffa') ||
+                   name.includes('solo') ||
+                   (!format.includes('v') && !format.includes('squad') && !format.includes('team'));
+          } else if (formatFilter === 'squad') {
+            // Squad: 2v2, 3v3, 4v4, 5v5, 6v6, squad, team
+            return format.includes('squad') || 
+                   format.includes('team') ||
+                   format.includes('2v2') || 
+                   format.includes('3v3') || 
+                   format.includes('4v4') || 
+                   format.includes('5v5') || 
+                   format.includes('6v6') ||
+                   name.includes('squad') ||
+                   name.includes('team');
+          }
+          return true;
+        });
+      }
+      
       setTournaments(filtered);
       setLastUpdate(data.lastUpdate);
       setTotalPages(data.totalPages || 1);
