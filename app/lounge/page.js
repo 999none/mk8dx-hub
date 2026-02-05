@@ -1910,40 +1910,85 @@ export default function LoungePage() {
         {/* Next SQ Highlight */}
         {nextSQ && (
           <Card className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/30 mb-8">
-            <CardHeader>
+            <CardHeader className="pb-3">
               <CardTitle className="text-yellow-400 flex items-center gap-2">
                 <Trophy className="w-5 h-5" />
                 Prochaine Squad Queue
               </CardTitle>
+              <CardDescription className="text-gray-400">
+                Formez votre équipe et rejoignez la queue • Ouverte de {formatTime(nextSQ.time - 75 * 60 * 1000)} à {new Date(nextSQ.time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }).slice(0, -2)}55
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                {/* Left: Info */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
                     <Badge variant="outline" className={`${formatColors[nextSQ.format]} text-lg px-3 py-1`}>
                       <Users className="w-4 h-4 mr-2" />
                       {nextSQ.format.toUpperCase()}
                     </Badge>
                     <span className="text-gray-400">SQ #{nextSQ.id}</span>
+                    {(() => {
+                      const now = Date.now();
+                      const queueOpenTime = nextSQ.time - 75 * 60 * 1000; // Opens 1h15 before (XX:45)
+                      const queueCloseTime = nextSQ.time - 5 * 60 * 1000; // Closes 5 min before (XX:55)
+                      const isQueueOpen = now >= queueOpenTime && now < queueCloseTime;
+                      return isQueueOpen ? (
+                        <Badge className="bg-green-500/20 text-green-400 border-green-500/30 animate-pulse">
+                          <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                          Queue Ouverte
+                        </Badge>
+                      ) : null;
+                    })()}
                   </div>
-                  <div className="text-2xl font-bold text-white mb-2">
-                    {formatDateTime(nextSQ.time)}
+                  <div className="text-white mb-2">
+                    <span className="text-2xl font-bold">{formatDateTime(nextSQ.time)}</span>
                   </div>
-                  <div className="text-green-400 font-medium text-lg">
+                  <div className="text-green-400 font-medium text-lg mb-2">
                     <Timer className="w-4 h-4 inline mr-2" />
                     {formatRelativeTime(nextSQ.time)}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Queue ouverte: {formatTime(nextSQ.time - 15 * 60 * 1000)} - {new Date(nextSQ.time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }).slice(0, -2)}55
+                  <div className="text-xs text-gray-500">
+                    Queue: {formatTime(nextSQ.time - 75 * 60 * 1000)} → {new Date(nextSQ.time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }).slice(0, -2)}55 (ferme 5 min avant le match)
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-5xl font-bold text-white">
-                    {formatTime(nextSQ.time)}
+                
+                {/* Right: Time + Action */}
+                <div className="w-full md:w-auto flex flex-col items-end gap-3">
+                  <div className="text-right">
+                    <div className="text-5xl font-bold text-white">
+                      {formatTime(nextSQ.time)}
+                    </div>
+                    <div className="text-gray-500 mt-1">
+                      Heure de Paris
+                    </div>
                   </div>
-                  <div className="text-gray-500 mt-1">
-                    Heure de Paris
-                  </div>
+                  
+                  {/* Action Button */}
+                  {session?.user ? (
+                    <a
+                      href="https://discord.com/channels/445404006177570829/772517883107475516"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button 
+                        className="w-full md:w-auto bg-yellow-600 hover:bg-yellow-700 text-white"
+                      >
+                        <DoorOpen className="w-4 h-4 mr-2" />
+                        Rejoindre la Queue
+                      </Button>
+                    </a>
+                  ) : (
+                    <a href="/login">
+                      <Button 
+                        className="w-full md:w-auto bg-[#5865F2] hover:bg-[#4752C4] text-white"
+                      >
+                        <LogIn className="w-4 h-4 mr-2" />
+                        Se connecter avec Discord
+                      </Button>
+                    </a>
+                  )}
                 </div>
               </div>
             </CardContent>
