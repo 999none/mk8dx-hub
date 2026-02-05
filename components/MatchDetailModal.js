@@ -158,10 +158,13 @@ export default function MatchDetailModal({ matchId, onClose }) {
 
               {/* Players Table - Team Format */}
               {formatInfo?.isTeamFormat ? (
-                <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl overflow-hidden">
-                  <div className="px-4 py-2 border-b border-white/[0.04] flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Classement par équipes</span>
-                    <span className="text-xs text-gray-600">{formatInfo.numTeams} équipes • {formatInfo.format}</span>
+                <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl overflow-hidden">
+                  <div className="px-5 py-3 border-b border-white/[0.04] flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm font-medium text-gray-300">Classement par équipes</span>
+                    </div>
+                    <span className="text-xs text-gray-500 bg-white/[0.03] px-2 py-1 rounded-lg">{formatInfo.numTeams} équipes • {formatInfo.format}</span>
                   </div>
                   
                   {/* Calculate individual rankings based on score */}
