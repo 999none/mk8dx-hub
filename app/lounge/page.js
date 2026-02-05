@@ -857,6 +857,67 @@ function PushNotificationSettings({ push, schedule = [] }) {
   );
 }
 
+// =====================================================
+// DISCORD APP LINK HANDLER
+// =====================================================
+
+// Function to open Discord links - tries app first, then falls back to web
+function openDiscordLink(webUrl) {
+  // Extract the path from the URL (e.g., /channels/445404006177570829/1186158671525318719)
+  const urlPath = webUrl.replace('https://discord.com', '');
+  
+  // Create the discord:// protocol URL
+  const appUrl = `discord://${urlPath}`;
+  
+  // Try to open the Discord app
+  const appWindow = window.open(appUrl, '_self');
+  
+  // Set a timeout to open web version if app doesn't respond
+  // This handles the case where the app isn't installed
+  setTimeout(() => {
+    // Check if we're still on the same page (app didn't open)
+    // Open the web version as fallback
+    window.open(webUrl, '_blank', 'noopener,noreferrer');
+  }, 1500);
+}
+
+// Alternative approach using hidden iframe for better UX
+function openDiscordLinkWithFallback(webUrl) {
+  // Extract the path from the URL
+  const urlPath = webUrl.replace('https://discord.com', '');
+  const appUrl = `discord://${urlPath}`;
+  
+  // Create a hidden iframe to try opening the app
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+  
+  // Track if the app opened successfully
+  let appOpened = false;
+  
+  // Listen for visibility change (indicates app opened)
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      appOpened = true;
+    }
+  };
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  
+  // Try to open the Discord app via iframe
+  iframe.contentWindow.location.href = appUrl;
+  
+  // Set a timeout to check if app opened
+  setTimeout(() => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    document.body.removeChild(iframe);
+    
+    // If app didn't open, open web version
+    if (!appOpened) {
+      window.open(webUrl, '_blank', 'noopener,noreferrer');
+    }
+  }, 1000);
+}
+
 // Format badge colors based on format type
 const formatColors = {
   '2v2': 'bg-green-500/20 text-green-400 border-green-500/30',
