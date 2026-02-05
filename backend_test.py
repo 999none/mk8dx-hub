@@ -11,7 +11,7 @@ from datetime import datetime
 import sys
 
 # Configuration
-BASE_URL = "https://stats-central-7.preview.emergentagent.com"
+BASE_URL = "https://menu-harmony-1.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 def test_lounge_player_count():
