@@ -72,6 +72,12 @@ export default function PlayerProfilePage() {
   const [showAllMatches, setShowAllMatches] = useState(false);
   const [selectedMatchId, setSelectedMatchId] = useState(null);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Animation mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchPlayer = async () => {
