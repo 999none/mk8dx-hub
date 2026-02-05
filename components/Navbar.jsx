@@ -28,6 +28,18 @@ export default function Navbar() {
     { href: '/academy', label: 'Academy', icon: BookOpen },
   ];
 
+  // Fetch tracked players count from Lounge
+  useEffect(() => {
+    fetch('/api/lounge/player-count')
+      .then(res => res.json())
+      .then(data => {
+        if (data.count) {
+          setTrackedPlayers(data.count);
+        }
+      })
+      .catch(err => console.error('Failed to fetch player count:', err));
+  }, []);
+
   return (
     <>
       <nav className="fixed top-0 w-full z-50 border-b border-white/[0.04] bg-black/90 backdrop-blur-md">
