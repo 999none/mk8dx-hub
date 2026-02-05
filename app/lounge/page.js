@@ -926,7 +926,7 @@ function formatTime(timestamp) {
 }
 
 // SQ Card Component
-function SQCard({ sq, isNext, participated = false }) {
+function SQCard({ sq, isNext, participated = false, matchId = null, onMatchClick = null }) {
   const status = getTimeStatus(sq.time);
   const isPast = status === 'past';
   const isSoon = status === 'soon';
@@ -940,6 +940,13 @@ function SQCard({ sq, isNext, participated = false }) {
   const queueCloseTime = new Date(sq.time);
   queueCloseTime.setMinutes(-5); // XX:55 of previous hour
   const isQueueOpen = now >= queueOpenTime.getTime() && now < sq.time;
+  
+  const handleParticipatedClick = (e) => {
+    e.stopPropagation();
+    if (matchId && onMatchClick) {
+      onMatchClick(matchId);
+    }
+  };
   
   return (
     <Card className={`
@@ -961,9 +968,13 @@ function SQCard({ sq, isNext, participated = false }) {
               </Badge>
               <span className="text-gray-500 text-sm">#{sq.id}</span>
               {participated && isPast && (
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                <Badge 
+                  className={`bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs ${matchId ? 'cursor-pointer hover:bg-emerald-500/30 transition-colors' : ''}`}
+                  onClick={matchId ? handleParticipatedClick : undefined}
+                >
                   <CheckCircle2 className="w-3 h-3 mr-1" />
                   Participé
+                  {matchId && <ExternalLink className="w-3 h-3 ml-1" />}
                 </Badge>
               )}
               {isNext && (
