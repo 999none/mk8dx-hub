@@ -156,42 +156,43 @@ export default function TeamDetailModal({ teamId, onClose }) {
               
               {/* Team Info Card */}
               <div 
-                className="p-4 rounded-xl border border-white/[0.06] transition-all duration-300 hover:border-white/[0.12]"
-                style={{ background: `linear-gradient(135deg, ${teamColor}10, transparent)` }}
+                className="p-5 rounded-xl border border-white/[0.08] transition-all duration-300 hover:border-white/[0.15] hover:shadow-lg"
+                style={{ background: `linear-gradient(135deg, ${teamColor}15, transparent)`, boxShadow: `0 4px 30px ${teamColor}10` }}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-5">
                   {/* Large Logo */}
                   <div 
-                    className="w-16 h-16 rounded-xl flex items-center justify-center border border-white/[0.08] flex-shrink-0"
+                    className="w-20 h-20 rounded-xl flex items-center justify-center border border-white/[0.08] flex-shrink-0 transition-transform duration-300 hover:scale-105"
                     style={{ backgroundColor: `${teamColor}15` }}
                   >
                     {teamDetails.logo ? (
                       <img 
                         src={`https://mkcentral.com${teamDetails.logo}`} 
                         alt={teamDetails.name} 
-                        className="w-14 h-14 object-contain"
-                        onError={(e) => { e.target.parentElement.innerHTML = '<div class="w-8 h-8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'; }}
+                        className="w-16 h-16 object-contain"
+                        onError={(e) => { e.target.parentElement.innerHTML = '<div class="w-10 h-10"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>'; }}
                       />
                     ) : (
-                      <Shield className="w-8 h-8" style={{ color: teamColor }} />
+                      <Shield className="w-10 h-10" style={{ color: teamColor }} />
                     )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-bold text-white mb-1">{teamDetails.name}</h3>
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-2">{teamDetails.name}</h3>
                     {teamDetails.tag && (
                       <Badge 
-                        className="mb-2 text-xs"
-                        style={{ backgroundColor: `${teamColor}20`, color: teamColor, borderColor: `${teamColor}40` }}
+                        className="mb-3 text-xs font-medium"
+                        style={{ backgroundColor: `${teamColor}25`, color: teamColor, borderColor: `${teamColor}50` }}
                       >
                         Tag: {teamDetails.tag}
                       </Badge>
                     )}
                     {teamDetails.description && (
-                      <p className="text-gray-400 text-sm mt-2 line-clamp-2">{teamDetails.description}</p>
+                      <p className="text-gray-400 text-sm mt-2 line-clamp-2 leading-relaxed">{teamDetails.description}</p>
                     )}
                     {teamDetails.creationDate && (
-                      <p className="text-gray-600 text-xs mt-2">
+                      <p className="text-gray-600 text-xs mt-3 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-gray-600 rounded-full"></span>
                         Créée le {new Date(teamDetails.creationDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </p>
                     )}
