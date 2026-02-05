@@ -297,7 +297,7 @@ export default function Navbar() {
         <div 
           className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-150"
           style={{
-            width: `${Math.min((scrollState.scrollY / (document.documentElement?.scrollHeight - window.innerHeight || 1)) * 100, 100)}%`,
+            width: `${scrollState.scrolled ? Math.min((scrollState.scrollY / Math.max((typeof document !== 'undefined' ? document.documentElement?.scrollHeight : 1000) - (typeof window !== 'undefined' ? window.innerHeight : 800), 1)) * 100, 100) : 0}%`,
             opacity: scrollState.scrollY > 100 ? 1 : 0
           }}
         />
