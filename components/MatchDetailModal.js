@@ -358,7 +358,7 @@ export default function MatchDetailModal({ matchId, onClose }) {
                 href={loungeMatchUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 p-3 bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04] rounded-lg transition-colors text-gray-400 hover:text-white text-sm"
+                className="flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 hover:border-blue-500/40 rounded-xl transition-all duration-300 text-gray-300 hover:text-white text-sm font-medium hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/10"
               >
                 <ExternalLink className="w-4 h-4" />
                 Voir sur MK8DX Lounge
