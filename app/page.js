@@ -74,7 +74,7 @@ export default function LandingPage() {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-20 max-w-3xl mx-auto">
             {[
-              { value: stats?.players || '2K+', label: 'Joueurs', color: 'text-green-500' },
+              { value: trackedPlayers ? trackedPlayers.toLocaleString('fr-FR') : (stats?.players || '2K+'), label: 'Joueurs Lounge', color: 'text-green-500' },
               { value: stats?.races || '100K+', label: 'Courses', color: 'text-blue-500' },
               { value: '96', label: 'Circuits', color: 'text-yellow-500' },
               { value: '24/7', label: 'Squad Queue', color: 'text-purple-500' },
